@@ -1,6 +1,7 @@
 # 💪 Fitness Tracker – 个人健身数据管理系统
 一个专为个人健身记录设计的"本地优先、云端同步"的现代化桌面/移动应用。告别纸笔和复杂表格，用优雅的界面记录每一次训练，自动计算做功，并支持坚果云 WebDAV 一键同步。
 
+#### 本项目CSDN链接：[https://blog.csdn.net/Ethocas/article/details/160124357](https://blog.csdn.net/Ethocas/article/details/160124357?fromshare=blogdetail&sharetype=blogdetail&sharerId=160124357&sharerefer=PC&sharesource=Ethocas&sharefrom=from_link)
 ---
 ## ✨ 核心功能
 ### 📝 智能表单填写
