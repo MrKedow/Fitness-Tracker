@@ -879,7 +879,7 @@ class FitnessApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: '健身数据管理系统',
+          title: '健身数据管理系统 Fitness-Tracker_Win v1.0',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.currentTheme,
           home: const MainScreen(),
@@ -1757,13 +1757,31 @@ class _MainScreenState extends State<MainScreen> {
     
     return Scaffold(
       appBar: AppBar(
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.fitness_center),
-            SizedBox(width: 12),
-            Text('健身数据管理系统'),
-          ],
-        ),
+            const Icon(Icons.fitness_center),
+            const SizedBox(width: 12),
+           
+          ///这里用于调节版本号↓
+            RichText(
+              text: const TextSpan(
+                style: TextStyle(color: Colors.white), // 根据主题调整颜色
+                children: [
+                  TextSpan(
+                    text: '健身数据管理系统 ',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  TextSpan(
+                    text: 'Fitness-Tracker_Win_v1.0',
+                    style: TextStyle(fontStyle: FontStyle.italic),
+                  ),
+                ],
+              ),
+            ),
+            ],
+          ),
+          ///这里用于调节版本号↑
+        
         actions: [
           if (_isCloudConnected)
             const Icon(
