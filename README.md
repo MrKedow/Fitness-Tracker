@@ -129,7 +129,7 @@ flutter build apk --release
 ---
 
 ## 📄 开源协议
-本项目采用 **MIT 协议**，详情见 [LICENSE](LICENSE) 文件。
+本项目采用 **MIT 协议**，详情见 [LICENSE](https://opensource.org/license/mit) 文件。
 
 ---
 
@@ -140,6 +140,6 @@ flutter build apk --release
 ---
 
 ## 📮 联系方式
-如有问题或建议，请提交 [GitHub Issues](https://github.com/yourusername/fitness_tracker/issues)。
+如有问题或建议，请提交 [GitHub Issues](https://github.com/MrKedow/Fitness-Tracker/issues)。
 
 **开始记录你的健身旅程吧！** 💪
