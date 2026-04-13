@@ -1,0 +1,6 @@
+distributionBase=GRADLE_USER_HOME
+distributionPath=wrapper/dists
+zipStoreBase=GRADLE_USER_HOME
+zipStorePath=wrapper/dists
+# 替换为兼容Java 19的Gradle版本（使用腾讯云镜像）
+distributionUrl=https\://mirrors.cloud.tencent.com/gradle/gradle-7.6.1-all.zip

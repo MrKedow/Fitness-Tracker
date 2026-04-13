@@ -1,0 +1,31 @@
+name: fitness_tracker
+description: 现代化健身数据管理系统
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  
+  # 基础依赖
+  cupertino_icons: ^1.0.5
+  provider: ^6.1.1
+  intl: ^0.20.2
+  shared_preferences: ^2.2.2
+  path_provider: ^2.1.0
+  
+  # HTTP请求
+  http: ^1.1.0
+  
+  # 通知
+  fluttertoast: ^9.0.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
