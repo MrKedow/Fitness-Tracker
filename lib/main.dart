@@ -9,10 +9,15 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:fitness_tracker/widgets/roaming_cat.dart';
+import 'package:fitness_tracker/widgets/coach_character.dart';
+import 'package:webview_windows/webview_windows.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-
+  // 初始化 WebView Windows 平台
+  // if (Platform.isWindows) {
+    // await WebviewController.initialize();
+  // }
   final prefs = await SharedPreferences.getInstance();
   final savedThemeIndex = prefs.getInt('selected_theme') ?? 0;
 
@@ -49,15 +54,24 @@ class ThemeProvider extends ChangeNotifier {
   }
 
   static final List<ThemeData> _themes = [
-    // 0: 远山青
+    // 0: 远山青（深青色渐变风格）
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFF3AB8C7),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF3AB8C7),
+        secondary: Color(0xFF2E8B9E),
+        surface: Color(0xFF1A2A3A),
+        onSurface: Colors.white,
+      ),
       scaffoldBackgroundColor: const Color(0xFF1A2A3A),
       cardColor: const Color(0xFF2A3A4A),
+      dialogBackgroundColor: const Color(0xFF2A3A4A),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF2A3A4A),
         elevation: 0,
+        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        iconTheme: IconThemeData(color: Colors.white),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -77,17 +91,33 @@ class ThemeProvider extends ChangeNotifier {
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.all(16),
+        labelStyle: const TextStyle(color: Colors.white70),
+        hintStyle: const TextStyle(color: Colors.white54),
+      ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white70),
       ),
     ),
-    // 1: 萤石黑
+    
+    // 1: 萤石黑（极致纯黑）
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFF007AFF),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFF007AFF),
+        secondary: Color(0xFF5856D6),
+        surface: Color(0xFF000000),
+        onSurface: Colors.white,
+      ),
       scaffoldBackgroundColor: const Color(0xFF000000),
       cardColor: const Color(0xFF1C1C1E),
+      dialogBackgroundColor: const Color(0xFF1C1C1E),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF1C1C1E),
         elevation: 0,
+        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        iconTheme: IconThemeData(color: Color(0xFF007AFF)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -107,18 +137,33 @@ class ThemeProvider extends ChangeNotifier {
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.all(16),
+        labelStyle: const TextStyle(color: Colors.white60),
+        hintStyle: const TextStyle(color: Colors.white38),
+      ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white70),
       ),
     ),
-    // 2: 珠玉白
+    
+    // 2: 珠玉白（明亮干净）
     ThemeData(
       brightness: Brightness.light,
       primaryColor: const Color(0xFF4A6FA5),
+      colorScheme: const ColorScheme.light(
+        primary: Color(0xFF4A6FA5),
+        secondary: Color(0xFF6B8FC7),
+        surface: Color(0xFFF8F9FA),
+        onSurface: Colors.black87,
+      ),
       scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       cardColor: Colors.white,
+      dialogBackgroundColor: Colors.white,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
         elevation: 1,
-        foregroundColor: Colors.black87,
+        titleTextStyle: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
+        iconTheme: IconThemeData(color: Color(0xFF4A6FA5)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -135,20 +180,36 @@ class ThemeProvider extends ChangeNotifier {
         fillColor: const Color(0xFFF0F2F5),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: Color(0xFFE0E3E8)),
         ),
         contentPadding: const EdgeInsets.all(16),
+        labelStyle: const TextStyle(color: Colors.black54),
+        hintStyle: const TextStyle(color: Colors.black38),
+      ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Colors.black87),
+        bodyMedium: TextStyle(color: Colors.black54),
       ),
     ),
-    // 3: 活力橙
+    
+    // 3: 活力橙（热情明亮）
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFFFF9500),
+      colorScheme: const ColorScheme.dark(
+        primary: Color(0xFFFF9500),
+        secondary: Color(0xFFFF6B00),
+        surface: Color(0xFF1A1A1A),
+        onSurface: Colors.white,
+      ),
       scaffoldBackgroundColor: const Color(0xFF1A1A1A),
       cardColor: const Color(0xFF2A2A2A),
+      dialogBackgroundColor: const Color(0xFF2A2A2A),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF2A2A2A),
         elevation: 0,
+        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        iconTheme: IconThemeData(color: Color(0xFFFF9500)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -168,17 +229,33 @@ class ThemeProvider extends ChangeNotifier {
           borderSide: BorderSide.none,
         ),
         contentPadding: const EdgeInsets.all(16),
+        labelStyle: const TextStyle(color: Colors.white60),
+        hintStyle: const TextStyle(color: Colors.white38),
+      ),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white70),
       ),
     ),
-    // 4: 全透明
+    
+    // 4: 全透明（毛玻璃效果）
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: Colors.white,
+      colorScheme: const ColorScheme.dark(
+        primary: Colors.white,
+        secondary: Colors.white70,
+        surface: Colors.transparent,
+        onSurface: Colors.white,
+      ),
       scaffoldBackgroundColor: Colors.transparent,
       cardColor: Colors.black.withOpacity(0.6),
+      dialogBackgroundColor: Colors.black.withOpacity(0.85),
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.black.withOpacity(0.7),
         elevation: 0,
+        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
@@ -201,7 +278,10 @@ class ThemeProvider extends ChangeNotifier {
         labelStyle: const TextStyle(color: Colors.white70),
         hintStyle: const TextStyle(color: Colors.white60),
       ),
-      dialogTheme: DialogThemeData(backgroundColor: Colors.black.withOpacity(0.8)),
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white70),
+      ),
     ),
   ];
 }
@@ -858,7 +938,7 @@ class FitnessApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: '健身数据管理系统 Fitness-Tracker_Win_v2.0',
+          title: '健身数据管理系统 Fitness-Tracker_Win_v3.0',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.currentTheme,
           home: const MainScreen(),
@@ -1325,13 +1405,13 @@ class _MainScreenState extends State<MainScreen> {
       context: context,
       position: position,
       items: [
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'logout',
-          child: const Text('退出云服务'),
+          child: Text('退出云服务'),
         ),
-        PopupMenuItem(
+        const PopupMenuItem(
           value: 'switch',
-          child: const Text('切换云账号'),
+          child: Text('切换云账号'),
         ),
       ],
     ).then((value) {
@@ -1383,8 +1463,7 @@ class _MainScreenState extends State<MainScreen> {
             Text(isEmpty
                 ? '这是一个空模板，您可以填写数据后导入使用。'
                 : '文件已记录，可点击"上云"按钮上传到坚果云。'),
-            if (!isEmpty)
-              const SizedBox(height: 10),
+            if (!isEmpty) const SizedBox(height: 10),
             if (!isEmpty)
               const Text(
                 '注意：同一天的训练项目在Excel中可以手动合并单元格，日期只在第一行显示。',
@@ -1465,23 +1544,32 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _showThemeSelector(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          final themeNames = ['远山青', '萤石黑', '珠玉白', '活力橙', '全透明'];
-          final themeColors = [
-            const Color(0xFF3AB8C7),
-            const Color(0xFF007AFF),
-            const Color(0xFF4A6FA5),
-            const Color(0xFFFF9500),
-            Colors.white,
-          ];
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, // 允许弹窗占据更多高度
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (context) => Consumer<ThemeProvider>(
+      builder: (context, themeProvider, child) {
+        final themeNames = ['远山青', '萤石黑', '珠玉白', '活力橙', '全透明'];
+        final themeColors = [
+          const Color(0xFF3AB8C7),
+          const Color(0xFF007AFF),
+          const Color(0xFF4A6FA5),
+          const Color(0xFFFF9500),
+          Colors.white,
+        ];
+        final themeDescriptions = [
+          '青绿渐变 · 清新自然',
+          '深邃纯黑 · 专注高效',
+          '温润米白 · 舒适护眼',
+          '活力橙色 · 热情奔放',
+          '毛玻璃效果 · 极简透明',
+        ];
 
-          return Container(
+        return SafeArea(
+          child: Container(
             padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -1493,15 +1581,15 @@ class _MainScreenState extends State<MainScreen> {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: 8),
+                const Text(
+                  '不同主题会改变整体配色方案',
+                  style: TextStyle(fontSize: 12, color: Colors.grey),
+                ),
                 const SizedBox(height: 20),
-                GridView.builder(
+                ListView.builder(
                   shrinkWrap: true,
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
-                    childAspectRatio: 3,
-                  ),
+                  physics: const NeverScrollableScrollPhysics(),
                   itemCount: themeNames.length,
                   itemBuilder: (context, index) {
                     final isSelected = themeProvider.selectedThemeIndex == index;
@@ -1511,41 +1599,85 @@ class _MainScreenState extends State<MainScreen> {
                         Navigator.pop(context);
                       },
                       child: Container(
+                        margin: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: themeColors[index],
+                          gradient: index == 0
+                              ? const LinearGradient(
+                                  colors: [Color(0xFF3AB8C7), Color(0xFF2E8B9E)],
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                )
+                              : null,
+                          color: index != 0 ? themeColors[index] : null,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? Colors.white : Colors.transparent,
+                            color: isSelected 
+                                ? (index == 2 ? Colors.blue : Colors.white)
+                                : Colors.transparent,
                             width: 3,
                           ),
+                          boxShadow: isSelected
+                              ? [
+                                  BoxShadow(
+                                    color: themeColors[index].withOpacity(0.3),
+                                    blurRadius: 8,
+                                    spreadRadius: 2,
+                                  )
+                                ]
+                              : null,
                         ),
-                        child: Center(
-                          child: Text(
-                            themeNames[index],
-                            style: TextStyle(
-                              color: index == 4 ? Colors.black : Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Text(
+                                  themeNames[index],
+                                  style: TextStyle(
+                                    color: index == 2 ? Colors.black87 : Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                if (isSelected)
+                                  Icon(
+                                    Icons.check_circle,
+                                    color: index == 2 ? Colors.blue : Colors.white,
+                                    size: 20,
+                                  ),
+                              ],
                             ),
-                          ),
+                            const SizedBox(height: 4),
+                            Text(
+                              themeDescriptions[index],
+                              style: TextStyle(
+                                color: index == 2 
+                                    ? Colors.black54 
+                                    : Colors.white70,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     );
                   },
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
                 OutlinedButton(
                   onPressed: () => Navigator.pop(context),
                   child: const Text('关闭'),
                 ),
               ],
             ),
-          );
-        },
-      ),
-    );
-  }
-
+          ),
+        );
+      },
+    ),
+  );
+}
   void _showToast(String message, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -1727,462 +1859,430 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  Widget _buildHistoryItem(WorkoutRecord record) {
-    final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-    final projectNames = record.projects.map((p) => p.name).where((name) => name.isNotEmpty).join('、');
+  @override
+  Widget build(BuildContext context) {
+    final duration = DateTime.now().difference(firstWorkoutDate);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                dateStr,
+    return Scaffold(
+      appBar: AppBar(
+        title: Row(
+          children: [
+            const Icon(Icons.fitness_center),
+            const SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '健身数据管理系统 Win_v3.0',
                 style: const TextStyle(
                   fontWeight: FontWeight.bold,
+                  fontFamily: 'SimSun',
+                  fontSize: 14,
                 ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Theme.of(context).primaryColor,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  '第${record.sessionNumber}次',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            projectNames.isNotEmpty ? projectNames : '无项目名称',
-            style: TextStyle(
-              color: Colors.grey[400],
-            ),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text('总做功'),
-              Text(
-                '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.orange,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-@override
-Widget build(BuildContext context) {
-  final duration = DateTime.now().difference(firstWorkoutDate);
-
-  return Scaffold(
-    appBar: AppBar(
-      title: Row(
-        children: [
-          const Icon(Icons.fitness_center),
-          const SizedBox(width: 8),
-          // 使用 Flexible 代替 Expanded，避免强制填充
-          Flexible(
-            child: Text(
-              '健身数据管理系统 Win_v2.0',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: 'SimSun',
-                fontSize: 14,
-              ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
-            ),
-          ),
-          const SizedBox(width: 8),
-          // 小猫区域固定宽度，保证右侧图标有足够空间
-          SizedBox(
-            width: 700, // 与 RoamingCat 的 maxWidth 一致
-            height: kToolbarHeight,
-            child: Align(
-              alignment: Alignment.centerRight,
-              child: RoamingCat(
-                maxWidth: 700,
-                maxHeight: kToolbarHeight - 8,
-                githubUrl: 'https://github.com/MrKedow/Fitness-Tracker',
-                catSize: 45.0,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
             ),
-          ),
-        ],
-      ),
-      actions: [
-        // 云状态显示（已连接时）
-        Consumer<NutstoreService>(
-          builder: (context, nutstore, child) {
-            if (nutstore.isConnected) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.cloud_done, color: Colors.green, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      nutstore.username ?? '',
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+            const SizedBox(width: 8),
+            SizedBox(
+              width: 700,
+              height: kToolbarHeight,
+              child: Align(
+                alignment: Alignment.centerRight,
+                child: RoamingCat(
+                  maxWidth: 700,
+                  maxHeight: kToolbarHeight - 8,
+                  githubUrl: 'https://github.com/MrKedow/Fitness-Tracker',
+                  catSize: 45.0,
+                ),
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Consumer<NutstoreService>(
+            builder: (context, nutstore, child) {
+              if (nutstore.isConnected) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_done, color: Colors.green, size: 20),
+                      const SizedBox(width: 4),
+                      Text(
+                        nutstore.username ?? '',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.history),
-          onPressed: () => _showHistory(context),
-          tooltip: '历史记录',
-        ),
-        IconButton(
-          icon: const Icon(Icons.palette),
-          onPressed: () => _showThemeSelector(context),
-          tooltip: '切换主题',
-        ),
-        Consumer<NutstoreService>(
-          builder: (context, nutstore, child) {
-            return IconButton(
-              icon: const Icon(Icons.cloud),
-              onPressed: () {
-                if (nutstore.isConnected) {
-                  _showCloudMenu(context);
-                } else {
-                  _showCloudLoginDialog(context);
-                }
-              },
-              tooltip: '云服务',
-            );
-          },
-        ),
-        if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
-      ],
-    ),
-    body: _isLoading
-        ? const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(),
-                SizedBox(height: 20),
-                Text('处理中...'),
-              ],
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () => _showHistory(context),
+            tooltip: '历史记录',
+          ),
+          IconButton(
+            icon: const Icon(Icons.palette),
+            onPressed: () => _showThemeSelector(context),
+            tooltip: '切换主题',
+          ),
+          Consumer<NutstoreService>(
+            builder: (context, nutstore, child) {
+              return IconButton(
+                icon: const Icon(Icons.cloud),
+                onPressed: () {
+                  if (nutstore.isConnected) {
+                    _showCloudMenu(context);
+                  } else {
+                    _showCloudLoginDialog(context);
+                  }
+                },
+                tooltip: '云服务',
+              );
+            },
+          ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             ),
-          )
-        : Consumer<WorkoutProvider>(
-            builder: (context, provider, child) {
-              final recentRecords = provider.records.take(5).toList();
+        ],
+      ),
+      body: _isLoading
+          ? const Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  CircularProgressIndicator(),
+                  SizedBox(height: 20),
+                  Text('处理中...'),
+                ],
+              ),
+            )
+          : Consumer<WorkoutProvider>(
+              builder: (context, provider, child) {
+                final recentRecords = provider.records.take(5).toList();
 
-              return Padding(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    // 统计卡片
-                    Card(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  '健身坚持统计',
-                                  style: TextStyle(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  '每一次努力都值得记录',
-                                  style: TextStyle(
-                                    color: Colors.grey[400],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.end,
-                              children: [
-                                GestureDetector(
-                                  onTap: _pickFirstWorkoutDate,
-                                  child: Text(
-                                    '${duration.inDays} 天',
+                return Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: [
+                      Card(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text(
+                                    '健身坚持统计',
                                     style: TextStyle(
-                                      fontSize: 32,
+                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
-                                      color: Theme.of(context).primaryColor,
                                     ),
                                   ),
-                                ),
-                                Text(
-                                  '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
-                                  style: TextStyle(
-                                    color: Colors.grey[400],
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '每一次努力都值得记录',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                children: [
+                                  GestureDetector(
+                                    onTap: _pickFirstWorkoutDate,
+                                    child: Text(
+                                      '${duration.inDays} 天',
+                                      style: TextStyle(
+                                        fontSize: 32,
+                                        fontWeight: FontWeight.bold,
+                                        color: Theme.of(context).primaryColor,
+                                      ),
+                                    ),
+                                  ),
+                                  Text(
+                                    '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
+                                    style: TextStyle(
+                                      color: Colors.grey[400],
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              flex: 3,
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        '填写训练记录',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text('📅 日期'),
+                                                const SizedBox(height: 8),
+                                                GestureDetector(
+                                                  onTap: () => _selectDate(context),
+                                                  child: Container(
+                                                    padding: const EdgeInsets.all(12),
+                                                    decoration: BoxDecoration(
+                                                      color: Theme.of(context).cardColor,
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor),
+                                                        const SizedBox(width: 8),
+                                                        Text(dateController.text),
+                                                        const Spacer(),
+                                                        const Icon(Icons.arrow_drop_down),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          const SizedBox(width: 20),
+                                          Expanded(
+                                            child: Column(
+                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              children: [
+                                                const Text('#️⃣ 第几次训练'),
+                                                const SizedBox(height: 8),
+                                                TextField(
+                                                  controller: TextEditingController(
+                                                    text: sessionNumber.toString(),
+                                                  ),
+                                                  keyboardType: TextInputType.number,
+                                                  decoration: const InputDecoration(
+                                                    hintText: '输入次数',
+                                                    border: OutlineInputBorder(),
+                                                  ),
+                                                  onChanged: (value) {
+                                                    final num = int.tryParse(value) ?? 1;
+                                                    setState(() {
+                                                      sessionNumber = num;
+                                                    });
+                                                  },
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+
+                                      const SizedBox(height: 30),
+
+                                      const Text(
+                                        '训练项目',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+
+                                      Expanded(
+                                        child: ListView.builder(
+                                          shrinkWrap: true,
+                                          itemCount: projects.length,
+                                          itemBuilder: (context, index) {
+                                            return _buildProjectCard(index);
+                                          },
+                                        ),
+                                      ),
+
+                                      const SizedBox(height: 20),
+
+                                      Row(
+                                        children: [
+                                          ElevatedButton.icon(
+                                            onPressed: _addProject,
+                                            icon: const Icon(Icons.add),
+                                            label: const Text('添加项目'),
+                                          ),
+                                          const SizedBox(width: 12),
+                                          ElevatedButton.icon(
+                                            onPressed: _removeProject,
+                                            icon: const Icon(Icons.remove),
+                                            label: const Text('删除项目'),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: Theme.of(context).cardColor,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+
+                                      const SizedBox(height: 30),
+
+                                      ElevatedButton.icon(
+                                        onPressed: () => _saveWorkout(context),
+                                        icon: const Icon(Icons.save),
+                                        label: const Text('保存记录'),
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: const Color(0xFF34C759),
+                                          minimumSize: const Size(double.infinity, 56),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                              ],
+                              ),
+                            ),
+
+                            const SizedBox(width: 24),
+
+                            Expanded(
+                              flex: 2,
+                              child: Card(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(20),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      const Text(
+                                        '最近记录',
+                                        style: TextStyle(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 20),
+
+                                      Expanded(
+                                        child: recentRecords.isEmpty
+                                            ? const Center(
+                                                child: Column(
+                                                  mainAxisAlignment: MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(Icons.history, size: 60, color: Colors.grey),
+                                                    SizedBox(height: 16),
+                                                    Text('暂无记录'),
+                                                    Text('开始您的第一次训练吧！', style: TextStyle(fontSize: 12)),
+                                                  ],
+                                                ),
+                                              )
+                                            : ListView.builder(
+                                                shrinkWrap: true,
+                                                itemCount: recentRecords.length,
+                                                itemBuilder: (context, index) {
+                                                  final record = recentRecords[index];
+                                                  final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
+                                                  final projectNames = record.projects.map((p) => p.name).where((name) => name.isNotEmpty).join('、');
+                                                  return Container(
+                                                    margin: const EdgeInsets.only(bottom: 12),
+                                                    padding: const EdgeInsets.all(16),
+                                                    decoration: BoxDecoration(
+                                                      color: Theme.of(context).cardColor,
+                                                      borderRadius: BorderRadius.circular(12),
+                                                    ),
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                                                            Container(
+                                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                              decoration: BoxDecoration(
+                                                                color: Theme.of(context).primaryColor,
+                                                                borderRadius: BorderRadius.circular(6),
+                                                              ),
+                                                              child: Text('第${record.sessionNumber}次', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Text(
+                                                          projectNames.isNotEmpty ? projectNames : '无项目名称',
+                                                          style: TextStyle(color: Colors.grey[400]),
+                                                        ),
+                                                        const SizedBox(height: 8),
+                                                        Row(
+                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                          children: [
+                                                            const Text('总做功'),
+                                                            Text(
+                                                              '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
+                                                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  );
+                                                },
+                                              ),
+                                      ),
+
+                                      const SizedBox(height: 20),
+
+                                      OutlinedButton.icon(
+                                        onPressed: () => _showHistory(context),
+                                        icon: const Icon(Icons.list),
+                                        label: const Text('查看全部记录'),
+                                        style: OutlinedButton.styleFrom(
+                                          minimumSize: const Size(double.infinity, 48),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // 两列布局
-                    Expanded(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // 左侧表单（可滚动）
-                          Expanded(
-                            flex: 3,
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      '填写训练记录',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-
-                                    // 日期选择行
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text('📅 日期'),
-                                              const SizedBox(height: 8),
-                                              GestureDetector(
-                                                onTap: () => _selectDate(context),
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(12),
-                                                  decoration: BoxDecoration(
-                                                    color: Theme.of(context).cardColor,
-                                                    borderRadius: BorderRadius.circular(12),
-                                                  ),
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor),
-                                                      const SizedBox(width: 8),
-                                                      Text(dateController.text),
-                                                      const Spacer(),
-                                                      const Icon(Icons.arrow_drop_down),
-                                                    ],
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 20),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              const Text('#️⃣ 第几次训练'),
-                                              const SizedBox(height: 8),
-                                              TextField(
-                                                controller: TextEditingController(
-                                                  text: sessionNumber.toString(),
-                                                ),
-                                                keyboardType: TextInputType.number,
-                                                decoration: const InputDecoration(
-                                                  hintText: '输入次数',
-                                                  border: OutlineInputBorder(),
-                                                ),
-                                                onChanged: (value) {
-                                                  final num = int.tryParse(value) ?? 1;
-                                                  setState(() {
-                                                    sessionNumber = num;
-                                                  });
-                                                },
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 30),
-
-                                    const Text(
-                                      '训练项目',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 16),
-
-                                    // 项目列表（可滚动）
-                                    Expanded(
-                                      child: ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount: projects.length,
-                                        itemBuilder: (context, index) {
-                                          return _buildProjectCard(index);
-                                        },
-                                      ),
-                                    ),
-
-                                    const SizedBox(height: 20),
-
-                                    // 项目操作按钮
-                                    Row(
-                                      children: [
-                                        ElevatedButton.icon(
-                                          onPressed: _addProject,
-                                          icon: const Icon(Icons.add),
-                                          label: const Text('添加项目'),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        ElevatedButton.icon(
-                                          onPressed: _removeProject,
-                                          icon: const Icon(Icons.remove),
-                                          label: const Text('删除项目'),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Theme.of(context).cardColor,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-
-                                    const SizedBox(height: 30),
-
-                                    // 保存按钮
-                                    ElevatedButton.icon(
-                                      onPressed: () => _saveWorkout(context),
-                                      icon: const Icon(Icons.save),
-                                      label: const Text('保存记录'),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFF34C759),
-                                        minimumSize: const Size(double.infinity, 56),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-
-                          const SizedBox(width: 24),
-
-                          // 右侧历史记录（可滚动）
-                          Expanded(
-                            flex: 2,
-                            child: Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      '最近记录',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        fontWeight: FontWeight.bold,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 20),
-
-                                    Expanded(
-                                      child: recentRecords.isEmpty
-                                          ? const Center(
-                                              child: Column(
-                                                mainAxisAlignment: MainAxisAlignment.center,
-                                                children: [
-                                                  Icon(Icons.history, size: 60, color: Colors.grey),
-                                                  SizedBox(height: 16),
-                                                  Text('暂无记录'),
-                                                  Text('开始您的第一次训练吧！', style: TextStyle(fontSize: 12)),
-                                                ],
-                                              ),
-                                            )
-                                          : ListView.builder(
-                                              shrinkWrap: true,
-                                              itemCount: recentRecords.length,
-                                              itemBuilder: (context, index) {
-                                                final record = recentRecords[index];
-                                                return _buildHistoryItem(record);
-                                              },
-                                            ),
-                                    ),
-
-                                    const SizedBox(height: 20),
-
-                                    OutlinedButton.icon(
-                                      onPressed: () => _showHistory(context),
-                                      icon: const Icon(Icons.list),
-                                      label: const Text('查看全部记录'),
-                                      style: OutlinedButton.styleFrom(
-                                        minimumSize: const Size(double.infinity, 48),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-  );
-}
+                    ],
+                  ),
+                );
+              },
+            ),
+    );
+  }
 }
 
 // ==================== 历史记录页面 ====================
@@ -2716,15 +2816,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showToast(String message) {
-    Fluttertoast.showToast(
-      msg: message,
-      toastLength: Toast.LENGTH_SHORT,
-      gravity: ToastGravity.BOTTOM,
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
       backgroundColor: Colors.green,
-      textColor: Colors.white,
-    );
-  }
-
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -2783,83 +2883,86 @@ class _HistoryScreenState extends State<HistoryScreen> {
       body: Consumer<WorkoutProvider>(
         builder: (context, provider, child) {
           final records = provider.records;
-
-          if (records.isEmpty) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.history_toggle_off, size: 80, color: Colors.grey),
-                  const SizedBox(height: 20),
-                  const Text('暂无历史记录'),
-                  const SizedBox(height: 10),
-                  const Text('开始您的第一次训练吧！'),
-                  const SizedBox(height: 30),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      widget.onExport();
-                    },
-                    icon: const Icon(Icons.download),
-                    label: const Text('导出空模板'),
-                  ),
-                ],
-              ),
-            );
-          }
-
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SingleChildScrollView(
-              child: DataTable(
-                columns: const [
-                  DataColumn(label: Text('日期')),
-                  DataColumn(label: Text('第几次')),
-                  DataColumn(label: Text('项目数')),
-                  DataColumn(label: Text('总做功')),
-                  DataColumn(label: Text('详细内容')),
-                  DataColumn(label: Text('操作')),
-                ],
-                rows: records.reversed.map((record) {
-                  final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-                  final details = record.projects.map((p) {
-                    if (p.name.isEmpty) return '';
-                    return '${p.name}(${p.part}): ${p.weight}kg×${p.sets}×${p.repsPerSet}';
-                  }).where((d) => d.isNotEmpty).join(' | ');
-
-                  return DataRow(
-                    onLongPress: () => _showContextMenu(context, record),
-                    cells: [
-                      DataCell(Text(dateStr)),
-                      DataCell(Text('第${record.sessionNumber}次')),
-                      DataCell(Text('${record.projects.length}')),
-                      DataCell(Text('${(record.totalWork / 1000).toStringAsFixed(1)}千焦')),
-                      DataCell(
-                        ConstrainedBox(
-                          constraints: const BoxConstraints(maxWidth: 12200),
-                          child: Text(details.isNotEmpty ? details : '无详细信息'),
-                        ),
-                      ),
-                      DataCell(
-                        Row(
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                flex: 2,
+                child: records.isEmpty
+                    ? Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            IconButton(
-                              icon: const Icon(Icons.edit, size: 20),
-                              onPressed: () => _editRecord(record),
-                              tooltip: '编辑',
-                            ),
-                            IconButton(
-                              icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                              onPressed: () => _deleteRecord(context, record),
-                              tooltip: '删除',
+                            const Icon(Icons.history_toggle_off, size: 80, color: Colors.grey),
+                            const SizedBox(height: 20),
+                            const Text('暂无历史记录'),
+                            const SizedBox(height: 10),
+                            const Text('开始您的第一次训练吧！'),
+                            const SizedBox(height: 30),
+                            ElevatedButton.icon(
+                              onPressed: widget.onExport,
+                              icon: const Icon(Icons.download),
+                              label: const Text('导出空模板'),
                             ),
                           ],
                         ),
+                      )
+                    : SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: DataTable(
+                          columns: const [
+                            DataColumn(label: Text('日期')),
+                            DataColumn(label: Text('第几次')),
+                            DataColumn(label: Text('项目数')),
+                            DataColumn(label: Text('总做功')),
+                            DataColumn(label: Text('详细内容')),
+                            DataColumn(label: Text('操作')),
+                          ],
+                          rows: records.reversed.map((record) {
+                            final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
+                            final details = record.projects.map((p) {
+                              if (p.name.isEmpty) return '';
+                              return '${p.name}(${p.part}): ${p.weight}kg×${p.sets}×${p.repsPerSet}';
+                            }).where((d) => d.isNotEmpty).join(' | ');
+                            return DataRow(
+                              onLongPress: () => _showContextMenu(context, record),
+                              cells: [
+                                DataCell(Text(dateStr)),
+                                DataCell(Text('第${record.sessionNumber}次')),
+                                DataCell(Text('${record.projects.length}')),
+                                DataCell(Text('${(record.totalWork / 1000).toStringAsFixed(1)}千焦')),
+                                DataCell(ConstrainedBox(
+                                  constraints: const BoxConstraints(maxWidth: 400),
+                                  child: Text(details.isNotEmpty ? details : '无详细信息'),
+                                )),
+                                DataCell(Row(
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit, size: 20),
+                                      onPressed: () => _editRecord(record),
+                                      tooltip: '编辑',
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                      onPressed: () => _deleteRecord(context, record),
+                                      tooltip: '删除',
+                                    ),
+                                  ],
+                                )),
+                              ],
+                            );
+                          }).toList(),
+                        ),
                       ),
-                    ],
-                  );
-                }).toList(),
               ),
-            ),
+              Expanded(
+                flex: 1,
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  child: CoachCharacter(records: records),
+                ),
+              ),
+            ],
           );
         },
       ),
