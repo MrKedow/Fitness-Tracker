@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>健身数据管理系统 HTML_v2.0</title>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --primary: #4a6fa5;
+            --secondary: #6b8cbc;
+            --accent: #ff7e5f;
+            --light: #f8f9fa;
+            --dark: #343a40;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #f5f7fa; color: var(--dark); line-height: 1.6; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .card { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 25px; margin-bottom: 25px; transition: transform 0.3s ease; }
+        .card:hover { transform: translateY(-5px); }
+        h1, h2 { color: var(--primary); margin-bottom: 20px; text-align: center; }
+        h1 { font-size: 2.2rem; margin-bottom: 30px; position: relative; display: inline-block; width: 100%; }
+        h1:after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 100px; height: 3px; background: linear-gradient(to right, var(--primary), var(--accent)); border-radius: 3px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 600; color: var(--dark); }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: var(--border-radius); font-size: 16px; transition: border 0.3s ease; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2); }
+        .project-controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; }
+        .btn { padding: 10px 20px; border: none; border-radius: var(--border-radius); cursor: pointer; font-size: 16px; font-weight: 600; transition: all 0.3s ease; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+        .btn-primary { background-color: var(--primary); color: white; }
+        .btn-primary:hover { background-color: var(--secondary); }
+        .btn-accent { background-color: var(--accent); color: white; }
+        .btn-accent:hover { background-color: #ff9a7f; }
+        .btn-success { background-color: var(--success); color: white; }
+        .btn-success:hover { background-color: #34ce57; }
+        .btn-warning { background-color: var(--warning); color: var(--dark); }
+        .btn-warning:hover { background-color: #e0a800; }
+        .btn-danger { background-color: var(--danger); color: white; }
+        .btn-danger:hover { background-color: #c82333; }
+        .btn-outline { background-color: transparent; border: 2px solid var(--primary); color: var(--primary); }
+        .btn-outline:hover { background-color: var(--primary); color: white; }
+        .btn-icon { width: 40px; height: 40px; padding: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; }
+        .project-item { border: 1px solid #eaeaea; border-radius: var(--border-radius); padding: 20px; margin-bottom: 20px; background-color: var(--light); }
+        .project-item-header { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        .sub-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
+        .time-display { font-size: 1.1rem; padding: 15px; background-color: #e9f7fe; border-radius: var(--border-radius); text-align: center; margin-bottom: 20px; }
+        .time-value { font-weight: bold; color: var(--accent); }
+        .page { display: none; }
+        .page.active { display: block; }
+        .history-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        .history-table th, .history-table td { padding: 12px 15px; text-align: left; border-bottom: 1px solid #ddd; }
+        .history-table th { background-color: var(--primary); color: white; font-weight: 600; }
+        .history-table tr:nth-child(even) { background-color: #f8f9fa; }
+        .history-table tr:hover { background-color: #e9ecef; }
+        .history-table tr.selected { background-color: #d4edda; }
+        .nav-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
+        .empty-state { text-align: center; padding: 40px; color: #6c757d; }
+        .empty-state i { font-size: 50px; margin-bottom: 15px; color: #dee2e6; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
+        .modal.active { display: flex; }
+        .modal-content { background-color: white; border-radius: var(--border-radius); box-shadow: var(--shadow); width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 25px; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: white; padding: 10px 0; z-index: 10; }
+        .modal-title { font-size: 1.5rem; color: var(--primary); }
+        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--dark); }
+        .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; position: sticky; bottom: 0; background: white; padding: 10px 0; z-index: 10; }
+        .work-display { background-color: #e8f5e8; padding: 10px; border-radius: var(--border-radius); text-align: center; margin-top: 10px; font-weight: bold; color: #2e7d32; }
+        .optional { color: #6c757d; font-weight: normal; }
+        .ai-global-section { margin-top: 30px; padding: 20px; background-color: #f0f8ff; border-radius: var(--border-radius); border-left: 6px solid var(--primary); }
+        .ai-suggestion-display { background-color: #fff; padding: 20px; border-radius: var(--border-radius); margin-top: 15px; min-height: 150px; white-space: pre-wrap; font-family: inherit; border: 1px solid #e0e0e0; max-height: 500px; overflow-y: auto; }
+        .batch-toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; align-items: center; }
+        .checkbox-col { width: 40px; text-align: center; }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .card { padding: 15px; }
+            .project-item-header, .sub-items { grid-template-columns: 1fr; }
+            .nav-buttons { flex-direction: column; }
+            .modal-content { width: 95%; padding: 15px; }
+            .modal-actions { flex-direction: column; }
+            .history-table th, .history-table td { padding: 8px 10px; font-size: 12px; }
+            .checkbox-col { width: 30px; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <!-- 录入页面 -->
+    <div id="input-page" class="page active">
+        <h1>🏋️ 健身数据管理系统 HTML_v2.0</h1>
+        <!-- 第一次健身时间设置 -->
+        <div class="card" style="background-color: #f0f4f8; border-left: 4px solid var(--primary);">
+            <h3>⚙️ 设置第一次健身时间</h3>
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div class="form-group" style="flex:1; min-width:180px;"><label for="first-date">日期</label><input type="date" id="first-date" required></div>
+                <div class="form-group" style="flex:1; min-width:180px;"><label for="first-time">时间</label><input type="time" id="first-time" step="1" required></div>
+            </div>
+            <button id="save-first-workout" class="btn btn-primary">保存设置</button>
+            <small style="display: block; margin-top: 10px; color: #666;">设置后立即更新“已坚持时间”，新记录将基于此时间计算。</small>
+        </div>
+
+        <div class="card">
+            <div class="form-group">
+                <label for="workout-date">📅 日期</label>
+                <input type="date" id="workout-date" required>
+            </div>
+
+            <div class="form-group">
+                <div class="project-controls">
+                    <button id="add-project" class="btn btn-primary btn-icon">+</button>
+                    <button id="remove-project" class="btn btn-accent btn-icon">-</button>
+                </div>
+                <div id="projects-container">
+                    <!-- 单个项目卡片 -->
+                    <div class="project-item">
+                        <div class="project-item-header">
+                            <div class="form-group"><label>项目名称</label><input type="text" class="project-name" placeholder="例如：坐姿推肩"></div>
+                            <div class="form-group"><label>锻炼部位</label><select class="project-part"><option>胸</option><option>背</option><option>腿</option><option>肩</option><option>腹</option></select></div>
+                        </div>
+                        <div class="sub-items">
+                            <div class="form-group"><label>重量 (kg)</label><input type="number" class="weight" min="0" step="0.5" placeholder="例如：20"></div>
+                            <div class="form-group"><label>组数</label><input type="number" class="sets" min="1" placeholder="例如：3"></div>
+                            <div class="form-group"><label>每组数量</label><input type="number" class="reps" min="1" placeholder="例如：12"></div>
+                            <div class="form-group"><label>感受</label><select class="feeling"><option>轻松</option><option selected>适中</option><option>吃力</option><option>非常吃力</option></select></div>
+                            <div class="form-group"><label>做功 (J) <span class="optional">自动计算</span></label><input type="number" class="work" readonly><div class="work-display">做功: <span class="work-value">0</span> J</div></div>
+                            <div class="form-group"><label>补剂 <span class="optional">选填</span></label><input type="text" class="supplement" placeholder="例如：蛋白粉"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="workout-count">#️⃣ 第几次健身</label>
+                <input type="number" id="workout-count" min="1" required>
+            </div>
+
+            <!-- 全局AI汇总区域 -->
+            <div class="ai-global-section">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <h3 style="margin:0;">🤖 AI 训练汇总分析</h3>
+                    <button id="global-ai-btn" class="btn btn-primary">✨ 生成智能报告</button>
+                </div>
+                <div id="global-ai-display" class="ai-suggestion-display">点击上方按钮，AI将综合分析本次所有训练项目，并结合历史数据给出专业建议。</div>
+            </div>
+
+            <div class="form-group">
+                <h2>⏰ 距离第一次决定健身已过时间</h2>
+                <div class="time-display">已坚持: <span id="time-passed" class="time-value">计算中...</span></div>
+            </div>
+
+            <div class="nav-buttons">
+                <button id="save-btn" class="btn btn-success">💾 保存记录</button>
+                <button id="view-history" class="btn btn-outline">📜 来时的路</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史记录页面 -->
+    <div id="history-page" class="page">
+        <h1>📜 来时的路</h1>
+        <div class="card">
+            <div id="history-content">
+                <div class="empty-state" id="empty-history"><i>📊</i><h3>暂无健身记录</h3><p>开始记录你的第一次健身数据吧！</p></div>
+                <div id="batch-toolbar" class="batch-toolbar" style="display: none;">
+                    <span id="selected-count" style="margin-right: auto;">已选择 0 条</span>
+                    <button id="batch-delete" class="btn btn-danger">批量删除</button>
+                    <button id="batch-edit-supplement" class="btn btn-primary">批量修改补剂</button>
+                    <button id="cancel-batch" class="btn btn-outline">取消选择</button>
+                </div>
+                <div style="overflow-x: auto;">
+                    <table class="history-table" id="history-table" style="display: none;">
+                        <thead><tr><th class="checkbox-col"><input type="checkbox" id="select-all-checkbox" style="width: auto;"></th><th>日期</th><th>项目</th><th>第几次</th><th>距离第一次时间</th><th>操作</th></tr></thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="nav-buttons">
+                <button id="export-btn" class="btn btn-success">📎 导出Excel</button>
+                <button id="import-btn" class="btn btn-outline">📂 读入Excel</button>
+                <button id="back-to-input" class="btn btn-outline">✏️ 返回记录</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑记录模态框 -->
+<div id="edit-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title">✏️ 编辑记录</h3><button class="close-modal">&times;</button></div>
+        <form id="edit-form">
+            <div class="form-group"><label for="edit-date">日期</label><input type="date" id="edit-date" required></div>
+            <div id="edit-projects-container"></div>
+            <div class="form-group"><label for="edit-count">第几次健身</label><input type="number" id="edit-count" min="1" required></div>
+            <div class="modal-actions"><button type="button" id="delete-record" class="btn btn-danger">删除记录</button><button type="submit" class="btn btn-success">保存更改</button></div>
+        </form>
+    </div>
+</div>
+
+<!-- 批量修改补剂模态框 -->
+<div id="batch-supplement-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header"><h3 class="modal-title">批量修改补剂</h3><button class="close-modal" id="close-batch-supplement">&times;</button></div>
+        <div class="form-group"><label for="batch-supplement-value">补剂内容</label><input type="text" id="batch-supplement-value" placeholder="例如：蛋白粉、肌酸"></div>
+        <div class="modal-actions"><button id="confirm-batch-supplement" class="btn btn-success">确认修改</button><button id="cancel-batch-supplement" class="btn btn-outline">取消</button></div>
+    </div>
+</div>
+
+<input type="file" id="file-input" accept=".xlsx,.xls" style="display: none;">
+
+<script>
+    (function(){
+        "use strict";
+
+        // ---------- 常量 ----------
+        const DEFAULT_FIRST_WORKOUT = '2025-06-09T18:29:00';
+        const WORKOUT_DISTANCES = { '胸':0.6, '背':0.6, '腿':0.7, '肩':0.6 };
+        const ABDOMINAL_WORK_PER_REP = 65 * 9.8 * 0.3;
+
+        // ---------- 超大语料库 ----------
+        const COACH_RULES = {
+            openings: [
+                "🔍 让我看看你今天的训练数据～", "📊 汇总分析完毕！这是你的专属报告：", 
+                "👋 嘿，伙伴！来看今天的训练总结：", "💭 数据不会说谎，让我为你解读：",
+                "🎯 专注分析中... 发现了一些有趣的规律！", "⚡ 能量满满！来看看你的训练报告："
+            ],
+            overall: {
+                highVolume: ["🔥 今天训练容量相当大！总做功达到${work}千焦，注意充分休息和营养补充。","💪 高强度训练日！${work}千焦的输出证明了你的努力，记得补充蛋白质。"],
+                moderate: ["📊 训练容量适中，${work}千焦的做功既能刺激肌肉又不会过度疲劳。","⚖️ 今天容量控制得很好，${work}千焦是可持续进步的黄金区间。"],
+                lowVolume: ["🌱 今天容量偏低，${work}千焦。如果状态不错，下次可以适当增加组数或重量。","📌 轻量训练日也是恢复的一部分，${work}千焦有助于保持运动习惯。"]
+            },
+            frequencyComment: [
+                "本周你已经训练了${sessions}次，", "截至目前本月累计${sessions}次健身，", 
+                "回顾最近七天，你完成了${sessions}次训练，"
+            ],
+            partBalance: {
+                good: ["✅ 今天训练部位覆盖了${parts}，非常全面！","🎯 部位选择很均衡，${parts}都得到了刺激。"],
+                missing: ["⚠️ 注意到今天没有训练${parts}，下次可以考虑加入以保持平衡。","🔧 建议补上${parts}的训练，避免肌力失衡。"]
+            },
+            perExercise: {
+                improved: ["📈 ${name}：重量比上次提升${diff}kg！这就是渐进超负荷。","🚀 ${name}进步明显，${diff}kg的提升证明了你的努力。"],
+                declined: ["📉 ${name}：重量略有下降，可能是状态波动，别灰心。","🌊 ${name}出现回落，注意休息和动作质量。"],
+                same: ["🔄 ${name}：重量与上次持平，可以考虑下次增加2.5kg或做一组。","📊 ${name}进入平台期？试试改变节奏或增加容量。"],
+                first: ["✨ ${name}：这是新动作，先建立动作模式，再追求重量。","🌟 首次记录${name}，打好基础最重要。"]
+            },
+            predictions: [
+                "📊 按当前进步速度，「${name}」预计${weeks}周后可达到 ${target} kg。",
+                "🎯 趋势预测：${name}下个月有望突破 ${target} kg。"
+            ],
+            encouragements: [
+                "✨ 每一次力竭都是成长的信号，继续加油！", "🌟 肌肉在休息时生长，好好睡觉和补充蛋白质。",
+                "💫 你已经走在正确的路上了，剩下的交给时间。", "😊 今天也要带着微笑去训练哦！",
+                "🏔️ 阿诺德说：'最后一组才是真正的开始'。", "💎 罗尼·库尔曼：'人人都想练健美，但没人想举重'。",
+                "🦁 像野兽一样训练，像国王一样饮食，像婴儿一样睡眠。", "🎯 多里安·耶茨：'强度比容量更重要'。",
+                "💪 李·哈尼：'刺激肌肉，而不是摧毁它'。", "🏆 弗兰克·赞恩：'对称和比例比块头更重要'。",
+                "⚡ 凯·格林：'念动一致是关键'。", "🔥 杰夫·卡瓦利尔：'疼痛不是软弱离开身体，是愚蠢进入身体'。"
+            ],
+            tips: [
+                "💡 练后30分钟内补充快碳+蛋白质，有助于肌肉恢复。",
+                "💡 如果关节不适，降低重量增加控制感。",
+                "💡 记录感受很重要，帮你找到最适合的训练节奏。",
+                "💡 渐进超负荷不只有加重，增加次数、组数、减少休息都是进步。",
+                "💡 研究显示，每组6-12次最有利于肌肥大。",
+                "💡 复合动作（深蹲、卧推、硬拉）应该是训练的核心。",
+                "💡 布拉德·舍恩菲尔德三大肌肥大机制：机械张力、代谢压力、肌肉损伤。",
+                "💡 肌酸是被研究最充分、最安全有效的补剂之一。",
+                "💡 减载周每4-8周安排一次，让关节和神经系统充分恢复。"
+            ]
+        };
+
+        // 辅助函数
+        function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function getUserFirstWorkoutDate() { const s=localStorage.getItem('firstWorkoutDateTime'); return s?new Date(s):new Date(DEFAULT_FIRST_WORKOUT); }
+        function setUserFirstWorkoutDate(d) { localStorage.setItem('firstWorkoutDateTime',d); }
+        function getTimePassedSinceFirst(date) {
+            const first = getUserFirstWorkoutDate(); const diff = new Date(date) - first;
+            if (diff < 0) return '尚未开始';
+            const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000);
+            return `${d}天 ${h}小时 ${m}分钟`;
+        }
+        function updateTimePassedDisplay() {
+            const now = new Date(), first = getUserFirstWorkoutDate(), diff = now - first;
+            const d = Math.floor(diff / 86400000), h = Math.floor((diff % 86400000) / 3600000), m = Math.floor((diff % 3600000) / 60000);
+            document.getElementById('time-passed').textContent = `${d}天 ${h}小时 ${m}分钟`;
+        }
+        function calculateWork(part, weight, sets, reps) {
+            if (part === '腹') return Math.round(sets * reps * ABDOMINAL_WORK_PER_REP);
+            return Math.round(weight * 9.8 * (WORKOUT_DISTANCES[part] || 0.6) * sets * reps);
+        }
+        function updateWorkDisplay(div) {
+            const part = div.querySelector('.project-part').value;
+            const w = parseFloat(div.querySelector('.weight').value) || 0;
+            const s = parseInt(div.querySelector('.sets').value) || 0;
+            const r = parseInt(div.querySelector('.reps').value) || 0;
+            const work = calculateWork(part, w, s, r);
+            div.querySelector('.work').value = work;
+            div.querySelector('.work-value').textContent = work;
+        }
+        function addProjectListeners(div) {
+            div.querySelectorAll('.project-part, .weight, .sets, .reps').forEach(i => i.addEventListener('input', () => updateWorkDisplay(div)));
+            updateWorkDisplay(div);
+        }
+        function getCurrentProjectsData() {
+            const projs = [];
+            document.querySelectorAll('#projects-container .project-item').forEach(div => {
+                const name = div.querySelector('.project-name').value.trim();
+                if (!name) return;
+                projs.push({
+                    name, part: div.querySelector('.project-part').value,
+                    weight: parseFloat(div.querySelector('.weight').value) || 0,
+                    sets: parseInt(div.querySelector('.sets').value) || 0,
+                    reps: parseInt(div.querySelector('.reps').value) || 0,
+                    feeling: div.querySelector('.feeling').value,
+                    work: parseInt(div.querySelector('.work').value) || 0,
+                    supplement: div.querySelector('.supplement').value || ''
+                });
+            });
+            return projs;
+        }
+        function getRecords() { return JSON.parse(localStorage.getItem('fitnessRecords') || '[]'); }
+        function saveRecords(r) { localStorage.setItem('fitnessRecords', JSON.stringify(r)); }
+
+        // 获取历史中某动作的上一次重量
+        function getPreviousWeight(records, name, part, currentDate) {
+            const history = [];
+            records.forEach(rec => {
+                if (new Date(rec.date) >= new Date(currentDate)) return;
+                rec.projects.forEach(p => { if (p.name === name && p.part === part) history.push({ date: rec.date, weight: p.weight }); });
+            });
+            history.sort((a, b) => new Date(b.date) - new Date(a.date));
+            return history.length ? history[0].weight : null;
+        }
+
+        // 线性预测
+        function predictWeight(records, name, part) {
+            const data = [];
+            records.forEach(rec => {
+                rec.projects.forEach(p => { if (p.name === name && p.part === part) data.push({ date: rec.date, weight: p.weight }); });
+            });
+            data.sort((a, b) => new Date(a.date) - new Date(b.date));
+            if (data.length < 3) return null;
+            const recent = data.slice(-5);
+            const n = recent.length;
+            let sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
+            for (let i = 0; i < n; i++) {
+                const x = i, y = recent[i].weight;
+                sumX += x; sumY += y; sumXY += x * y; sumX2 += x * x;
+            }
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            return intercept + slope * n;
+        }
+
+        // 生成汇总报告
+        function generateGlobalReport(currentProjects, allRecords, currentDate) {
+            if (!currentProjects.length) return '⚠️ 请先填写至少一个训练项目。';
+            let report = rnd(COACH_RULES.openings) + '\n\n';
+            const totalWork = currentProjects.reduce((s, p) => s + (p.work || 0), 0);
+            const workKJ = (totalWork / 1000).toFixed(0);
+            let level = totalWork > 50000 ? 'highVolume' : (totalWork > 20000 ? 'moderate' : 'lowVolume');
+            report += rnd(COACH_RULES.overall[level]).replace('${work}', workKJ) + '\n\n';
+            const parts = [...new Set(currentProjects.map(p => p.part))];
+            const missing = ['胸', '背', '腿', '肩', '腹'].filter(p => !parts.includes(p));
+            if (missing.length === 0) report += rnd(COACH_RULES.partBalance.good).replace('${parts}', parts.join('、')) + '\n';
+            else report += rnd(COACH_RULES.partBalance.missing).replace('${parts}', missing.join('、')) + '\n';
+            const thisWeek = allRecords.filter(r => {
+                const d = new Date(r.date), now = new Date();
+                const start = new Date(now.setDate(now.getDate() - now.getDay() + 1));
+                return d >= start;
+            }).length;
+            report += rnd(COACH_RULES.frequencyComment).replace('${sessions}', thisWeek) + '\n\n';
+            report += '📋 项目详细点评：\n';
+            for (let p of currentProjects) {
+                const prev = getPreviousWeight(allRecords, p.name, p.part, currentDate);
+                let line = `  • ${p.name} (${p.part})：${p.sets}组×${p.reps}次 @${p.weight}kg，做功${p.work}J。`;
+                if (prev !== null) {
+                    const diff = (p.weight - prev).toFixed(1);
+                    if (diff > 0) line += ' ' + rnd(COACH_RULES.perExercise.improved).replace('${name}', p.name).replace('${diff}', diff);
+                    else if (diff < 0) line += ' ' + rnd(COACH_RULES.perExercise.declined).replace('${name}', p.name).replace('${diff}', Math.abs(diff));
+                    else line += ' ' + rnd(COACH_RULES.perExercise.same).replace('${name}', p.name);
+                } else line += ' ' + rnd(COACH_RULES.perExercise.first).replace('${name}', p.name);
+                report += line + '\n';
+                const pred = predictWeight(allRecords, p.name, p.part);
+                if (pred && pred > p.weight) {
+                    const weeks = Math.max(2, Math.ceil((pred - p.weight) / 1.2));
+                    const target = (p.weight + (pred - p.weight) / 2).toFixed(1);
+                    report += '    ' + rnd(COACH_RULES.predictions).replace('${name}', p.name).replace('${weeks}', weeks).replace('${target}', target) + '\n';
+                }
+            }
+            report += '\n✨ ' + rnd(COACH_RULES.encouragements) + '\n';
+            report += rnd(COACH_RULES.tips);
+            return report;
+        }
+
+        // ---------- DOM 元素 ----------
+        const inputPage = document.getElementById('input-page'), historyPage = document.getElementById('history-page');
+        const projectsContainer = document.getElementById('projects-container');
+        const addBtn = document.getElementById('add-project'), removeBtn = document.getElementById('remove-project');
+        const saveBtn = document.getElementById('save-btn'), viewHistory = document.getElementById('view-history'), backInput = document.getElementById('back-to-input');
+        const exportBtn = document.getElementById('export-btn'), importBtn = document.getElementById('import-btn'), fileInput = document.getElementById('file-input');
+        const workoutDate = document.getElementById('workout-date'), workoutCount = document.getElementById('workout-count');
+        const globalAIBtn = document.getElementById('global-ai-btn'), globalAIDisplay = document.getElementById('global-ai-display');
+        const historyBody = document.getElementById('history-body'), historyTable = document.getElementById('history-table'), emptyHistory = document.getElementById('empty-history');
+        const batchToolbar = document.getElementById('batch-toolbar'), selectedCountSpan = document.getElementById('selected-count');
+        const selectAllCheck = document.getElementById('select-all-checkbox'), batchDelete = document.getElementById('batch-delete');
+        const batchEditSuppl = document.getElementById('batch-edit-supplement'), cancelBatch = document.getElementById('cancel-batch');
+        const batchSupplModal = document.getElementById('batch-supplement-modal'), batchSupplValue = document.getElementById('batch-supplement-value');
+        const confirmBatchSuppl = document.getElementById('confirm-batch-supplement'), cancelBatchSuppl = document.getElementById('cancel-batch-supplement'), closeBatchSuppl = document.getElementById('close-batch-supplement');
+        const editModal = document.getElementById('edit-modal'), editForm = document.getElementById('edit-form'), editDate = document.getElementById('edit-date');
+        const editCount = document.getElementById('edit-count'), editProjectsContainer = document.getElementById('edit-projects-container');
+        const deleteRecordBtn = document.getElementById('delete-record');
+        const firstDate = document.getElementById('first-date'), firstTime = document.getElementById('first-time'), saveFirst = document.getElementById('save-first-workout');
+
+        let selectedIndices = new Set(), currentEditIndex = -1;
+
+        // 初始化第一次时间
+        (function() {
+            const d = getUserFirstWorkoutDate();
+            firstDate.value = d.toISOString().split('T')[0];
+            firstTime.value = d.toTimeString().split(' ')[0];
+        })();
+        saveFirst.addEventListener('click', () => {
+            if (!firstDate.value || !firstTime.value) return alert('请完整填写日期和时间');
+            setUserFirstWorkoutDate(`${firstDate.value}T${firstTime.value}`);
+            updateTimePassedDisplay();
+            alert('第一次健身时间已更新');
+        });
+
+        // 项目管理
+        function createEmptyProject() {
+            const div = document.createElement('div');
+            div.className = 'project-item';
+            div.innerHTML = `
+                <div class="project-item-header">
+                    <div class="form-group"><label>项目名称</label><input type="text" class="project-name" placeholder="例如：坐姿推肩"></div>
+                    <div class="form-group"><label>锻炼部位</label><select class="project-part"><option>胸</option><option>背</option><option>腿</option><option>肩</option><option>腹</option></select></div>
+                </div>
+                <div class="sub-items">
+                    <div class="form-group"><label>重量 (kg)</label><input type="number" class="weight" min="0" step="0.5"></div>
+                    <div class="form-group"><label>组数</label><input type="number" class="sets" min="1"></div>
+                    <div class="form-group"><label>每组数量</label><input type="number" class="reps" min="1"></div>
+                    <div class="form-group"><label>感受</label><select class="feeling"><option>轻松</option><option selected>适中</option><option>吃力</option><option>非常吃力</option></select></div>
+                    <div class="form-group"><label>做功 (J)</label><input type="number" class="work" readonly><div class="work-display">做功: <span class="work-value">0</span> J</div></div>
+                    <div class="form-group"><label>补剂</label><input type="text" class="supplement" placeholder="例如：蛋白粉"></div>
+                </div>
+            `;
+            addProjectListeners(div);
+            return div;
+        }
+        addBtn.addEventListener('click', () => projectsContainer.appendChild(createEmptyProject()));
+        removeBtn.addEventListener('click', () => {
+            const items = projectsContainer.querySelectorAll('.project-item');
+            if (items.length > 1) items[items.length - 1].remove();
+            else alert('至少保留一个项目');
+        });
+
+        // 全局AI分析
+        globalAIBtn.addEventListener('click', () => {
+            const projects = getCurrentProjectsData();
+            if (!projects.length) { globalAIDisplay.textContent = '⚠️ 请先填写至少一个完整的训练项目。'; return; }
+            globalAIDisplay.textContent = '⏳ 正在生成本地智能报告...';
+            setTimeout(() => {
+                try { globalAIDisplay.textContent = generateGlobalReport(projects, getRecords(), workoutDate.value); }
+                catch (e) { globalAIDisplay.textContent = '生成报告出错: ' + e.message; }
+            }, 200);
+        });
+
+        // 保存记录
+        saveBtn.addEventListener('click', () => {
+            const date = workoutDate.value, count = parseInt(workoutCount.value);
+            if (!date || !count) return alert('请填写日期和第几次健身');
+            const projects = getCurrentProjectsData();
+            if (!projects.length) return alert('请填写至少一个完整项目');
+            const timePassed = getTimePassedSinceFirst(date);
+            const records = getRecords();
+            records.push({ date, projects, count, timePassed, timestamp: new Date().toISOString() });
+            saveRecords(records);
+            workoutCount.value = count + 1;
+            projectsContainer.innerHTML = ''; projectsContainer.appendChild(createEmptyProject());
+            globalAIDisplay.textContent = '点击上方按钮，AI将综合分析本次所有训练项目，并结合历史数据给出专业建议。';
+            alert('记录保存成功！');
+        });
+
+        // 渲染历史记录
+        function renderHistory() {
+            const records = getRecords();
+            if (!records.length) {
+                emptyHistory.style.display = 'block';
+                historyTable.style.display = 'none';
+                batchToolbar.style.display = 'none';
+                return;
+            }
+            emptyHistory.style.display = 'none';
+            historyTable.style.display = 'table';
+            historyBody.innerHTML = '';
+            records.sort((a, b) => new Date(b.date) - new Date(a.date));
+            records.forEach((rec, idx) => {
+                const row = historyBody.insertRow();
+                const chkCell = row.insertCell(0);
+                const chk = document.createElement('input'); chk.type = 'checkbox'; chk.dataset.index = idx;
+                chk.checked = selectedIndices.has(idx);
+                chk.addEventListener('change', e => {
+                    e.target.checked ? selectedIndices.add(idx) : selectedIndices.delete(idx);
+                    updateBatchUI();
+                    row.classList.toggle('selected', e.target.checked);
+                });
+                chkCell.appendChild(chk);
+                row.insertCell(1).textContent = rec.date;
+                row.insertCell(2).innerHTML = rec.projects.map(p => `${p.name} (${p.part}): ${p.sets}×${p.reps}, ${p.weight}kg`).join('<br>');
+                row.insertCell(3).textContent = `第${rec.count}次`;
+                row.insertCell(4).textContent = rec.timePassed;
+                const act = row.insertCell(5);
+                const editBtn = document.createElement('button'); editBtn.textContent = '编辑'; editBtn.className = 'btn btn-warning';
+                editBtn.onclick = () => openEditModal(idx);
+                act.appendChild(editBtn);
+                if (selectedIndices.has(idx)) row.classList.add('selected');
+            });
+            updateBatchUI();
+        }
+        function updateBatchUI() {
+            const cnt = selectedIndices.size;
+            selectedCountSpan.textContent = `已选择 ${cnt} 条`;
+            batchToolbar.style.display = cnt ? 'flex' : 'none';
+            const total = getRecords().length;
+            selectAllCheck.checked = cnt === total && total > 0;
+            selectAllCheck.indeterminate = cnt > 0 && cnt < total;
+        }
+        function openEditModal(index) {
+            const records = getRecords();
+            const rec = records[index];
+            if (!rec) return;
+            currentEditIndex = index;
+            editDate.value = rec.date;
+            editCount.value = rec.count;
+            editProjectsContainer.innerHTML = '';
+            rec.projects.forEach(proj => {
+                const div = document.createElement('div'); div.className = 'project-item';
+                div.innerHTML = `
+                    <div class="project-item-header">
+                        <div class="form-group"><label>项目名称</label><input type="text" class="project-name" value="${escapeHtml(proj.name)}"></div>
+                        <div class="form-group"><label>锻炼部位</label><select class="project-part">${['胸','背','腿','肩','腹'].map(p => `<option ${p===proj.part?'selected':''}>${p}</option>`).join('')}</select></div>
+                    </div>
+                    <div class="sub-items">
+                        <div class="form-group"><label>重量 (kg)</label><input type="number" class="weight" value="${proj.weight}"></div>
+                        <div class="form-group"><label>组数</label><input type="number" class="sets" value="${proj.sets}"></div>
+                        <div class="form-group"><label>每组数量</label><input type="number" class="reps" value="${proj.reps}"></div>
+                        <div class="form-group"><label>感受</label><select class="feeling">${['轻松','适中','吃力','非常吃力'].map(f => `<option ${f===proj.feeling?'selected':''}>${f}</option>`).join('')}</select></div>
+                        <div class="form-group"><label>做功 (J)</label><input type="number" class="work" value="${proj.work}" readonly><div class="work-display">做功: <span class="work-value">${proj.work}</span> J</div></div>
+                        <div class="form-group"><label>补剂</label><input type="text" class="supplement" value="${escapeHtml(proj.supplement||'')}"></div>
+                    </div>
+                `;
+                editProjectsContainer.appendChild(div);
+                addProjectListeners(div);
+            });
+            editModal.classList.add('active');
+        }
+        function escapeHtml(s) { return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
+        editForm.addEventListener('submit', e => {
+            e.preventDefault();
+            const records = getRecords();
+            const rec = records[currentEditIndex];
+            if (!rec) return;
+            rec.date = editDate.value;
+            rec.count = parseInt(editCount.value);
+            const newProjects = [];
+            editProjectsContainer.querySelectorAll('.project-item').forEach(item => {
+                const name = item.querySelector('.project-name').value.trim();
+                if (!name) return;
+                newProjects.push({
+                    name, part: item.querySelector('.project-part').value,
+                    weight: parseFloat(item.querySelector('.weight').value) || 0,
+                    sets: parseInt(item.querySelector('.sets').value) || 0,
+                    reps: parseInt(item.querySelector('.reps').value) || 0,
+                    feeling: item.querySelector('.feeling').value,
+                    work: parseInt(item.querySelector('.work').value) || 0,
+                    supplement: item.querySelector('.supplement').value || ''
+                });
+            });
+            rec.projects = newProjects;
+            rec.timePassed = getTimePassedSinceFirst(rec.date);
+            saveRecords(records);
+            editModal.classList.remove('active');
+            renderHistory();
+            alert('记录已更新');
+        });
+        deleteRecordBtn.addEventListener('click', () => {
+            if (confirm('永久删除此记录？')) {
+                const records = getRecords();
+                records.splice(currentEditIndex, 1);
+                saveRecords(records);
+                editModal.classList.remove('active');
+                renderHistory();
+                alert('已删除');
+            }
+        });
+        document.querySelectorAll('.close-modal').forEach(b => b.addEventListener('click', () => editModal.classList.remove('active')));
+        editModal.addEventListener('click', e => { if (e.target === editModal) editModal.classList.remove('active'); });
+
+        // 批量操作
+        selectAllCheck.addEventListener('change', e => {
+            const records = getRecords();
+            selectedIndices.clear();
+            if (e.target.checked) records.forEach((_, i) => selectedIndices.add(i));
+            renderHistory();
+        });
+        batchDelete.addEventListener('click', () => {
+            if (!selectedIndices.size) return alert('请先选择记录');
+            if (!confirm(`确定删除 ${selectedIndices.size} 条记录吗？`)) return;
+            const records = getRecords().filter((_, i) => !selectedIndices.has(i));
+            saveRecords(records);
+            selectedIndices.clear();
+            renderHistory();
+            alert('删除成功');
+        });
+        batchEditSuppl.addEventListener('click', () => {
+            if (!selectedIndices.size) return alert('请先选择记录');
+            batchSupplValue.value = '';
+            batchSupplModal.classList.add('active');
+        });
+        confirmBatchSuppl.addEventListener('click', () => {
+            const val = batchSupplValue.value.trim();
+            if (!val) return alert('请输入补剂内容');
+            const records = getRecords();
+            selectedIndices.forEach(i => { if (records[i]) records[i].projects.forEach(p => p.supplement = val); });
+            saveRecords(records);
+            batchSupplModal.classList.remove('active');
+            renderHistory();
+            alert('补剂已批量更新');
+        });
+        const closeBatchModal = () => batchSupplModal.classList.remove('active');
+        cancelBatchSuppl.addEventListener('click', closeBatchModal);
+        closeBatchSuppl.addEventListener('click', closeBatchModal);
+        batchSupplModal.addEventListener('click', e => { if (e.target === batchSupplModal) closeBatchModal(); });
+        cancelBatch.addEventListener('click', () => { selectedIndices.clear(); renderHistory(); });
+
+        // 导入导出
+        exportBtn.addEventListener('click', () => {
+            const records = getRecords();
+            if (!records.length) return alert('无数据可导出');
+            const data = [['日期','项目名称','锻炼部位','重量(kg)','组数','每组数量','感受','做功(J)','补剂','第几次健身','距离第一次健身时间']];
+            records.forEach(r => r.projects.forEach(p => data.push([r.date, p.name, p.part, p.weight, p.sets, p.reps, p.feeling, p.work, p.supplement||'', r.count, r.timePassed])));
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(wb, ws, '健身记录');
+            XLSX.writeFile(wb, `健身记录_${new Date().toISOString().slice(0,19)}.xlsx`);
+        });
+        importBtn.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = ev => {
+                try {
+                    const wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
+                    const ws = wb.Sheets[wb.SheetNames[0]];
+                    const rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
+                    rows.shift();
+                    const records = [];
+                    let cur = null, curDate = null;
+                    rows.forEach(row => {
+                        const date = row[0];
+                        if (date && date !== curDate) {
+                            if (cur) records.push(cur);
+                            cur = { date, projects: [], count: row[9] || 1, timePassed: row[10] || '', timestamp: new Date().toISOString() };
+                            curDate = date;
+                        }
+                        if (cur && row[1]) cur.projects.push({ name: row[1], part: row[2]||'胸', weight: row[3]||0, sets: row[4]||0, reps: row[5]||0, feeling: row[6]||'适中', work: row[7]||0, supplement: row[8]||'' });
+                    });
+                    if (cur) records.push(cur);
+                    saveRecords(records);
+                    renderHistory();
+                    alert(`导入成功，共 ${records.length} 条记录`);
+                } catch (err) { alert('导入失败：'+err.message); }
+                fileInput.value = '';
+            };
+            reader.readAsArrayBuffer(file);
+        });
+
+        // 导航
+        viewHistory.addEventListener('click', () => { inputPage.classList.remove('active'); historyPage.classList.add('active'); renderHistory(); });
+        backInput.addEventListener('click', () => { historyPage.classList.remove('active'); inputPage.classList.add('active'); });
+
+        // 初始化
+        workoutDate.valueAsDate = new Date();
+        updateTimePassedDisplay();
+        setInterval(updateTimePassedDisplay, 60000);
+        document.querySelectorAll('.project-item').forEach(p => addProjectListeners(p));
+        const recs = getRecords();
+        workoutCount.value = recs.length ? recs[recs.length - 1].count + 1 : 1;
+    })();
+</script>
+</body>
+</html>
