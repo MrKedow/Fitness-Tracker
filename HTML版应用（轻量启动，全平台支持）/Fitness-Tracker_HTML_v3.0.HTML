@@ -2,8 +2,8 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>健身数据管理系统 HTML_v3.0</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+    <title>健身数据管理系统 HTML_V3.0</title>
     <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
     <style>
         :root {
@@ -15,117 +15,142 @@
             --success: #28a745;
             --warning: #ffc107;
             --danger: #dc3545;
-            --border-radius: 8px;
-            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --border-radius: 12px;
+            --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
         }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background-color: #f5f7fa; color: var(--dark); line-height: 1.6; font-size: 16px; }
-        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
-        .card { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 25px; margin-bottom: 25px; }
-        h1, h2 { color: var(--primary); margin-bottom: 20px; text-align: center; }
-        h1 { font-size: 2.2rem; position: relative; display: inline-block; width: 100%; }
-        h1:after { content: ''; position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 100px; height: 3px; background: linear-gradient(to right, var(--primary), var(--accent)); border-radius: 3px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 600; }
-        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: var(--border-radius); font-size: 16px; }
-        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 2px rgba(74, 111, 165, 0.2); }
-        .btn { padding: 10px 20px; border: none; border-radius: var(--border-radius); cursor: pointer; font-size: 16px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; transition: all 0.3s; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; }
+        body { background-color: #f5f7fa; color: var(--dark); line-height: 1.5; font-size: 15px; -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 12px; }
+        .card { background: white; border-radius: var(--border-radius); box-shadow: var(--shadow); padding: 18px; margin-bottom: 16px; }
+        h1, h2 { color: var(--primary); margin-bottom: 16px; text-align: center; }
+        h1 { font-size: 1.8rem; position: relative; display: inline-block; width: 100%; }
+        h1:after { content: ''; position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%); width: 60px; height: 3px; background: linear-gradient(to right, var(--primary), var(--accent)); border-radius: 3px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; margin-bottom: 6px; font-weight: 600; font-size: 14px; }
+        input, select, textarea { width: 100%; padding: 12px; border: 1px solid #ddd; border-radius: var(--border-radius); font-size: 15px; background: white; }
+        input:focus, select:focus, textarea:focus { border-color: var(--primary); outline: none; box-shadow: 0 0 0 3px rgba(74, 111, 165, 0.15); }
+        .btn { padding: 10px 18px; border: none; border-radius: var(--border-radius); cursor: pointer; font-size: 14px; font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 6px; transition: all 0.2s; background-color: var(--light); color: var(--dark); }
         .btn-primary { background-color: var(--primary); color: white; }
-        .btn-primary:hover { background-color: var(--secondary); }
+        .btn-primary:hover, .btn-primary:active { background-color: var(--secondary); transform: scale(0.98); }
         .btn-accent { background-color: var(--accent); color: white; }
         .btn-success { background-color: var(--success); color: white; }
         .btn-warning { background-color: var(--warning); color: var(--dark); }
         .btn-danger { background-color: var(--danger); color: white; }
         .btn-outline { background: transparent; border: 2px solid var(--primary); color: var(--primary); }
-        .btn-outline:hover { background: var(--primary); color: white; }
-        .btn-icon { width: 40px; height: 40px; padding: 0; border-radius: 50%; font-size: 20px; }
+        .btn-outline:active { background: var(--primary); color: white; }
+        .btn-icon { width: 44px; height: 44px; padding: 0; border-radius: 50%; font-size: 20px; }
         .page { display: none; }
         .page.active { display: block; }
 
-        .project-controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 15px; }
-        .project-item { border: 1px solid #eaeaea; border-radius: var(--border-radius); padding: 20px; margin-bottom: 20px; background: var(--light); }
-        .project-item-header { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
-        .sub-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; }
-        .work-display { background: #e8f5e8; padding: 10px; border-radius: var(--border-radius); text-align: center; margin-top: 10px; font-weight: bold; color: #2e7d32; }
+        /* 录入页样式 */
+        .project-controls { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; }
+        .project-item { border: 1px solid #eaeaea; border-radius: var(--border-radius); padding: 16px; margin-bottom: 16px; background: var(--light); }
+        .project-item-header { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .sub-items { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; }
+        .work-display { background: #e8f5e8; padding: 10px; border-radius: var(--border-radius); text-align: center; margin-top: 10px; font-weight: bold; color: #2e7d32; font-size: 14px; }
         .optional { color: #6c757d; font-weight: normal; }
-        .time-display { font-size: 1.1rem; padding: 15px; background-color: #e9f7fe; border-radius: var(--border-radius); text-align: center; margin-bottom: 20px; }
+        .time-display { font-size: 1rem; padding: 12px; background-color: #e9f7fe; border-radius: var(--border-radius); text-align: center; margin-bottom: 16px; }
         .time-value { font-weight: bold; color: var(--accent); }
-        .ai-global-section { margin-top: 30px; padding: 20px; background: #f0f8ff; border-radius: var(--border-radius); border-left: 6px solid var(--primary); }
-        .ai-suggestion-display { background: #fff; padding: 20px; border-radius: var(--border-radius); margin-top: 15px; min-height: 150px; white-space: pre-wrap; border: 1px solid #e0e0e0; max-height: 500px; overflow-y: auto; font-size: 16px; }
+        .ai-global-section { margin-top: 20px; padding: 16px; background: #f0f8ff; border-radius: var(--border-radius); border-left: 4px solid var(--primary); }
+        .ai-suggestion-display { background: #fff; padding: 16px; border-radius: var(--border-radius); margin-top: 12px; min-height: 120px; white-space: pre-wrap; border: 1px solid #e0e0e0; max-height: 400px; overflow-y: auto; font-size: 14px; }
 
-        .history-layout { display: flex; gap: 24px; align-items: flex-start; }
-        .history-left { flex: 2; min-width: 0; }
-        .history-right { flex: 1; min-width: 280px; display: flex; flex-direction: column; }
-        .coach-card { text-align: center; display: flex; flex-direction: column; height: 100%; }
-        .coach-image-container { width: 100%; height: 180px; border-radius: 16px; background: var(--light); display: flex; align-items: center; justify-content: center; margin-bottom: 16px; cursor: pointer; user-select: none; overflow: hidden; }
-        .coach-image { font-size: 80px; line-height: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+        /* 历史页 - 移动优先：上下布局 */
+        .history-stack { display: flex; flex-direction: column; gap: 16px; }
+        .history-table-wrapper { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .history-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 500px; }
+        .history-table th, .history-table td { padding: 10px 8px; text-align: left; border-bottom: 1px solid #eee; }
+        .history-table th { background: var(--primary); color: white; font-weight: 600; }
+        .history-table tr.selected { background: #d4edda; }
+        .batch-toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 12px; align-items: center; flex-wrap: wrap; }
+        .checkbox-col { width: 36px; text-align: center; }
+        .empty-state { text-align: center; padding: 40px 20px; color: #6c757d; font-size: 14px; }
+
+        .nav-buttons { display: flex; justify-content: center; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+        
+        /* 陪练卡片 - 移动端独立显示 */
+        .coach-card { text-align: center; }
+        .coach-image-container { width: 140px; height: 140px; margin: 0 auto 12px; border-radius: 20px; background: var(--light); display: flex; align-items: center; justify-content: center; cursor: pointer; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .coach-image { font-size: 70px; line-height: 1; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
         .coach-image img { width: 100%; height: 100%; object-fit: contain; }
-        .coach-hint { font-size: 14px; color: #666; margin-top: 8px; }
-        .response-wrapper { position: relative; flex: 1; min-height: 200px; margin-top: 16px; }
-        .coach-response { background: var(--light); border-radius: 12px; padding: 16px; height: 100%; max-height: calc(100vh - 380px); overflow-y: auto; white-space: pre-wrap; text-align: left; border-left: 4px solid var(--primary); font-size: 15px; line-height: 1.5; scroll-behavior: smooth; }
+        .coach-hint { font-size: 12px; color: #666; margin-top: 6px; }
+        .response-wrapper { position: relative; margin-top: 16px; }
+        .coach-response { background: var(--light); border-radius: 12px; padding: 16px; height: auto; max-height: 400px; overflow-y: auto; white-space: pre-wrap; text-align: left; border-left: 4px solid var(--primary); font-size: 14px; line-height: 1.5; }
         .scroll-indicator {
-            position: absolute;
+            position: sticky;
             bottom: 12px;
             right: 12px;
-            background: rgba(74, 111, 165, 0.85);
+            float: right;
+            background: rgba(74, 111, 165, 0.9);
             color: white;
             width: 36px;
             height: 36px;
             border-radius: 50%;
-            display: flex;
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            font-size: 20px;
-            transition: transform 0.2s, background 0.2s;
-            z-index: 10;
+            font-size: 18px;
+            transition: all 0.2s;
             backdrop-filter: blur(4px);
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            margin-top: -40px;
+            margin-right: 8px;
         }
-        .scroll-indicator:hover { background: var(--primary); transform: scale(1.05); }
+        .scroll-indicator:active { transform: scale(0.95); }
         @keyframes gentleBounce {
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(4px); }
         }
         .scroll-indicator.bounce { animation: gentleBounce 1s ease-in-out infinite; }
 
-        .history-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 15px; }
-        .history-table th, .history-table td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #ddd; }
-        .history-table th { background: var(--primary); color: white; }
-        .history-table tr.selected { background: #d4edda; }
-        .batch-toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 10px; align-items: center; }
-        .checkbox-col { width: 40px; text-align: center; }
-        .empty-state { text-align: center; padding: 40px; color: #6c757d; font-size: 16px; }
-
-        .nav-buttons { display: flex; justify-content: center; gap: 15px; margin-top: 30px; flex-wrap: wrap; }
-
-        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 20px; }
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; padding: 16px; }
         .modal.active { display: flex; }
-        .modal-content { background: white; border-radius: var(--border-radius); width: 90%; max-width: 700px; max-height: 85vh; overflow-y: auto; padding: 25px; position: relative; font-size: 16px; }
-        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; position: sticky; top: 0; background: white; padding: 10px 0; z-index: 10; }
-        .modal-title { font-size: 1.5rem; color: var(--primary); }
-        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; }
+        .modal-content { background: white; border-radius: var(--border-radius); width: 100%; max-width: 500px; max-height: 85vh; overflow-y: auto; padding: 20px; position: relative; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; position: sticky; top: 0; background: white; padding-bottom: 8px; }
+        .modal-title { font-size: 1.3rem; color: var(--primary); }
+        .close-modal { background: none; border: none; font-size: 24px; cursor: pointer; padding: 0 8px; }
         .preset-list { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 15px 0; }
-        .preset-item { padding: 12px; border: 2px solid #ddd; border-radius: 12px; cursor: pointer; text-align: center; transition: all 0.2s; }
-        .preset-item:hover { border-color: var(--primary); background: #f0f4ff; }
+        .preset-item { padding: 10px; border: 2px solid #ddd; border-radius: 12px; cursor: pointer; text-align: center; }
         .preset-item.selected { border-color: var(--primary); background: #e0ebff; }
         .preset-emoji { font-size: 32px; }
-        .preset-item img { width: 50px; height: 50px; object-fit: contain; }
+        .preset-item img { width: 45px; height: 45px; object-fit: contain; }
 
         @keyframes spin { to { transform: rotate(360deg); } }
-        .loading-spinner { display: inline-block; width: 20px; height: 20px; border: 3px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--primary); animation: spin 0.8s linear infinite; margin-right: 8px; }
+        .loading-spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: var(--primary); animation: spin 0.6s linear infinite; margin-right: 8px; vertical-align: middle; }
+
+        /* 平板及以上设备：恢复左右布局 */
+        @media (min-width: 768px) {
+            .container { padding: 20px; }
+            .card { padding: 24px; }
+            .history-stack { flex-direction: row; gap: 24px; align-items: flex-start; }
+            .history-left { flex: 2; min-width: 0; }
+            .history-right { flex: 1; min-width: 280px; position: sticky; top: 20px; }
+            .coach-image-container { width: 100%; height: 200px; }
+            .coach-image { font-size: 80px; }
+            .history-table { font-size: 14px; min-width: auto; }
+        }
+
+        /* 小屏幕优化 */
+        @media (max-width: 480px) {
+            .btn { padding: 8px 14px; font-size: 13px; }
+            .project-item-header { grid-template-columns: 1fr; gap: 10px; }
+            .sub-items { grid-template-columns: 1fr; }
+            .nav-buttons button { flex: 1; min-width: 120px; }
+            .batch-toolbar { justify-content: space-between; }
+            .batch-toolbar .btn { padding: 6px 10px; font-size: 12px; }
+        }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- ========== 录入页面 ========= -->
+    <!-- 录入页面 -->
     <div id="input-page" class="page active">
-        <h1>🏋️ 健身数据管理系统 HTML_v3.0</h1>
+        <h1>🏋️ 健身数据管理系统 HTML_V3.0</h1>
         <div class="card" style="background-color: #f0f4f8; border-left: 4px solid var(--primary);">
             <h3>⚙️ 设置第一次健身时间</h3>
-            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                <div class="form-group" style="flex:1"><label>日期</label><input type="date" id="first-date"></div>
-                <div class="form-group" style="flex:1"><label>时间</label><input type="time" id="first-time" step="1"></div>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <div class="form-group" style="flex:1; min-width: 140px;"><label>日期</label><input type="date" id="first-date"></div>
+                <div class="form-group" style="flex:1; min-width: 120px;"><label>时间</label><input type="time" id="first-time" step="1"></div>
             </div>
             <button id="save-first-workout" class="btn btn-primary">保存设置</button>
         </div>
@@ -155,21 +180,22 @@
             </div>
             <div class="form-group"><label>#️⃣ 第几次健身</label><input type="number" id="workout-count" min="1" required></div>
             <div class="ai-global-section">
-                <div style="display: flex; justify-content: space-between;"><h3 style="margin:0">🤖 AI 训练汇总分析</h3><button id="global-ai-btn" class="btn btn-primary">✨ 生成智能报告</button></div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;"><h3 style="margin:0; font-size:1.1rem;">🤖 AI 训练汇总分析</h3><button id="global-ai-btn" class="btn btn-primary">✨ 生成智能报告</button></div>
                 <div id="global-ai-display" class="ai-suggestion-display">点击上方按钮，AI将综合分析本次所有项目。</div>
             </div>
-            <div class="form-group"><h2>⏰ 距离第一次决定健身已过时间</h2><div class="time-display">已坚持: <span id="time-passed" class="time-value">计算中...</span></div></div>
+            <div class="form-group"><h2 style="font-size:1.2rem;">⏰ 距离第一次决定健身已过时间</h2><div class="time-display">已坚持: <span id="time-passed" class="time-value">计算中...</span></div></div>
             <div class="nav-buttons">
                 <button id="save-btn" class="btn btn-success">💾 保存记录</button>
-                <button id="view-history" class="btn btn-outline">📜 来时的路•AI陪练</button>
+                <button id="view-history" class="btn btn-outline">📜 来时的路·AI陪练</button>
             </div>
         </div>
     </div>
 
-    <!-- ========== 历史记录页面 ========= -->
+    <!-- 历史记录页面 - 移动端上下布局，平板左右布局 -->
     <div id="history-page" class="page">
         <h1>📜 来时的路 · AI 陪练</h1>
-        <div class="history-layout">
+        <div class="history-stack">
+            <!-- 左侧历史表格 -->
             <div class="history-left">
                 <div class="card">
                     <div id="batch-toolbar" class="batch-toolbar" style="display: none;">
@@ -178,7 +204,7 @@
                         <button id="batch-edit-supplement" class="btn btn-primary">批量修改补剂</button>
                         <button id="cancel-batch" class="btn btn-outline">取消选择</button>
                     </div>
-                    <div style="overflow-x: auto;">
+                    <div class="history-table-wrapper">
                         <table class="history-table" id="history-table" style="display: none;">
                             <thead><tr><th class="checkbox-col"><input type="checkbox" id="select-all-checkbox"></th><th>日期</th><th>项目</th><th>第几次</th><th>坚持时间</th><th>操作</th></tr></thead>
                             <tbody id="history-body"></tbody>
@@ -186,24 +212,26 @@
                     </div>
                     <div id="empty-history" class="empty-state"><i>📊</i><h3>暂无健身记录</h3><p>开始记录你的第一次健身数据吧！</p></div>
                 </div>
-                <div class="nav-buttons" style="margin-top: 16px;">
+                <div class="nav-buttons" style="margin-top: 12px;">
                     <button id="export-btn" class="btn btn-success">📎 导出Excel</button>
                     <button id="import-btn" class="btn btn-outline">📂 读入Excel</button>
                     <button id="back-to-input" class="btn btn-outline">✏️ 返回记录</button>
                 </div>
             </div>
+
+            <!-- 右侧AI陪练（移动端在下方） -->
             <div class="history-right">
                 <div class="card coach-card">
-                    <h3 style="margin-bottom: 12px;">🤖 AI 陪练</h3>
+                    <h3 style="margin-bottom: 10px;">🤖 AI 陪练</h3>
                     <div id="coach-image-container" class="coach-image-container" title="左键分析 · 右键菜单">
                         <div id="coach-display" class="coach-image">🦁</div>
                     </div>
-                    <div class="coach-hint">👆 单击分析全部记录<br>👇 右键更换形象</div>
+                    <div class="coach-hint">👆 单击分析全部记录<br>👇 右键/长按 更换形象</div>
                     <div class="response-wrapper">
                         <div id="coach-response" class="coach-response" style="display: none;"></div>
                         <div id="scroll-indicator" class="scroll-indicator bounce">↓</div>
                     </div>
-                    <div id="coach-loading" style="display: none; margin-top: 16px;"><span class="loading-spinner"></span> AI 正在分析历史数据...</div>
+                    <div id="coach-loading" style="display: none; margin-top: 12px;"><span class="loading-spinner"></span> AI 正在分析历史数据...</div>
                 </div>
             </div>
         </div>
@@ -218,7 +246,7 @@
             <div class="form-group"><label>日期</label><input type="date" id="edit-date" required></div>
             <div id="edit-projects-container"></div>
             <div class="form-group"><label>第几次健身</label><input type="number" id="edit-count" min="1" required></div>
-            <div class="modal-actions"><button type="button" id="delete-record" class="btn btn-danger">删除</button><button type="submit" class="btn btn-success">保存</button></div>
+            <div class="modal-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;"><button type="button" id="delete-record" class="btn btn-danger">删除</button><button type="submit" class="btn btn-success">保存</button></div>
         </form>
     </div>
 </div>
@@ -228,13 +256,13 @@
     <div class="modal-content">
         <div class="modal-header"><h3>批量修改补剂</h3><button class="close-modal" id="close-batch-supplement">&times;</button></div>
         <div class="form-group"><label>补剂内容</label><input type="text" id="batch-supplement-value" placeholder="蛋白粉、肌酸"></div>
-        <div class="modal-actions"><button id="confirm-batch-supplement" class="btn btn-success">确认</button><button id="cancel-batch-supplement" class="btn btn-outline">取消</button></div>
+        <div class="modal-actions" style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px;"><button id="confirm-batch-supplement" class="btn btn-success">确认</button><button id="cancel-batch-supplement" class="btn btn-outline">取消</button></div>
     </div>
 </div>
 
 <!-- 切换形象菜单 -->
 <div id="coach-menu" class="modal" style="background: transparent;">
-    <div class="modal-content" style="max-width: 360px; padding: 20px;">
+    <div class="modal-content" style="max-width: 340px; padding: 20px;">
         <h3 style="margin-bottom: 16px;">🎨 选择陪练形象</h3>
         <div id="preset-images-grid" class="preset-list"></div>
         <button id="upload-custom-image" class="btn btn-outline" style="width: 100%; margin-top: 12px;">📁 上传自定义图片</button>
@@ -252,115 +280,39 @@
         const WORKOUT_DISTANCES = { '胸':0.6, '背':0.6, '腿':0.7, '肩':0.6 };
         const ABDOMINAL_WORK_PER_REP = 65 * 9.8 * 0.3;
 
-        // ---------- 超大规模语料库（组合数 > 100亿）----------
+        // 语料库（保持原样，精简版）
         const COACH_RULES = {
-            openings: [
-                "🔍 让我看看你今天的训练数据～", "📊 汇总分析完毕！这是你的专属报告：", 
-                "👋 嘿，伙伴！来看今天的训练总结：", "💭 数据不会说谎，让我为你解读：",
-                "🎯 专注分析中... 发现了一些有趣的规律！", "⚡ 能量满满！来看看你的训练报告：",
-                "🏆 你的努力我都看在眼里，这是分析结果：", "🧠 深度分析完成，以下是重点：",
-                "📈 数据不会骗人，你正在变强！", "🔥 燃烧吧！这是你的训练报告：",
-                "💪 又一天过去了，来看看进步吧：", "🤔 让我仔细看看... 有意思！",
-                "✨ 恭喜你完成训练！这是分析：", "🎉 新纪录？一起来看看：", "📝 训练日志分析完毕："
-            ],
+            openings: ["🔍 让我看看你今天的训练数据～", "📊 汇总分析完毕！这是你的专属报告：", "👋 嘿，伙伴！来看今天的训练总结：", "💭 数据不会说谎，让我为你解读：", "🎯 专注分析中... 发现了一些有趣的规律！", "⚡ 能量满满！来看看你的训练报告：", "🏆 你的努力我都看在眼里，这是分析结果：", "📝 训练日志分析完毕："],
             overall: {
-                highVolume: [
-                    "🔥 今天训练容量相当大！总做功达到${work}千焦，注意充分休息和营养补充。",
-                    "💪 高强度训练日！${work}千焦的输出证明了你的努力，记得补充蛋白质。",
-                    "⚡ 惊人的训练量！${work}千焦，你是野兽吗？注意恢复。",
-                    "🏋️ 今天练得很猛，${work}千焦的负荷，小心过度训练。",
-                    "🚀 火箭般的训练容量！${work}千焦，继续加油但别受伤。"
-                ],
-                moderate: [
-                    "📊 训练容量适中，${work}千焦的做功既能刺激肌肉又不会过度疲劳。",
-                    "⚖️ 今天容量控制得很好，${work}千焦是可持续进步的黄金区间。",
-                    "🎯 恰到好处的训练量，${work}千焦，长期坚持效果最佳。",
-                    "✅ 容量合理，${work}千焦，下次可以尝试稍微加一点重量。",
-                    "📉 今天的容量${work}千焦，属于优质训练区间。"
-                ],
-                lowVolume: [
-                    "🌱 今天容量偏低，${work}千焦。如果状态不错，下次可以适当增加组数或重量。",
-                    "📌 轻量训练日也是恢复的一部分，${work}千焦有助于保持运动习惯。",
-                    "🧘 低容量日适合技术打磨，${work}千焦也能积累有效刺激。",
-                    "💤 今天比较轻松，${work}千焦，可能是减载日？",
-                    "🚶 容量不高但坚持就是胜利，${work}千焦，明天可以加量。"
-                ]
+                highVolume: ["🔥 今天训练容量相当大！总做功达到${work}千焦，注意充分休息。", "💪 高强度训练日！${work}千焦的输出证明了你的努力。"],
+                moderate: ["📊 训练容量适中，${work}千焦的做功既能刺激肌肉又不会过度疲劳。", "⚖️ 今天容量控制得很好，${work}千焦是可持续进步的黄金区间。"],
+                lowVolume: ["🌱 今天容量偏低，${work}千焦。如果状态不错，下次可以适当增加组数或重量。", "🚶 容量不高但坚持就是胜利，${work}千焦，明天可以加量。"]
             },
             partBalance: {
-                good: ["✅ 今天训练部位覆盖了${parts}，非常全面！","🎯 部位选择很均衡，${parts}都得到了刺激。","🏅 完美的分化训练，${parts}一个没落下。","🌈 雨露均沾，${parts}都练到了，优秀！"],
-                missing: ["⚠️ 注意到今天没有训练${parts}，下次可以考虑加入以保持平衡。","🔧 建议补上${parts}的训练，避免肌力失衡。","📌 缺少${parts}的训练，长期可能导致体态问题。","💡 下次可以加入${parts}的动作，让身体全面发展。"]
+                good: ["✅ 今天训练部位覆盖了${parts}，非常全面！", "🎯 部位选择很均衡，${parts}都得到了刺激。"],
+                missing: ["⚠️ 注意到今天没有训练${parts}，下次可以考虑加入以保持平衡。", "🔧 建议补上${parts}的训练，避免肌力失衡。"]
             },
             perExercise: {
-                improved: ["📈 ${name}：重量比上次提升${diff}kg！这就是渐进超负荷。","🚀 ${name}进步明显，${diff}kg的提升证明了你的努力。","💪 ${name}：+${diff}kg，肌肉在尖叫！","🏆 ${name}突破自我，+${diff}kg，离目标更近了。","✨ ${name}稳步上升，+${diff}kg，继续保持！"],
-                declined: ["📉 ${name}：重量略有下降，可能是状态波动，别灰心。","🌊 ${name}出现回落，注意休息和动作质量。","💤 ${name}掉了${diff}kg，检查一下恢复情况。","🔄 ${name}重量下降，也许是减载或疲劳。","😔 ${name}退步了${diff}kg，下次争取练回来。"],
-                same: ["🔄 ${name}：重量与上次持平，可以考虑下次增加2.5kg或做一组。","📊 ${name}进入平台期？试试改变节奏或增加容量。","⚖️ ${name}重量不变，可以尝试加一组递减组。","🎯 ${name}持平，先巩固动作模式再加重。","🔁 ${name}没有变化，不妨换一个变式刺激一下。"],
-                first: ["✨ ${name}：这是新动作，先建立动作模式，再追求重量。","🌟 首次记录${name}，打好基础最重要。","📝 ${name}第一次出现，记住这个起点。","🎯 新动作${name}，建议先用轻重量熟悉发力。","💡 ${name}首次加入，之后可以追踪进步。"]
+                improved: ["📈 ${name}：重量比上次提升${diff}kg！这就是渐进超负荷。", "🚀 ${name}进步明显，${diff}kg的提升证明了你的努力。"],
+                declined: ["📉 ${name}：重量略有下降，可能是状态波动，别灰心。", "🌊 ${name}出现回落，注意休息和动作质量。"],
+                same: ["🔄 ${name}：重量与上次持平，可以考虑下次增加2.5kg或做一组。", "📊 ${name}进入平台期？试试改变节奏或增加容量。"],
+                first: ["✨ ${name}：这是新动作，先建立动作模式，再追求重量。", "🌟 首次记录${name}，打好基础最重要。"]
             },
-            predictions: [
-                "📊 按当前进步速度，「${name}」预计${weeks}周后可达到 ${target} kg。",
-                "🎯 趋势预测：${name}下个月有望突破 ${target} kg。",
-                "📈 线性预测显示，${name}在${weeks}周后可能达到${target}kg。"
-            ],
-            encouragements: [
-                "✨ 每一次力竭都是成长的信号，继续加油！", "🌟 肌肉在休息时生长，好好睡觉和补充蛋白质。",
-                "💫 你已经走在正确的路上了，剩下的交给时间。", "😊 今天也要带着微笑去训练哦！",
-                "🏔️ 阿诺德说：'最后一组才是真正的开始'。", "💎 罗尼·库尔曼：'人人都想练健美，但没人想举重'。",
-                "🦁 像野兽一样训练，像国王一样饮食，像婴儿一样睡眠。", "🎯 多里安·耶茨：'强度比容量更重要'。",
-                "💪 李·哈尼：'刺激肌肉，而不是摧毁它'。", "🏆 弗兰克·赞恩：'对称和比例比块头更重要'。",
-                "⚡ 凯·格林：'念动一致是关键'。", "🔥 杰夫·卡瓦利尔：'疼痛不是软弱离开身体，是愚蠢进入身体'。",
-                "🌟 你今天流的汗，是明天别人羡慕的泪。", "💯 坚持就是胜利，你已经超过了昨天的自己。",
-                "🚀 继续前进，你的极限是天空！"
-            ],
-            tips: [
-                "💡 练后30分钟内补充快碳+蛋白质，有助于肌肉恢复。",
-                "💡 如果关节不适，降低重量增加控制感。",
-                "💡 记录感受很重要，帮你找到最适合的训练节奏。",
-                "💡 渐进超负荷不只有加重，增加次数、组数、减少休息都是进步。",
-                "💡 研究显示，每组6-12次最有利于肌肥大。",
-                "💡 复合动作（深蹲、卧推、硬拉）应该是训练的核心。",
-                "💡 布拉德·舍恩菲尔德三大肌肥大机制：机械张力、代谢压力、肌肉损伤。",
-                "💡 肌酸是被研究最充分、最安全有效的补剂之一。",
-                "💡 减载周每4-8周安排一次，让关节和神经系统充分恢复。",
-                "💡 训练前动态热身，训练后静态拉伸，预防受伤。"
-            ],
-            weekSummary: [
-                "📆 本周共训练${weekSessions}次，总做功${weekWorkKJ}千焦。",
-                "🗓️ 这周你完成了${weekSessions}次训练，累计${weekWorkKJ}千焦输出。",
-                "📅 本周打卡${weekSessions}天，总工作量${weekWorkKJ}千焦。",
-                "⏰ 本周出勤${weekSessions}次，总容量${weekWorkKJ}千焦。",
-                "📊 周报：训练${weekSessions}次，总做功${weekWorkKJ}千焦。",
-                "🏅 本周总结：${weekSessions}次训练，${weekWorkKJ}千焦总负荷。"
-            ],
-            historySummary: [
-                "🏆 自首次健身以来，累计训练${totalSessions}次，总组数${totalSets}组，总做功${totalWorkKJ}千焦。",
-                "📜 从开始到现在，你一共完成了${totalSessions}次训练，${totalSets}组动作，输出${totalWorkKJ}千焦。",
-                "💎 健身以来总数据：${totalSessions}次，${totalSets}组，${totalWorkKJ}千焦。",
-                "🎯 长期统计：训练${totalSessions}次，组数${totalSets}，做功${totalWorkKJ}千焦。",
-                "📈 累计：${totalSessions}次训练，${totalSets}组，总容量${totalWorkKJ}千焦。",
-                "🏔️ 你走过的路：${totalSessions}次，${totalSets}组，${totalWorkKJ}千焦，每一步都算数。"
-            ],
-            weekPartAdvice: [
-                "本周训练部位：${weekParts}。${missingPartsMsg}",
-                "周部位覆盖：${weekParts}。${missingPartsMsg}"
-            ]
+            predictions: ["📊 按当前进步速度，「${name}」预计${weeks}周后可达到 ${target} kg。", "🎯 趋势预测：${name}下个月有望突破 ${target} kg。"],
+            encouragements: ["✨ 每一次力竭都是成长的信号，继续加油！", "🌟 肌肉在休息时生长，好好睡觉和补充蛋白质。", "💫 你已经走在正确的路上了，剩下的交给时间。", "🏔️ 阿诺德说：'最后一组才是真正的开始'。"],
+            tips: ["💡 练后30分钟内补充快碳+蛋白质，有助于肌肉恢复。", "💡 记录感受很重要，帮你找到最适合的训练节奏。", "💡 渐进超负荷不只有加重，增加次数、组数、减少休息都是进步。", "💡 复合动作（深蹲、卧推、硬拉）应该是训练的核心。"],
+            weekSummary: ["📆 本周共训练${weekSessions}次，总做功${weekWorkKJ}千焦。", "📊 周报：训练${weekSessions}次，总做功${weekWorkKJ}千焦。"],
+            historySummary: ["🏆 自首次健身以来，累计训练${totalSessions}次，总组数${totalSets}组，总做功${totalWorkKJ}千焦。", "📜 从开始到现在，你一共完成了${totalSessions}次训练，${totalSets}组动作，输出${totalWorkKJ}千焦。"],
+            weekPartAdvice: ["本周训练部位：${weekParts}。${missingPartsMsg}", "周部位覆盖：${weekParts}。${missingPartsMsg}"]
         };
-
-        // 频率评语函数（根据次数返回不同评语，避免三元表达式）
-        function getFrequencyComment(sessions) {
-            const comments = [
-                { min: 4, text: "非常勤奋！注意休息。" },
-                { min: 3, text: "频率很棒！" },
-                { min: 2, text: "保持住，继续加油。" },
-                { min: 1, text: "还可以再努力一次。" },
-                { min: 0, text: "建议增加训练频率。" }
-            ];
-            for (let c of comments) {
-                if (sessions >= c.min) return c.text;
-            }
-            return "继续保持！";
-        }
-
         function rnd(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function getFrequencyComment(sessions) {
+            if (sessions >= 4) return "非常勤奋！注意休息。";
+            if (sessions >= 3) return "频率很棒！";
+            if (sessions >= 2) return "保持住，继续加油。";
+            if (sessions >= 1) return "还可以再努力一次。";
+            return "建议增加训练频率。";
+        }
 
         // 存储操作
         function getRecords() { return JSON.parse(localStorage.getItem('fitnessRecords')||'[]'); }
@@ -379,7 +331,6 @@
             document.getElementById('time-passed').textContent = `${d}天 ${h}小时 ${m}分钟`;
         }
 
-        // 做功计算
         function calculateWork(part, weight, sets, reps) {
             if (part === '腹') return Math.round(sets * reps * ABDOMINAL_WORK_PER_REP);
             return Math.round(weight * 9.8 * (WORKOUT_DISTANCES[part] || 0.6) * sets * reps);
@@ -445,7 +396,6 @@
             return intercept + slope*n;
         }
 
-        // 录入页报告
         function generateGlobalReport(currentProjects, allRecords, currentDate) {
             if (!currentProjects.length) return '⚠️ 请先填写至少一个训练项目。';
             let report = rnd(COACH_RULES.openings) + '\n\n';
@@ -462,8 +412,7 @@
                 const start = new Date(now.setDate(now.getDate()-now.getDay()+1));
                 return d>=start;
             }).length;
-            let freqComment = `本周你已经训练了${thisWeek}次，${getFrequencyComment(thisWeek)}`;
-            report += freqComment + '\n\n';
+            report += `本周你已经训练了${thisWeek}次，${getFrequencyComment(thisWeek)}\n\n`;
             report += '📋 项目详细点评：\n';
             for (let p of currentProjects) {
                 const prev = getPreviousWeight(allRecords, p.name, p.part, currentDate);
@@ -487,10 +436,8 @@
             return report;
         }
 
-        // 陪练报告（已彻底修复三元表达式问题）
         function generateHistoryReport(records) {
             if (!records.length) return '暂无历史记录，快去录入第一次训练吧！';
-
             const latest = records[0];
             const today = new Date();
             const dayOfWeek = today.getDay();
@@ -500,23 +447,12 @@
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
             sunday.setHours(23,59,59,999);
-            const weekRecords = records.filter(r => {
-                const d = new Date(r.date);
-                return d >= monday && d <= sunday;
-            });
-
+            const weekRecords = records.filter(r => { const d = new Date(r.date); return d >= monday && d <= sunday; });
             let totalWork = 0, totalSets = 0, totalSessions = records.length;
-            records.forEach(r => {
-                r.projects.forEach(p => {
-                    totalWork += p.work || 0;
-                    totalSets += p.sets || 0;
-                });
-            });
+            records.forEach(r => { r.projects.forEach(p => { totalWork += p.work || 0; totalSets += p.sets || 0; }); });
             const totalWorkKJ = (totalWork / 1000).toFixed(0);
-            
             let report = rnd(COACH_RULES.openings) + '\n\n';
-
-            // 第一部分：最近一次训练
+            // 最近一次
             report += `📅 最近一次训练 (${latest.date}) 分析：\n`;
             const latestWork = latest.projects.reduce((s,p)=>s+(p.work||0),0);
             const latestKJ = (latestWork/1000).toFixed(0);
@@ -545,15 +481,13 @@
                 }
             }
             report += '\n';
-
-            // 第二部分：本周总结
+            // 本周
             const weekSessions = weekRecords.length;
             let weekWork = 0;
             weekRecords.forEach(r => { r.projects.forEach(p => { weekWork += p.work||0; }); });
             const weekWorkKJ = (weekWork/1000).toFixed(0);
             report += `📆 本周训练总结 (${monday.toLocaleDateString()} ~ ${sunday.toLocaleDateString()})：\n`;
             report += rnd(COACH_RULES.weekSummary).replace('${weekSessions}', weekSessions).replace('${weekWorkKJ}', weekWorkKJ) + '\n';
-            // 使用函数获取频率评语（不再使用三元表达式字符串）
             report += `本周你已经训练了${weekSessions}次，${getFrequencyComment(weekSessions)}\n`;
             const weekPartsSet = new Set();
             weekRecords.forEach(r => { r.projects.forEach(p => { weekPartsSet.add(p.part); }); });
@@ -564,17 +498,11 @@
             if (weekWork > 0) {
                 let weekLevel = weekWork>150000 ? 'highVolume' : (weekWork>60000 ? 'moderate' : 'lowVolume');
                 report += rnd(COACH_RULES.overall[weekLevel]).replace('${work}', weekWorkKJ) + '\n';
-            } else {
-                report += '⚠️ 本周还没有训练记录，抓紧时间动起来！\n';
-            }
+            } else { report += '⚠️ 本周还没有训练记录，抓紧时间动起来！\n'; }
             report += '\n';
-
-            // 第三部分：整体回顾
+            // 整体
             report += `🏆 健身以来整体回顾 (共 ${totalSessions} 次训练)：\n`;
-            report += rnd(COACH_RULES.historySummary)
-                .replace('${totalSessions}', totalSessions)
-                .replace('${totalSets}', totalSets)
-                .replace('${totalWorkKJ}', totalWorkKJ) + '\n';
+            report += rnd(COACH_RULES.historySummary).replace('${totalSessions}', totalSessions).replace('${totalSets}', totalSets).replace('${totalWorkKJ}', totalWorkKJ) + '\n';
             const allPartsMap = {};
             records.forEach(r => { r.projects.forEach(p => { allPartsMap[p.part] = (allPartsMap[p.part]||0) + 1; }); });
             const favPart = Object.keys(allPartsMap).reduce((a,b)=> allPartsMap[a]>allPartsMap[b] ? a : b, '胸');
@@ -583,21 +511,12 @@
                 const firstWork = records[records.length-1].projects.reduce((s,p)=>s+(p.work||0),0);
                 const firstKJ = (firstWork/1000).toFixed(0);
                 const latestKJTotal = (latestWork/1000).toFixed(0);
-                if (latestWork > firstWork) {
-                    report += `📈 相比第一次训练 (${firstKJ}千焦)，最近一次容量提升了 ${latestKJTotal - firstKJ}千焦，进步显著！\n`;
-                } else if (latestWork < firstWork) {
-                    report += `📉 相比第一次训练 (${firstKJ}千焦)，最近一次容量有所下降，可能是减载或状态波动。\n`;
-                } else {
-                    report += `⚖️ 相比第一次训练，容量保持稳定，可以尝试突破。\n`;
-                }
+                if (latestWork > firstWork) report += `📈 相比第一次训练 (${firstKJ}千焦)，最近一次容量提升了 ${latestKJTotal - firstKJ}千焦，进步显著！\n`;
+                else if (latestWork < firstWork) report += `📉 相比第一次训练 (${firstKJ}千焦)，最近一次容量有所下降，可能是减载或状态波动。\n`;
+                else report += `⚖️ 相比第一次训练，容量保持稳定，可以尝试突破。\n`;
             }
-            if (totalSessions % 10 === 0 && totalSessions>0) {
-                report += `🎉 恭喜完成第 ${totalSessions} 次训练！这是一个重要的里程碑！\n`;
-            } else if (totalSessions === 1) {
-                report += `🌟 这是你的第一次记录，坚持下去！\n`;
-            } else if (totalSessions === 100) {
-                report += `🏅 100次训练！你已经超越了大多数人！\n`;
-            }
+            if (totalSessions % 10 === 0 && totalSessions>0) report += `🎉 恭喜完成第 ${totalSessions} 次训练！这是一个重要的里程碑！\n`;
+            else if (totalSessions === 1) report += `🌟 这是你的第一次记录，坚持下去！\n`;
             report += '\n✨ ' + rnd(COACH_RULES.encouragements) + '\n';
             report += rnd(COACH_RULES.tips);
             return report;
@@ -616,12 +535,11 @@
                 container.style.fontSize = 'inherit';
             } else {
                 container.innerHTML = avatar;
-                container.style.fontSize = '80px';
+                container.style.fontSize = '70px';
             }
         }
 
-        // 打字机效果
-        async function typewriter(text, element, speed=30) {
+        async function typewriter(text, element, speed=25) {
             element.style.display = 'block';
             element.textContent = '';
             for (let i=0; i<text.length; i++) {
@@ -630,32 +548,20 @@
             }
             updateScrollIndicator();
         }
-        
         const responseDiv = document.getElementById('coach-response');
         const indicator = document.getElementById('scroll-indicator');
         function updateScrollIndicator() {
             if (!responseDiv || responseDiv.style.display === 'none') return;
             const isAtBottom = responseDiv.scrollHeight - responseDiv.scrollTop - responseDiv.clientHeight < 5;
-            if (isAtBottom) {
-                indicator.textContent = '↑';
-                indicator.classList.add('bounce');
-                indicator.title = '回顶部';
-            } else {
-                indicator.textContent = '↓';
-                indicator.classList.add('bounce');
-                indicator.title = '滚动到底部';
-            }
+            if (isAtBottom) { indicator.textContent = '↑'; indicator.classList.add('bounce'); indicator.title = '回顶部'; }
+            else { indicator.textContent = '↓'; indicator.classList.add('bounce'); indicator.title = '滚动到底部'; }
         }
         function handleIndicatorClick() {
             if (!responseDiv) return;
             const isAtBottom = responseDiv.scrollHeight - responseDiv.scrollTop - responseDiv.clientHeight < 5;
-            if (isAtBottom) {
-                responseDiv.scrollTo({ top: 0, behavior: 'smooth' });
-            } else {
-                responseDiv.scrollTo({ top: responseDiv.scrollHeight, behavior: 'smooth' });
-            }
+            if (isAtBottom) responseDiv.scrollTo({ top: 0, behavior: 'smooth' });
+            else responseDiv.scrollTo({ top: responseDiv.scrollHeight, behavior: 'smooth' });
         }
-        
         async function handleCoachAnalyze() {
             let loading = document.getElementById('coach-loading');
             let respDiv = document.getElementById('coach-response');
@@ -672,13 +578,7 @@
             updateScrollIndicator();
         }
 
-        // 右键菜单
-        function showCoachMenu(e) {
-            e.preventDefault();
-            let menu = document.getElementById('coach-menu');
-            renderPresetGrid();
-            menu.classList.add('active');
-        }
+        function showCoachMenu(e) { e.preventDefault(); let menu = document.getElementById('coach-menu'); renderPresetGrid(); menu.classList.add('active'); }
         function renderPresetGrid() {
             let grid = document.getElementById('preset-images-grid');
             let current = getCoachAvatar();
@@ -696,13 +596,13 @@
             });
             getCustomAvatars().forEach(b64 => {
                 let div = document.createElement('div'); div.className = 'preset-item' + (current===b64?' selected':'');
-                div.innerHTML = `<img src="${b64}" style="width:50px;height:50px;object-fit:contain;"><div>自定义</div>`;
+                div.innerHTML = `<img src="${b64}" style="width:45px;height:45px;object-fit:contain;"><div>自定义</div>`;
                 div.onclick = () => { saveCoachAvatar(b64); updateCoachDisplay(); document.getElementById('coach-menu').classList.remove('active'); };
                 grid.appendChild(div);
             });
         }
 
-        // ---------- DOM 绑定 ----------
+        // DOM 绑定
         const inputPage = document.getElementById('input-page'), historyPage = document.getElementById('history-page');
         const projectsContainer = document.getElementById('projects-container');
         const addBtn = document.getElementById('add-project'), removeBtn = document.getElementById('remove-project');
@@ -712,290 +612,76 @@
         const globalAIBtn = document.getElementById('global-ai-btn'), globalAIDisplay = document.getElementById('global-ai-display');
         const firstDate = document.getElementById('first-date'), firstTime = document.getElementById('first-time'), saveFirst = document.getElementById('save-first-workout');
 
-        (function() {
-            const d = getUserFirst();
-            firstDate.value = d.toISOString().split('T')[0];
-            firstTime.value = d.toTimeString().split(' ')[0];
-        })();
-        saveFirst.addEventListener('click', () => {
-            if (!firstDate.value || !firstTime.value) return alert('请完整填写日期和时间');
-            setUserFirst(`${firstDate.value}T${firstTime.value}`);
-            updateTimePassedDisplay();
-            alert('第一次健身时间已更新');
-        });
+        (function() { const d = getUserFirst(); firstDate.value = d.toISOString().split('T')[0]; firstTime.value = d.toTimeString().split(' ')[0]; })();
+        saveFirst.addEventListener('click', () => { if (!firstDate.value || !firstTime.value) return alert('请完整填写日期和时间'); setUserFirst(`${firstDate.value}T${firstTime.value}`); updateTimePassedDisplay(); alert('第一次健身时间已更新'); });
 
         function createEmptyProject() {
-            const div = document.createElement('div');
-            div.className = 'project-item';
-            div.innerHTML = `
-                <div class="project-item-header">
-                    <div class="form-group"><label>项目名称</label><input type="text" class="project-name" placeholder="例如：坐姿推肩"></div>
-                    <div class="form-group"><label>锻炼部位</label><select class="project-part"><option>胸</option><option>背</option><option>腿</option><option>肩</option><option>腹</option></select></div>
-                </div>
-                <div class="sub-items">
-                    <div class="form-group"><label>重量 (kg)</label><input type="number" class="weight" min="0" step="0.5"></div>
-                    <div class="form-group"><label>组数</label><input type="number" class="sets" min="1"></div>
-                    <div class="form-group"><label>每组数量</label><input type="number" class="reps" min="1"></div>
-                    <div class="form-group"><label>感受</label><select class="feeling"><option>轻松</option><option selected>适中</option><option>吃力</option><option>非常吃力</option></select></div>
-                    <div class="form-group"><label>做功 (J)</label><input type="number" class="work" readonly><div class="work-display">做功: <span class="work-value">0</span> J</div></div>
-                    <div class="form-group"><label>补剂</label><input type="text" class="supplement" placeholder="例如：蛋白粉"></div>
-                </div>
-            `;
-            addProjectListeners(div);
-            return div;
+            const div = document.createElement('div'); div.className = 'project-item';
+            div.innerHTML = `<div class="project-item-header"><div class="form-group"><label>项目名称</label><input type="text" class="project-name" placeholder="例如：坐姿推肩"></div><div class="form-group"><label>锻炼部位</label><select class="project-part"><option>胸</option><option>背</option><option>腿</option><option>肩</option><option>腹</option></select></div></div><div class="sub-items"><div class="form-group"><label>重量 (kg)</label><input type="number" class="weight" min="0" step="0.5"></div><div class="form-group"><label>组数</label><input type="number" class="sets" min="1"></div><div class="form-group"><label>每组数量</label><input type="number" class="reps" min="1"></div><div class="form-group"><label>感受</label><select class="feeling"><option>轻松</option><option selected>适中</option><option>吃力</option><option>非常吃力</option></select></div><div class="form-group"><label>做功 (J)</label><input type="number" class="work" readonly><div class="work-display">做功: <span class="work-value">0</span> J</div></div><div class="form-group"><label>补剂</label><input type="text" class="supplement" placeholder="例如：蛋白粉"></div></div></div>`;
+            addProjectListeners(div); return div;
         }
         addBtn.addEventListener('click', () => projectsContainer.appendChild(createEmptyProject()));
-        removeBtn.addEventListener('click', () => {
-            let items = projectsContainer.querySelectorAll('.project-item');
-            if (items.length>1) items[items.length-1].remove();
-            else alert('至少保留一个项目');
-        });
+        removeBtn.addEventListener('click', () => { let items = projectsContainer.querySelectorAll('.project-item'); if (items.length>1) items[items.length-1].remove(); else alert('至少保留一个项目'); });
+        globalAIBtn.addEventListener('click', () => { let projects = getCurrentProjectsData(); if (!projects.length) { globalAIDisplay.textContent = '⚠️ 请先填写至少一个完整的训练项目。'; return; } globalAIDisplay.textContent = '⏳ 正在生成本地智能报告...'; setTimeout(() => { try { globalAIDisplay.textContent = generateGlobalReport(projects, getRecords(), workoutDate.value); } catch(e) { globalAIDisplay.textContent = '生成报告出错: '+e.message; } }, 200); });
+        saveBtn.addEventListener('click', () => { let date = workoutDate.value, count = parseInt(workoutCount.value); if (!date || !count) return alert('请填写日期和第几次健身'); let projects = getCurrentProjectsData(); if (!projects.length) return alert('请填写至少一个完整项目'); let timePassed = getTimePassed(date); let records = getRecords(); records.push({ date, projects, count, timePassed, timestamp: new Date().toISOString() }); saveRecords(records); workoutCount.value = count+1; projectsContainer.innerHTML = ''; projectsContainer.appendChild(createEmptyProject()); globalAIDisplay.textContent = '点击上方按钮，AI将综合分析本次所有训练项目，并结合历史数据给出专业建议。'; alert('记录保存成功！'); });
 
-        globalAIBtn.addEventListener('click', () => {
-            let projects = getCurrentProjectsData();
-            if (!projects.length) { globalAIDisplay.textContent = '⚠️ 请先填写至少一个完整的训练项目。'; return; }
-            globalAIDisplay.textContent = '⏳ 正在生成本地智能报告...';
-            setTimeout(() => {
-                try { globalAIDisplay.textContent = generateGlobalReport(projects, getRecords(), workoutDate.value); }
-                catch(e) { globalAIDisplay.textContent = '生成报告出错: '+e.message; }
-            }, 200);
-        });
-
-        saveBtn.addEventListener('click', () => {
-            let date = workoutDate.value, count = parseInt(workoutCount.value);
-            if (!date || !count) return alert('请填写日期和第几次健身');
-            let projects = getCurrentProjectsData();
-            if (!projects.length) return alert('请填写至少一个完整项目');
-            let timePassed = getTimePassed(date);
-            let records = getRecords();
-            records.push({ date, projects, count, timePassed, timestamp: new Date().toISOString() });
-            saveRecords(records);
-            workoutCount.value = count+1;
-            projectsContainer.innerHTML = ''; projectsContainer.appendChild(createEmptyProject());
-            globalAIDisplay.textContent = '点击上方按钮，AI将综合分析本次所有训练项目，并结合历史数据给出专业建议。';
-            alert('记录保存成功！');
-        });
-
-        let selectedIndices = new Set();
-        let currentEditIndex = -1;
-
+        let selectedIndices = new Set(); let currentEditIndex = -1;
         function renderHistory() {
             let records = getRecords();
             let emptyDiv = document.getElementById('empty-history'), table = document.getElementById('history-table'), tbody = document.getElementById('history-body');
             let batchToolbar = document.getElementById('batch-toolbar');
-            if (!records.length) {
-                emptyDiv.style.display = 'block';
-                table.style.display = 'none';
-                batchToolbar.style.display = 'none';
-                return;
-            }
-            emptyDiv.style.display = 'none';
-            table.style.display = 'table';
-            tbody.innerHTML = '';
+            if (!records.length) { emptyDiv.style.display = 'block'; table.style.display = 'none'; batchToolbar.style.display = 'none'; return; }
+            emptyDiv.style.display = 'none'; table.style.display = 'table'; tbody.innerHTML = '';
             records.sort((a,b)=>new Date(b.date)-new Date(a.date));
             records.forEach((rec, idx) => {
                 let tr = tbody.insertRow();
                 let chkCell = tr.insertCell(0);
                 let chk = document.createElement('input'); chk.type='checkbox';
                 chk.checked = selectedIndices.has(idx);
-                chk.addEventListener('change', e => {
-                    e.target.checked ? selectedIndices.add(idx) : selectedIndices.delete(idx);
-                    updateBatchUI();
-                    tr.classList.toggle('selected', e.target.checked);
-                });
+                chk.addEventListener('change', e => { e.target.checked ? selectedIndices.add(idx) : selectedIndices.delete(idx); updateBatchUI(); tr.classList.toggle('selected', e.target.checked); });
                 chkCell.appendChild(chk);
                 tr.insertCell(1).textContent = rec.date;
                 tr.insertCell(2).innerHTML = rec.projects.map(p => `${p.name} (${p.part}): ${p.sets}组×${p.reps}个, ${p.weight}kg`).join('<br>');
                 tr.insertCell(3).textContent = `第${rec.count}次`;
                 tr.insertCell(4).textContent = rec.timePassed;
                 let actCell = tr.insertCell(5);
-                let editBtn = document.createElement('button'); editBtn.textContent='编辑'; editBtn.className='btn btn-warning';
+                let editBtn = document.createElement('button'); editBtn.textContent='编辑'; editBtn.className='btn btn-warning'; editBtn.style.padding = '4px 12px'; editBtn.style.fontSize = '12px';
                 editBtn.onclick = () => openEditModal(idx);
                 actCell.appendChild(editBtn);
                 if (selectedIndices.has(idx)) tr.classList.add('selected');
             });
             updateBatchUI();
         }
-        function updateBatchUI() {
-            let cnt = selectedIndices.size;
-            document.getElementById('selected-count').textContent = `已选择 ${cnt} 条`;
-            let toolbar = document.getElementById('batch-toolbar');
-            toolbar.style.display = cnt ? 'flex' : 'none';
-            let total = getRecords().length;
-            let selectAll = document.getElementById('select-all-checkbox');
-            selectAll.checked = cnt === total && total > 0;
-            selectAll.indeterminate = cnt > 0 && cnt < total;
-        }
-        function openEditModal(index) {
-            let records = getRecords();
-            let rec = records[index];
-            if (!rec) return;
-            currentEditIndex = index;
-            document.getElementById('edit-date').value = rec.date;
-            document.getElementById('edit-count').value = rec.count;
-            let container = document.getElementById('edit-projects-container');
-            container.innerHTML = '';
-            rec.projects.forEach(proj => {
-                let div = document.createElement('div'); div.className='project-item';
-                div.innerHTML = `
-                    <div class="project-item-header">
-                        <div class="form-group"><label>项目名称</label><input type="text" class="project-name" value="${escapeHtml(proj.name)}"></div>
-                        <div class="form-group"><label>锻炼部位</label><select class="project-part">${['胸','背','腿','肩','腹'].map(p=>`<option ${p===proj.part?'selected':''}>${p}</option>`).join('')}</select></div>
-                    </div>
-                    <div class="sub-items">
-                        <div class="form-group"><label>重量 (kg)</label><input type="number" class="weight" value="${proj.weight}"></div>
-                        <div class="form-group"><label>组数</label><input type="number" class="sets" value="${proj.sets}"></div>
-                        <div class="form-group"><label>每组数量</label><input type="number" class="reps" value="${proj.reps}"></div>
-                        <div class="form-group"><label>感受</label><select class="feeling">${['轻松','适中','吃力','非常吃力'].map(f=>`<option ${f===proj.feeling?'selected':''}>${f}</option>`).join('')}</select></div>
-                        <div class="form-group"><label>做功 (J)</label><input type="number" class="work" value="${proj.work}" readonly><div class="work-display">做功: <span class="work-value">${proj.work}</span> J</div></div>
-                        <div class="form-group"><label>补剂</label><input type="text" class="supplement" value="${escapeHtml(proj.supplement||'')}"></div>
-                    </div>
-                `;
-                container.appendChild(div);
-                addProjectListeners(div);
-            });
-            document.getElementById('edit-modal').classList.add('active');
-        }
+        function updateBatchUI() { let cnt = selectedIndices.size; document.getElementById('selected-count').textContent = `已选择 ${cnt} 条`; let toolbar = document.getElementById('batch-toolbar'); toolbar.style.display = cnt ? 'flex' : 'none'; let total = getRecords().length; let selectAll = document.getElementById('select-all-checkbox'); selectAll.checked = cnt === total && total > 0; selectAll.indeterminate = cnt > 0 && cnt < total; }
+        function openEditModal(index) { let records = getRecords(); let rec = records[index]; if (!rec) return; currentEditIndex = index; document.getElementById('edit-date').value = rec.date; document.getElementById('edit-count').value = rec.count; let container = document.getElementById('edit-projects-container'); container.innerHTML = ''; rec.projects.forEach(proj => { let div = document.createElement('div'); div.className='project-item'; div.innerHTML = `<div class="project-item-header"><div class="form-group"><label>项目名称</label><input type="text" class="project-name" value="${escapeHtml(proj.name)}"></div><div class="form-group"><label>锻炼部位</label><select class="project-part">${['胸','背','腿','肩','腹'].map(p=>`<option ${p===proj.part?'selected':''}>${p}</option>`).join('')}</select></div></div><div class="sub-items"><div class="form-group"><label>重量 (kg)</label><input type="number" class="weight" value="${proj.weight}"></div><div class="form-group"><label>组数</label><input type="number" class="sets" value="${proj.sets}"></div><div class="form-group"><label>每组数量</label><input type="number" class="reps" value="${proj.reps}"></div><div class="form-group"><label>感受</label><select class="feeling">${['轻松','适中','吃力','非常吃力'].map(f=>`<option ${f===proj.feeling?'selected':''}>${f}</option>`).join('')}</select></div><div class="form-group"><label>做功 (J)</label><input type="number" class="work" value="${proj.work}" readonly><div class="work-display">做功: <span class="work-value">${proj.work}</span> J</div></div><div class="form-group"><label>补剂</label><input type="text" class="supplement" value="${escapeHtml(proj.supplement||'')}"></div></div></div>`; container.appendChild(div); addProjectListeners(div); }); document.getElementById('edit-modal').classList.add('active'); }
         function escapeHtml(s) { return s.replace(/[&<>]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;'})[m]); }
-        document.getElementById('edit-form').addEventListener('submit', e => {
-            e.preventDefault();
-            let records = getRecords();
-            let rec = records[currentEditIndex];
-            if (!rec) return;
-            rec.date = document.getElementById('edit-date').value;
-            rec.count = parseInt(document.getElementById('edit-count').value);
-            let newProjects = [];
-            document.querySelectorAll('#edit-projects-container .project-item').forEach(item => {
-                let name = item.querySelector('.project-name').value.trim();
-                if (!name) return;
-                newProjects.push({
-                    name, part: item.querySelector('.project-part').value,
-                    weight: parseFloat(item.querySelector('.weight').value) || 0,
-                    sets: parseInt(item.querySelector('.sets').value) || 0,
-                    reps: parseInt(item.querySelector('.reps').value) || 0,
-                    feeling: item.querySelector('.feeling').value,
-                    work: parseInt(item.querySelector('.work').value) || 0,
-                    supplement: item.querySelector('.supplement').value || ''
-                });
-            });
-            rec.projects = newProjects;
-            rec.timePassed = getTimePassed(rec.date);
-            saveRecords(records);
-            document.getElementById('edit-modal').classList.remove('active');
-            renderHistory();
-            alert('记录已更新');
-        });
-        document.getElementById('delete-record').addEventListener('click', () => {
-            if (confirm('永久删除此记录？')) {
-                let records = getRecords();
-                records.splice(currentEditIndex, 1);
-                saveRecords(records);
-                document.getElementById('edit-modal').classList.remove('active');
-                renderHistory();
-                alert('已删除');
-            }
-        });
-        document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => {
-            document.getElementById('edit-modal').classList.remove('active');
-            document.getElementById('batch-supplement-modal').classList.remove('active');
-            document.getElementById('coach-menu').classList.remove('active');
-        }));
+        document.getElementById('edit-form').addEventListener('submit', e => { e.preventDefault(); let records = getRecords(); let rec = records[currentEditIndex]; if (!rec) return; rec.date = document.getElementById('edit-date').value; rec.count = parseInt(document.getElementById('edit-count').value); let newProjects = []; document.querySelectorAll('#edit-projects-container .project-item').forEach(item => { let name = item.querySelector('.project-name').value.trim(); if (!name) return; newProjects.push({ name, part: item.querySelector('.project-part').value, weight: parseFloat(item.querySelector('.weight').value) || 0, sets: parseInt(item.querySelector('.sets').value) || 0, reps: parseInt(item.querySelector('.reps').value) || 0, feeling: item.querySelector('.feeling').value, work: parseInt(item.querySelector('.work').value) || 0, supplement: item.querySelector('.supplement').value || '' }); }); rec.projects = newProjects; rec.timePassed = getTimePassed(rec.date); saveRecords(records); document.getElementById('edit-modal').classList.remove('active'); renderHistory(); alert('记录已更新'); });
+        document.getElementById('delete-record').addEventListener('click', () => { if (confirm('永久删除此记录？')) { let records = getRecords(); records.splice(currentEditIndex, 1); saveRecords(records); document.getElementById('edit-modal').classList.remove('active'); renderHistory(); alert('已删除'); } });
+        document.querySelectorAll('.close-modal').forEach(btn => btn.addEventListener('click', () => { document.getElementById('edit-modal').classList.remove('active'); document.getElementById('batch-supplement-modal').classList.remove('active'); document.getElementById('coach-menu').classList.remove('active'); }));
         document.getElementById('edit-modal').addEventListener('click', e => { if (e.target === document.getElementById('edit-modal')) document.getElementById('edit-modal').classList.remove('active'); });
-
-        document.getElementById('select-all-checkbox').addEventListener('change', e => {
-            let recs = getRecords();
-            selectedIndices.clear();
-            if (e.target.checked) recs.forEach((_,i)=>selectedIndices.add(i));
-            renderHistory();
-        });
-        document.getElementById('batch-delete').addEventListener('click', () => {
-            if (!selectedIndices.size) return alert('请先选择记录');
-            if (!confirm(`确定删除 ${selectedIndices.size} 条记录吗？`)) return;
-            let records = getRecords().filter((_,i)=>!selectedIndices.has(i));
-            saveRecords(records);
-            selectedIndices.clear();
-            renderHistory();
-            alert('删除成功');
-        });
-        document.getElementById('batch-edit-supplement').addEventListener('click', () => {
-            if (!selectedIndices.size) return alert('请先选择记录');
-            document.getElementById('batch-supplement-value').value = '';
-            document.getElementById('batch-supplement-modal').classList.add('active');
-        });
-        document.getElementById('confirm-batch-supplement').addEventListener('click', () => {
-            let val = document.getElementById('batch-supplement-value').value.trim();
-            if (!val) return alert('请输入补剂内容');
-            let records = getRecords();
-            selectedIndices.forEach(i => { if (records[i]) records[i].projects.forEach(p => p.supplement = val); });
-            saveRecords(records);
-            document.getElementById('batch-supplement-modal').classList.remove('active');
-            renderHistory();
-            alert('补剂已批量更新');
-        });
+        document.getElementById('select-all-checkbox').addEventListener('change', e => { let recs = getRecords(); selectedIndices.clear(); if (e.target.checked) recs.forEach((_,i)=>selectedIndices.add(i)); renderHistory(); });
+        document.getElementById('batch-delete').addEventListener('click', () => { if (!selectedIndices.size) return alert('请先选择记录'); if (!confirm(`确定删除 ${selectedIndices.size} 条记录吗？`)) return; let records = getRecords().filter((_,i)=>!selectedIndices.has(i)); saveRecords(records); selectedIndices.clear(); renderHistory(); alert('删除成功'); });
+        document.getElementById('batch-edit-supplement').addEventListener('click', () => { if (!selectedIndices.size) return alert('请先选择记录'); document.getElementById('batch-supplement-value').value = ''; document.getElementById('batch-supplement-modal').classList.add('active'); });
+        document.getElementById('confirm-batch-supplement').addEventListener('click', () => { let val = document.getElementById('batch-supplement-value').value.trim(); if (!val) return alert('请输入补剂内容'); let records = getRecords(); selectedIndices.forEach(i => { if (records[i]) records[i].projects.forEach(p => p.supplement = val); }); saveRecords(records); document.getElementById('batch-supplement-modal').classList.remove('active'); renderHistory(); alert('补剂已批量更新'); });
         document.getElementById('cancel-batch-supplement').addEventListener('click', () => document.getElementById('batch-supplement-modal').classList.remove('active'));
         document.getElementById('close-batch-supplement').addEventListener('click', () => document.getElementById('batch-supplement-modal').classList.remove('active'));
         document.getElementById('cancel-batch').addEventListener('click', () => { selectedIndices.clear(); renderHistory(); });
-
-        exportBtn.addEventListener('click', () => {
-            let records = getRecords();
-            if (!records.length) return alert('无数据可导出');
-            let data = [['日期','项目名称','锻炼部位','重量(kg)','组数','每组数量','感受','做功(J)','补剂','第几次健身','距离第一次健身时间']];
-            records.forEach(r => r.projects.forEach(p => data.push([r.date, p.name, p.part, p.weight, p.sets, p.reps, p.feeling, p.work, p.supplement||'', r.count, r.timePassed])));
-            let wb = XLSX.utils.book_new();
-            let ws = XLSX.utils.aoa_to_sheet(data);
-            XLSX.utils.book_append_sheet(wb, ws, '健身记录');
-            XLSX.writeFile(wb, `健身记录_${new Date().toISOString().slice(0,19)}.xlsx`);
-        });
+        exportBtn.addEventListener('click', () => { let records = getRecords(); if (!records.length) return alert('无数据可导出'); let data = [['日期','项目名称','锻炼部位','重量(kg)','组数','每组数量','感受','做功(J)','补剂','第几次健身','距离第一次健身时间']]; records.forEach(r => r.projects.forEach(p => data.push([r.date, p.name, p.part, p.weight, p.sets, p.reps, p.feeling, p.work, p.supplement||'', r.count, r.timePassed]))); let wb = XLSX.utils.book_new(); let ws = XLSX.utils.aoa_to_sheet(data); XLSX.utils.book_append_sheet(wb, ws, '健身记录'); XLSX.writeFile(wb, `健身记录_${new Date().toISOString().slice(0,19)}.xlsx`); });
         importBtn.addEventListener('click', () => fileInput.click());
-        fileInput.addEventListener('change', e => {
-            let file = e.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = ev => {
-                try {
-                    let wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
-                    let ws = wb.Sheets[wb.SheetNames[0]];
-                    let rows = XLSX.utils.sheet_to_json(ws, { header: 1 });
-                    rows.shift();
-                    let records = [], cur = null, curDate = null;
-                    rows.forEach(row => {
-                        let date = row[0];
-                        if (date && date !== curDate) {
-                            if (cur) records.push(cur);
-                            cur = { date, projects: [], count: row[9] || 1, timePassed: row[10] || '', timestamp: new Date().toISOString() };
-                            curDate = date;
-                        }
-                        if (cur && row[1]) cur.projects.push({ name: row[1], part: row[2]||'胸', weight: row[3]||0, sets: row[4]||0, reps: row[5]||0, feeling: row[6]||'适中', work: row[7]||0, supplement: row[8]||'' });
-                    });
-                    if (cur) records.push(cur);
-                    saveRecords(records);
-                    renderHistory();
-                    alert(`导入成功，共 ${records.length} 条记录`);
-                } catch(err) { alert('导入失败：'+err.message); }
-                fileInput.value = '';
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
+        fileInput.addEventListener('change', e => { let file = e.target.files[0]; if (!file) return; let reader = new FileReader(); reader.onload = ev => { try { let wb = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' }); let ws = wb.Sheets[wb.SheetNames[0]]; let rows = XLSX.utils.sheet_to_json(ws, { header: 1 }); rows.shift(); let records = [], cur = null, curDate = null; rows.forEach(row => { let date = row[0]; if (date && date !== curDate) { if (cur) records.push(cur); cur = { date, projects: [], count: row[9] || 1, timePassed: row[10] || '', timestamp: new Date().toISOString() }; curDate = date; } if (cur && row[1]) cur.projects.push({ name: row[1], part: row[2]||'胸', weight: row[3]||0, sets: row[4]||0, reps: row[5]||0, feeling: row[6]||'适中', work: row[7]||0, supplement: row[8]||'' }); }); if (cur) records.push(cur); saveRecords(records); renderHistory(); alert(`导入成功，共 ${records.length} 条记录`); } catch(err) { alert('导入失败：'+err.message); } fileInput.value = ''; }; reader.readAsArrayBuffer(file); });
         updateCoachDisplay();
         let coachContainer = document.getElementById('coach-image-container');
         coachContainer.addEventListener('click', handleCoachAnalyze);
         coachContainer.addEventListener('contextmenu', showCoachMenu);
+        // 移动端长按支持
+        coachContainer.addEventListener('touchstart', function(e) { let timer; timer = setTimeout(() => { showCoachMenu(e); }, 500); coachContainer.addEventListener('touchend', () => clearTimeout(timer)); });
         document.getElementById('close-coach-menu').onclick = () => document.getElementById('coach-menu').classList.remove('active');
         document.getElementById('upload-custom-image').onclick = () => document.getElementById('custom-image-input').click();
-        document.getElementById('custom-image-input').onchange = e => {
-            let file = e.target.files[0]; if(!file) return;
-            let reader = new FileReader();
-            reader.onload = ev => { saveCustomAvatar(ev.target.result); saveCoachAvatar(ev.target.result); updateCoachDisplay(); renderPresetGrid(); };
-            reader.readAsDataURL(file);
-        };
-        
+        document.getElementById('custom-image-input').onchange = e => { let file = e.target.files[0]; if(!file) return; let reader = new FileReader(); reader.onload = ev => { saveCustomAvatar(ev.target.result); saveCoachAvatar(ev.target.result); updateCoachDisplay(); renderPresetGrid(); }; reader.readAsDataURL(file); };
         if (responseDiv) responseDiv.addEventListener('scroll', updateScrollIndicator);
         if (indicator) indicator.addEventListener('click', handleIndicatorClick);
-
         viewHistory.addEventListener('click', () => { inputPage.classList.remove('active'); historyPage.classList.add('active'); renderHistory(); });
         backInput.addEventListener('click', () => { historyPage.classList.remove('active'); inputPage.classList.add('active'); });
-
         workoutDate.valueAsDate = new Date();
         updateTimePassedDisplay();
         setInterval(updateTimePassedDisplay, 60000);
