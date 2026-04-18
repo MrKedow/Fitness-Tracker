@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -84,13 +85,17 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
   }
 
   double _randomStep() => _randomDouble(-_stepMax, _stepMax);
+  
   double _randomDouble(double min, double max) {
     if (max - min <= 0.0) return min;
-    return min + (DateTime.now().millisecondsSinceEpoch % ((max - min).toInt()));
+    final random = Random();
+    return min + random.nextDouble() * (max - min);
   }
+  
   int _randomInt(int min, int max) {
     if (max - min <= 0) return min;
-    return min + (DateTime.now().millisecondsSinceEpoch % (max - min));
+    final random = Random();
+    return min + random.nextInt(max - min);
   }
 
   void _setHovering(bool hovering) {
@@ -166,10 +171,10 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
                   child: ClipRect(
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFDF5E6).withOpacity(0.98),
+                        color: const Color(0xFFFDF5E6).withValues(alpha: 0.98),
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withOpacity(0.2), blurRadius: 6, offset: const Offset(2, 2)),
+                          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(2, 2)),
                         ],
                         border: Border.all(color: Colors.brown.shade400, width: 2),
                       ),

@@ -1,23 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:fitness_tracker/widgets/roaming_cat.dart';
 import 'package:fitness_tracker/widgets/coach_character.dart';
-import 'package:webview_windows/webview_windows.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  // 初始化 WebView Windows 平台
-  // if (Platform.isWindows) {
-    // await WebviewController.initialize();
-  // }
   final prefs = await SharedPreferences.getInstance();
   final savedThemeIndex = prefs.getInt('selected_theme') ?? 0;
 
@@ -37,24 +30,18 @@ void main() async {
 // ==================== 主题管理 ====================
 class ThemeProvider extends ChangeNotifier {
   int _selectedThemeIndex;
-
   ThemeProvider(this._selectedThemeIndex);
-
   int get selectedThemeIndex => _selectedThemeIndex;
-
   void setTheme(int index) async {
     _selectedThemeIndex = index;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt('selected_theme', index);
     notifyListeners();
   }
-
-  ThemeData get currentTheme {
-    return _themes[_selectedThemeIndex];
-  }
+  ThemeData get currentTheme => _themes[_selectedThemeIndex];
 
   static final List<ThemeData> _themes = [
-    // 0: 远山青（深青色渐变风格）
+    // 0: 远山青
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFF3AB8C7),
@@ -78,18 +65,13 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF3AB8C7),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF3A4A5A),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white70),
         hintStyle: const TextStyle(color: Colors.white54),
@@ -99,8 +81,7 @@ class ThemeProvider extends ChangeNotifier {
         bodyMedium: TextStyle(color: Colors.white70),
       ),
     ),
-    
-    // 1: 萤石黑（极致纯黑）
+    // 1: 萤石黑
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFF007AFF),
@@ -124,18 +105,13 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF007AFF),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF2C2C2E),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white60),
         hintStyle: const TextStyle(color: Colors.white38),
@@ -145,8 +121,7 @@ class ThemeProvider extends ChangeNotifier {
         bodyMedium: TextStyle(color: Colors.white70),
       ),
     ),
-    
-    // 2: 珠玉白（明亮干净）
+    // 2: 珠玉白
     ThemeData(
       brightness: Brightness.light,
       primaryColor: const Color(0xFF4A6FA5),
@@ -170,9 +145,7 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF4A6FA5),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -191,8 +164,7 @@ class ThemeProvider extends ChangeNotifier {
         bodyMedium: TextStyle(color: Colors.black54),
       ),
     ),
-    
-    // 3: 活力橙（热情明亮）
+    // 3: 活力橙
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: const Color(0xFFFF9500),
@@ -216,18 +188,13 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFFFF9500),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF3A3A3A),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white60),
         hintStyle: const TextStyle(color: Colors.white38),
@@ -237,8 +204,7 @@ class ThemeProvider extends ChangeNotifier {
         bodyMedium: TextStyle(color: Colors.white70),
       ),
     ),
-    
-    // 4: 全透明（毛玻璃效果）
+    // 4: 全透明（仿真玻璃 + 细边框 + 半透明背景）
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: Colors.white,
@@ -249,30 +215,36 @@ class ThemeProvider extends ChangeNotifier {
         onSurface: Colors.white,
       ),
       scaffoldBackgroundColor: Colors.transparent,
-      cardColor: Colors.black.withOpacity(0.6),
-      dialogBackgroundColor: Colors.black.withOpacity(0.85),
+      cardColor: Colors.black.withValues(alpha: 0.6),
+      dialogBackgroundColor: Colors.grey.shade800.withValues(alpha: 0.85), // 半透明灰色，隐约见背景
       appBarTheme: AppBarTheme(
-        backgroundColor: Colors.black.withOpacity(0.7),
+        backgroundColor: Colors.black.withValues(alpha: 0.7),
         elevation: 0,
         titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.white.withOpacity(0.3),
+          backgroundColor: Colors.white.withValues(alpha: 0.3),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
-        fillColor: Colors.black.withOpacity(0.4),
+        fillColor: Colors.black.withValues(alpha: 0.4),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+          borderSide: const BorderSide(color: Colors.white54, width: 1),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white54, width: 1),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: Colors.white, width: 1.5),
         ),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white70),
@@ -360,7 +332,7 @@ class WorkoutProject {
     };
 
     if (part == '腹') {
-      return (sets * repsPerSet * 100).toDouble();
+      return (sets * repsPerSet * 65 * 9.8 * 0.3).toDouble();
     } else {
       final distance = travelDistances[part] ?? 0;
       return (weight * 9.8 * distance * sets * repsPerSet);
@@ -393,8 +365,23 @@ class WorkoutProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addRecord(WorkoutRecord record) {
-    _records.add(record);
+  void addRecord(WorkoutRecord newRecord) {
+    final existingIndex = _records.indexWhere((r) => isSameDay(r.date, newRecord.date));
+    if (existingIndex != -1) {
+      final existing = _records[existingIndex];
+      final mergedProjects = [...existing.projects, ...newRecord.projects];
+      final updatedSession = newRecord.sessionNumber;
+      final updatedRecord = WorkoutRecord(
+        id: existing.id,
+        date: existing.date,
+        sessionNumber: updatedSession,
+        projects: mergedProjects,
+        timestamp: DateTime.now(),
+      );
+      _records[existingIndex] = updatedRecord;
+    } else {
+      _records.add(newRecord);
+    }
     _saveRecords();
     notifyListeners();
   }
@@ -421,6 +408,35 @@ class WorkoutProvider extends ChangeNotifier {
 
   void clearRecords() {
     _records.clear();
+    _saveRecords();
+    notifyListeners();
+  }
+
+  bool isSameDay(DateTime a, DateTime b) {
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  void mergeSameDayRecords() {
+    final Map<String, WorkoutRecord> merged = {};
+    for (var record in _records) {
+      final key = DateFormat('yyyy-MM-dd').format(record.date);
+      if (merged.containsKey(key)) {
+        final existing = merged[key]!;
+        existing.projects.addAll(record.projects);
+        if (record.sessionNumber > existing.sessionNumber) {
+          existing.sessionNumber = record.sessionNumber;
+        }
+      } else {
+        merged[key] = WorkoutRecord(
+          id: record.id,
+          date: record.date,
+          sessionNumber: record.sessionNumber,
+          projects: List.from(record.projects),
+          timestamp: record.timestamp,
+        );
+      }
+    }
+    _records = merged.values.toList();
     _saveRecords();
     notifyListeners();
   }
@@ -477,10 +493,9 @@ class WorkoutProvider extends ChangeNotifier {
           );
         }).toList();
       } catch (e) {
-        print('加载保存的记录失败: $e');
+        debugPrint('加载保存的记录失败: $e');
       }
     }
-
     notifyListeners();
   }
 }
@@ -496,10 +511,10 @@ class ExcelCSVService {
       final filePath = '${directory.path}/$_defaultFilename';
       final file = File(filePath);
       await file.writeAsString(csvContent, encoding: utf8);
-      print('CSV文件已保存到: $filePath');
+      debugPrint('CSV文件已保存到: $filePath');
       return filePath;
     } catch (e) {
-      print('导出CSV失败: $e');
+      debugPrint('导出CSV失败: $e');
       rethrow;
     }
   }
@@ -514,29 +529,13 @@ class ExcelCSVService {
     }
 
     final sortedRecords = List<WorkoutRecord>.from(records)
-      ..sort((a, b) {
-        final dateCompare = a.date.compareTo(b.date);
-        if (dateCompare != 0) return dateCompare;
-        return a.sessionNumber.compareTo(b.sessionNumber);
-      });
-
-    String? lastDateStr;
-    int? lastSessionNumber;
+      ..sort((a, b) => a.date.compareTo(b.date));
 
     for (final record in sortedRecords) {
       final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-
-      for (int i = 0; i < record.projects.length; i++) {
-        final project = record.projects[i];
+      for (final project in record.projects) {
         if (project.name.isNotEmpty) {
-          if (dateStr == lastDateStr && record.sessionNumber == lastSessionNumber && i > 0) {
-            buffer.write(',');
-          } else {
-            buffer.write('$dateStr,');
-            lastDateStr = dateStr;
-            lastSessionNumber = record.sessionNumber;
-          }
-
+          buffer.write('$dateStr,');
           buffer.write('${record.sessionNumber},');
           buffer.write('"${_escapeCSV(project.name)}",');
           buffer.write('${project.part},');
@@ -551,7 +550,6 @@ class ExcelCSVService {
         }
       }
     }
-
     return buffer.toString();
   }
 
@@ -568,69 +566,39 @@ class ExcelCSVService {
       if (!await file.exists()) {
         throw Exception('文件不存在: $filePath');
       }
-
       final content = await file.readAsString(encoding: utf8);
       final lines = LineSplitter.split(content).toList();
+      if (lines.isEmpty) return [];
 
-      if (lines.isEmpty) {
-        return [];
-      }
-
-      final records = <WorkoutRecord>[];
-      final recordMap = <String, WorkoutRecord>{};
-
-      int startIndex = 0;
       if (lines[0].startsWith('\uFEFF')) {
         lines[0] = lines[0].substring(1);
       }
 
-      String? currentDateStr;
-      int? currentSessionNum;
-
+      final Map<String, WorkoutRecord> recordMap = {};
       for (int i = 1; i < lines.length; i++) {
         final line = lines[i];
         if (line.trim().isEmpty) continue;
-
         final cells = _parseCSVLine(line);
         if (cells.length < 3) continue;
 
         try {
-          String dateStr = cells[0];
-          if (dateStr.isEmpty && currentDateStr != null) {
-            dateStr = currentDateStr;
-          } else if (dateStr.isNotEmpty) {
-            currentDateStr = dateStr;
-          }
-
-          int sessionNum;
-          if (cells[1].isEmpty && currentSessionNum != null) {
-            sessionNum = currentSessionNum;
-          } else {
-            sessionNum = int.tryParse(cells[1]) ?? 0;
-            currentSessionNum = sessionNum;
-          }
-
+          final dateStr = cells[0];
+          final sessionNum = int.tryParse(cells[1]) ?? 0;
           final projectName = cells[2];
-
-          if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) {
-            continue;
-          }
+          if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) continue;
 
           final date = DateFormat('yyyy-MM-dd').parse(dateStr);
-          final recordKey = '${date.toIso8601String()}_$sessionNum';
+          final key = date.toIso8601String();
 
-          if (!recordMap.containsKey(recordKey)) {
-            final record = WorkoutRecord(
+          if (!recordMap.containsKey(key)) {
+            recordMap[key] = WorkoutRecord(
               id: DateTime.now().microsecondsSinceEpoch.toString(),
               date: date,
               sessionNumber: sessionNum,
               projects: [],
               timestamp: cells.length > 10 ? DateTime.parse(cells[10]) : DateTime.now(),
             );
-            recordMap[recordKey] = record;
-            records.add(record);
           }
-
           final project = WorkoutProject(
             name: projectName,
             part: cells.length > 3 ? cells[3] : '胸',
@@ -640,16 +608,14 @@ class ExcelCSVService {
             feeling: cells.length > 8 ? cells[8] : '',
             supplement: cells.length > 9 ? cells[9] : '',
           );
-
-          recordMap[recordKey]!.projects.add(project);
+          recordMap[key]!.projects.add(project);
         } catch (e) {
-          print('解析CSV行失败: $e, 行内容: $line');
+          debugPrint('解析CSV行失败: $e, 行内容: $line');
         }
       }
-
-      return records;
+      return recordMap.values.toList();
     } catch (e) {
-      print('导入CSV失败: $e');
+      debugPrint('导入CSV失败: $e');
       rethrow;
     }
   }
@@ -657,28 +623,25 @@ class ExcelCSVService {
   List<String> _parseCSVLine(String line) {
     final result = <String>[];
     final chars = line.split('');
-    StringBuffer current = StringBuffer();
+    final buffer = StringBuffer();
     bool inQuotes = false;
-
     for (int i = 0; i < chars.length; i++) {
       final char = chars[i];
-
       if (char == '"') {
         if (i + 1 < chars.length && chars[i + 1] == '"') {
-          current.write('"');
+          buffer.write('"');
           i++;
         } else {
           inQuotes = !inQuotes;
         }
       } else if (char == ',' && !inQuotes) {
-        result.add(current.toString());
-        current.clear();
+        result.add(buffer.toString());
+        buffer.clear();
       } else {
-        current.write(char);
+        buffer.write(char);
       }
     }
-
-    result.add(current.toString());
+    result.add(buffer.toString());
     return result;
   }
 }
@@ -713,17 +676,14 @@ class NutstoreService extends ChangeNotifier {
     try {
       _username = username;
       _password = password;
-
       final client = http.Client();
       final url = Uri.parse(_baseUrl);
       final request = http.Request('PROPFIND', url);
       request.headers['Authorization'] = _getAuthHeader();
       request.headers['Depth'] = '0';
-
       final streamedResponse = await client.send(request);
       final response = await http.Response.fromStream(streamedResponse);
       client.close();
-
       if (response.statusCode == 207) {
         _isConnected = true;
         await _ensureCloudFolder();
@@ -735,13 +695,13 @@ class NutstoreService extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-        print('连接坚果云失败: 状态码 ${response.statusCode}');
+        debugPrint('连接坚果云失败: 状态码 ${response.statusCode}');
         _isConnected = false;
         notifyListeners();
         return false;
       }
     } catch (e) {
-      print('连接坚果云失败: $e');
+      debugPrint('连接坚果云失败: $e');
       _isConnected = false;
       notifyListeners();
       return false;
@@ -753,18 +713,10 @@ class NutstoreService extends ChangeNotifier {
       final prefs = await SharedPreferences.getInstance();
       final username = prefs.getString('nutstore_username');
       final password = prefs.getString('nutstore_password');
-
-      if (username == null || password == null) {
-        return false;
-      }
-
-      return await connect(
-        username: username,
-        password: password,
-        saveCredentials: false,
-      );
+      if (username == null || password == null) return false;
+      return await connect(username: username, password: password, saveCredentials: false);
     } catch (e) {
-      print('加载保存的配置失败: $e');
+      debugPrint('加载保存的配置失败: $e');
       return false;
     }
   }
@@ -779,41 +731,30 @@ class NutstoreService extends ChangeNotifier {
       final checkResp = await client.send(checkReq);
       final checkResponse = await http.Response.fromStream(checkResp);
       client.close();
-
-      if (checkResponse.statusCode == 207) {
-        print('云文件夹已存在: $_cloudFolder');
-        return;
-      }
-
+      if (checkResponse.statusCode == 207) return;
       final mkcolClient = http.Client();
       final mkcolReq = http.Request('MKCOL', folderUrl);
       mkcolReq.headers['Authorization'] = _getAuthHeader();
       final mkcolResp = await mkcolClient.send(mkcolReq);
       final mkcolResponse = await http.Response.fromStream(mkcolResp);
       mkcolClient.close();
-
       if (mkcolResponse.statusCode == 201) {
-        print('云文件夹创建成功: $_cloudFolder');
+        debugPrint('云文件夹创建成功: $_cloudFolder');
       } else {
-        print('云文件夹创建失败: 状态码${mkcolResponse.statusCode}');
+        debugPrint('云文件夹创建失败: 状态码${mkcolResponse.statusCode}');
       }
     } catch (e) {
-      print('确保云文件夹存在失败: $e');
+      debugPrint('确保云文件夹存在失败: $e');
     }
   }
 
   Future<bool> uploadFile(String localFilePath) async {
     try {
       final file = File(localFilePath);
-      if (!await file.exists()) {
-        print('本地文件不存在: $localFilePath');
-        return false;
-      }
+      if (!await file.exists()) return false;
       final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
-      print('正在上传文件到: $remotePath');
       final bytes = await file.readAsBytes();
       final url = Uri.parse(remotePath);
-
       final client = http.Client();
       final response = await client.put(
         url,
@@ -824,16 +765,9 @@ class NutstoreService extends ChangeNotifier {
         body: bytes,
       );
       client.close();
-
-      if (response.statusCode == 201 || response.statusCode == 204) {
-        print('上传成功');
-        return true;
-      } else {
-        print('上传失败: 状态码${response.statusCode}');
-        return false;
-      }
+      return response.statusCode == 201 || response.statusCode == 204;
     } catch (e) {
-      print('上传文件失败: $e');
+      debugPrint('上传文件失败: $e');
       rethrow;
     }
   }
@@ -841,9 +775,7 @@ class NutstoreService extends ChangeNotifier {
   Future<bool> downloadFile(String savePath) async {
     try {
       final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
-      print('正在从云盘下载文件: $remotePath');
       final url = Uri.parse(remotePath);
-
       final client = http.Client();
       final response = await client.get(
         url,
@@ -852,18 +784,14 @@ class NutstoreService extends ChangeNotifier {
         },
       );
       client.close();
-
       if (response.statusCode == 200) {
         final file = File(savePath);
         await file.writeAsBytes(response.bodyBytes);
-        print('下载成功，已保存到: $savePath');
         return true;
-      } else {
-        print('下载失败: 状态码${response.statusCode}');
-        return false;
       }
+      return false;
     } catch (e) {
-      print('下载文件失败: $e');
+      debugPrint('下载文件失败: $e');
       rethrow;
     }
   }
@@ -872,7 +800,6 @@ class NutstoreService extends ChangeNotifier {
     try {
       final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
       final url = Uri.parse(remotePath);
-
       final client = http.Client();
       final response = await client.head(
         url,
@@ -881,10 +808,9 @@ class NutstoreService extends ChangeNotifier {
         },
       );
       client.close();
-
       return response.statusCode == 200;
     } catch (e) {
-      print('检查文件存在失败: $e');
+      debugPrint('检查文件存在失败: $e');
       return false;
     }
   }
@@ -932,13 +858,12 @@ class NutstoreService extends ChangeNotifier {
 // ==================== 主应用 ====================
 class FitnessApp extends StatelessWidget {
   const FitnessApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: '健身数据管理系统 Fitness-Tracker_Win_v3.0',
+          title: '健身数据管理系统 Fitness-Tracker_Win_v3.0.1',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.currentTheme,
           home: const MainScreen(),
@@ -951,7 +876,6 @@ class FitnessApp extends StatelessWidget {
 // ==================== 主界面 ====================
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
-
   @override
   State<MainScreen> createState() => _MainScreenState();
 }
@@ -986,14 +910,13 @@ class _MainScreenState extends State<MainScreen> {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
     await provider.loadSavedRecords();
     await provider.loadLastExportPath();
-
     final nutstore = Provider.of<NutstoreService>(context, listen: false);
     await nutstore.loadSavedConfig();
-
     if (mounted) {
       setState(() {
         if (provider.records.isNotEmpty) {
-          sessionNumber = provider.records.last.sessionNumber + 1;
+          final maxSession = provider.records.map((r) => r.sessionNumber).reduce((a, b) => a > b ? a : b);
+          sessionNumber = maxSession + 1;
         }
       });
     }
@@ -1023,15 +946,31 @@ class _MainScreenState extends State<MainScreen> {
       initialDate: firstWorkoutDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedDate == null) return;
-
     final pickedTime = await showTimePicker(
       context: context,
       initialTime: TimeOfDay.fromDateTime(firstWorkoutDate),
+      builder: (context, child) {
+        final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+          ),
+          child: child!,
+        );
+      },
     );
     if (pickedTime == null) return;
-
     final newDateTime = DateTime(
       pickedDate.year,
       pickedDate.month,
@@ -1040,7 +979,6 @@ class _MainScreenState extends State<MainScreen> {
       pickedTime.minute,
     );
     await _saveFirstWorkoutDate(newDateTime);
-
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('起始日期已更新，坚持天数已重新计算')),
     );
@@ -1092,8 +1030,16 @@ class _MainScreenState extends State<MainScreen> {
       initialDate: selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
+      builder: (context, child) {
+        final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+        return Theme(
+          data: Theme.of(context).copyWith(
+            dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+          ),
+          child: child!,
+        );
+      },
     );
-
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
@@ -1104,7 +1050,6 @@ class _MainScreenState extends State<MainScreen> {
 
   void _saveWorkout(BuildContext context) {
     final List<WorkoutProject> validProjects = [];
-
     for (int i = 0; i < projects.length; i++) {
       if (nameControllers[i].text.trim().isNotEmpty) {
         validProjects.add(WorkoutProject(
@@ -1118,7 +1063,6 @@ class _MainScreenState extends State<MainScreen> {
         ));
       }
     }
-
     if (validProjects.isEmpty) {
       _showToast('请至少填写一个完整的训练项目', isError: true);
       return;
@@ -1135,10 +1079,6 @@ class _MainScreenState extends State<MainScreen> {
     Provider.of<WorkoutProvider>(context, listen: false).addRecord(record);
 
     setState(() {
-      sessionNumber++;
-      selectedDate = DateTime.now();
-      dateController.text = DateFormat('yyyy-MM-dd').format(selectedDate);
-
       projects.clear();
       nameControllers.clear();
       weightControllers.clear();
@@ -1147,25 +1087,19 @@ class _MainScreenState extends State<MainScreen> {
       feelingControllers.clear();
       supplementControllers.clear();
       partNotifiers.clear();
-
       projects.add(WorkoutProject.empty());
       _initializeControllers();
+      sessionNumber++;
     });
-
     _showToast('训练记录保存成功！');
   }
 
   Future<void> _exportToCSV(BuildContext context) async {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
     final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final filePath = await excelService.exportToCSV(provider.records);
-
       if (filePath != null) {
         provider.setLastExportPath(filePath);
         _showExportSuccessDialog(context, filePath, provider.records.isEmpty);
@@ -1175,9 +1109,7 @@ class _MainScreenState extends State<MainScreen> {
     } catch (e) {
       _showToast('导出失败: $e', isError: true);
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -1185,33 +1117,21 @@ class _MainScreenState extends State<MainScreen> {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
     final nutstore = Provider.of<NutstoreService>(context, listen: false);
     final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-
     if (!nutstore.isConnected) {
       _showCloudLoginDialog(context);
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       final filePath = await excelService.exportToCSV(provider.records);
-
-      if (filePath == null) {
-        _showToast('导出数据失败', isError: true);
-        return;
-      }
-
+      if (filePath == null) throw Exception('导出数据失败');
       provider.setLastExportPath(filePath);
       await nutstore.uploadFile(filePath);
       _showToast('数据已成功上传到坚果云！');
     } catch (e) {
       _showToast('上传失败: $e', isError: true);
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
@@ -1219,22 +1139,16 @@ class _MainScreenState extends State<MainScreen> {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
     final nutstore = Provider.of<NutstoreService>(context, listen: false);
     final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-
     if (!nutstore.isConnected) {
       _showCloudLoginDialog(context);
       return;
     }
-
     final fileExists = await nutstore.checkFileExists();
     if (!fileExists) {
       _showToast('云文件中不存在，请先上传', isError: true);
       return;
     }
-
-    setState(() {
-      _isLoading = true;
-    });
-
+    setState(() => _isLoading = true);
     try {
       String savePath;
       if (provider.lastExportPath == null) {
@@ -1244,7 +1158,6 @@ class _MainScreenState extends State<MainScreen> {
       } else {
         savePath = provider.lastExportPath!;
       }
-
       await nutstore.downloadFile(savePath);
       final records = await excelService.importFromCSV(savePath);
       if (records.isNotEmpty) {
@@ -1256,30 +1169,22 @@ class _MainScreenState extends State<MainScreen> {
     } catch (e) {
       _showToast('下载失败: $e', isError: true);
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
     }
   }
 
   void _showCloudLoginDialog(BuildContext context) {
     final usernameController = TextEditingController();
     final passwordController = TextEditingController();
-
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) {
           bool rememberPassword = true;
           bool isConnecting = false;
-
           return AlertDialog(
             title: const Row(
-              children: [
-                Icon(Icons.cloud, color: Colors.blue),
-                SizedBox(width: 10),
-                Text('连接坚果云服务'),
-              ],
+              children: [Icon(Icons.cloud, color: Colors.blue), SizedBox(width: 10), Text('连接坚果云服务')],
             ),
             content: SingleChildScrollView(
               child: Column(
@@ -1292,54 +1197,17 @@ class _MainScreenState extends State<MainScreen> {
                   const SizedBox(height: 15),
                   const Text('账户邮箱：', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  TextField(
-                    controller: usernameController,
-                    decoration: const InputDecoration(
-                      hintText: '您的坚果云邮箱',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
+                  TextField(controller: usernameController, decoration: const InputDecoration(hintText: '您的坚果云邮箱', border: OutlineInputBorder())),
                   const SizedBox(height: 15),
                   const Text('应用密码：', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  TextField(
-                    controller: passwordController,
-                    obscureText: true,
-                    decoration: const InputDecoration(
-                      hintText: '坚果云应用密码',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
+                  TextField(controller: passwordController, obscureText: true, decoration: const InputDecoration(hintText: '坚果云应用密码', border: OutlineInputBorder())),
                   const SizedBox(height: 15),
-                  Row(
-                    children: [
-                      Checkbox(
-                        value: rememberPassword,
-                        onChanged: (value) {
-                          setState(() {
-                            rememberPassword = value ?? true;
-                          });
-                        },
-                      ),
-                      const Text('记住密码'),
-                    ],
-                  ),
+                  Row(children: [Checkbox(value: rememberPassword, onChanged: (v) => setState(() => rememberPassword = v ?? true)), const Text('记住密码')]),
                   const SizedBox(height: 10),
                   TextButton(
                     onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                          title: const Text('坚果云配置帮助'),
-                          content: Text(NutstoreService.getHelpMessage()),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(context),
-                              child: const Text('关闭'),
-                            ),
-                          ],
-                        ),
-                      );
+                      showDialog(context: context, builder: (_) => AlertDialog(title: const Text('坚果云配置帮助'), content: Text(NutstoreService.getHelpMessage()), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('关闭'))]));
                     },
                     child: const Text('查看配置说明'),
                   ),
@@ -1347,41 +1215,21 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('取消'),
-              ),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
               ElevatedButton(
                 onPressed: isConnecting ? null : () async {
-                  setState(() {
-                    isConnecting = true;
-                  });
-
+                  setState(() => isConnecting = true);
                   final nutstore = Provider.of<NutstoreService>(context, listen: false);
-                  final connected = await nutstore.connect(
-                    username: usernameController.text,
-                    password: passwordController.text,
-                    saveCredentials: rememberPassword,
-                  );
-
+                  final connected = await nutstore.connect(username: usernameController.text, password: passwordController.text, saveCredentials: rememberPassword);
                   if (connected && mounted) {
                     Navigator.pop(context);
                     _showToast('坚果云连接成功！');
                   } else {
                     _showToast('连接失败，请检查配置', isError: true);
                   }
-
-                  setState(() {
-                    isConnecting = false;
-                  });
+                  setState(() => isConnecting = false);
                 },
-                child: isConnecting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Text('连接'),
+                child: isConnecting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('连接'),
               ),
             ],
           );
@@ -1394,39 +1242,23 @@ class _MainScreenState extends State<MainScreen> {
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(Offset.zero, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
+      Rect.fromPoints(button.localToGlobal(Offset.zero, ancestor: overlay), button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay)),
       Offset.zero & overlay.size,
     );
-
     showMenu(
       context: context,
       position: position,
-      items: [
-        const PopupMenuItem(
-          value: 'logout',
-          child: Text('退出云服务'),
-        ),
-        const PopupMenuItem(
-          value: 'switch',
-          child: Text('切换云账号'),
-        ),
-      ],
+      items: const [PopupMenuItem(value: 'logout', child: Text('退出云服务')), PopupMenuItem(value: 'switch', child: Text('切换云账号'))],
     ).then((value) {
-      if (value == 'logout') {
-        _logoutCloud();
-      } else if (value == 'switch') {
-        _switchCloudAccount();
-      }
+      if (value == 'logout') _logoutCloud();
+      else if (value == 'switch') _switchCloudAccount();
     });
   }
 
   Future<void> _logoutCloud() async {
     final nutstore = Provider.of<NutstoreService>(context, listen: false);
     await nutstore.clearCredentials();
-    _showToast('已退出云服务', isError: false);
+    _showToast('已退出云服务');
   }
 
   Future<void> _switchCloudAccount() async {
@@ -1438,55 +1270,23 @@ class _MainScreenState extends State<MainScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            Icon(isEmpty ? Icons.info_outline : Icons.check_circle,
-                color: isEmpty ? Colors.orange : Colors.green),
-            const SizedBox(width: 10),
-            Text(isEmpty ? '导出空模板成功' : '导出成功'),
-          ],
-        ),
+        title: Row(children: [Icon(isEmpty ? Icons.info_outline : Icons.check_circle, color: isEmpty ? Colors.orange : Colors.green), const SizedBox(width: 10), Text(isEmpty ? '导出空模板成功' : '导出成功')]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(isEmpty ? '空模板已成功导出到：' : '数据已成功导出到：'),
             const SizedBox(height: 10),
-            Text(
-              filePath,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
+            Text(filePath, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 15),
-            Text(isEmpty
-                ? '这是一个空模板，您可以填写数据后导入使用。'
-                : '文件已记录，可点击"上云"按钮上传到坚果云。'),
+            Text(isEmpty ? '这是一个空模板，您可以填写数据后导入使用。' : '文件已记录，可点击"上云"按钮上传到坚果云。'),
             if (!isEmpty) const SizedBox(height: 10),
-            if (!isEmpty)
-              const Text(
-                '注意：同一天的训练项目在Excel中可以手动合并单元格，日期只在第一行显示。',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: Colors.orange,
-                ),
-              ),
+            if (!isEmpty) const Text('注意：同一天的训练项目在Excel中可以手动合并单元格，日期只在第一行显示。', style: TextStyle(fontSize: 12, color: Colors.orange)),
           ],
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('确定'),
-          ),
-          if (!isEmpty)
-            ElevatedButton(
-              onPressed: () {
-                Navigator.pop(context);
-                _uploadToCloud(context);
-              },
-              child: const Text('立即上云'),
-            ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
+          if (!isEmpty) ElevatedButton(onPressed: () { Navigator.pop(context); _uploadToCloud(context); }, child: const Text('立即上云')),
         ],
       ),
     );
@@ -1496,36 +1296,19 @@ class _MainScreenState extends State<MainScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green),
-            SizedBox(width: 10),
-            Text('下载成功'),
-          ],
-        ),
+        title: const Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 10), Text('下载成功')]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('数据已从坚果云下载到：'),
             const SizedBox(height: 10),
-            Text(
-              filePath,
-              style: const TextStyle(
-                fontSize: 12,
-                color: Colors.grey,
-              ),
-            ),
+            Text(filePath, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 15),
             const Text('云数据已成功替换本地数据。'),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('确定'),
-          ),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定'))],
       ),
     );
   }
@@ -1533,161 +1316,125 @@ class _MainScreenState extends State<MainScreen> {
   void _showHistory(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => HistoryScreen(
-          onExport: () => _exportToCSV(context),
-          onUpload: () => _uploadToCloud(context),
-          onDownload: () => _downloadFromCloud(context),
-        ),
-      ),
+      MaterialPageRoute(builder: (context) => HistoryScreen(onExport: () => _exportToCSV(context), onUpload: () => _uploadToCloud(context), onDownload: () => _downloadFromCloud(context))),
     );
   }
 
   void _showThemeSelector(BuildContext context) {
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true, // 允许弹窗占据更多高度
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-    ),
-    builder: (context) => Consumer<ThemeProvider>(
-      builder: (context, themeProvider, child) {
-        final themeNames = ['远山青', '萤石黑', '珠玉白', '活力橙', '全透明'];
-        final themeColors = [
-          const Color(0xFF3AB8C7),
-          const Color(0xFF007AFF),
-          const Color(0xFF4A6FA5),
-          const Color(0xFFFF9500),
-          Colors.white,
-        ];
-        final themeDescriptions = [
-          '青绿渐变 · 清新自然',
-          '深邃纯黑 · 专注高效',
-          '温润米白 · 舒适护眼',
-          '活力橙色 · 热情奔放',
-          '毛玻璃效果 · 极简透明',
-        ];
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (context) => Consumer<ThemeProvider>(
+        builder: (context, themeProvider, child) {
+          final themeNames = ['远山青', '萤石黑', '珠玉白', '活力橙', '全透明'];
+          final List<Color> themeColors = [
+            const Color(0xFF3AB8C7),
+            const Color(0xFF007AFF),
+            const Color(0xFF4A6FA5),
+            const Color(0xFFFF9500),
+            Colors.white,
+          ];
+          final List<LinearGradient?> gradients = [
+            const LinearGradient(colors: [Color(0xFF3AB8C7), Color(0xFF2E8B9E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            const LinearGradient(colors: [Color(0xFF1C1C1E), Color(0xFF2C2C2E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            const LinearGradient(colors: [Color(0xFFFDFBF7), Color(0xFFF0EDE5)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            const LinearGradient(colors: [Color(0xFFFF9500), Color(0xFFFF6B00)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            null,
+          ];
+          final themeDescriptions = [
+            '青绿渐变 · 清新自然',
+            '玻璃光泽 · 深邃纯黑',
+            '汉白玉渐变 · 温润护眼',
+            '活力渐变 · 热情奔放',
+            '晶莹剔透 · 仿真玻璃',
+          ];
 
-        return SafeArea(
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  '选择主题',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  '不同主题会改变整体配色方案',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
-                const SizedBox(height: 20),
-                ListView.builder(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: themeNames.length,
-                  itemBuilder: (context, index) {
-                    final isSelected = themeProvider.selectedThemeIndex == index;
-                    return GestureDetector(
-                      onTap: () {
-                        themeProvider.setTheme(index);
-                        Navigator.pop(context);
-                      },
-                      child: Container(
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          gradient: index == 0
-                              ? const LinearGradient(
-                                  colors: [Color(0xFF3AB8C7), Color(0xFF2E8B9E)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : null,
-                          color: index != 0 ? themeColors[index] : null,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: isSelected 
-                                ? (index == 2 ? Colors.blue : Colors.white)
-                                : Colors.transparent,
-                            width: 3,
+          return SafeArea(
+            child: Container(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('选择主题', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 8),
+                  const Text('不同主题会改变整体配色方案', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  const SizedBox(height: 20),
+                  ListView.builder(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: themeNames.length,
+                    itemBuilder: (context, index) {
+                      final isSelected = themeProvider.selectedThemeIndex == index;
+                      final bool isJadeWhite = index == 2;
+                      final bool isGlass = index == 4;
+                      final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+                      final Color textColor = isLightTheme ? Colors.black87 : Colors.white;
+                      return GestureDetector(
+                        onTap: () {
+                          themeProvider.setTheme(index);
+                          Navigator.pop(context);
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: isGlass ? null : gradients[index],
+                            color: isGlass ? Colors.white.withValues(alpha: 0.2) : null,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isSelected ? (isJadeWhite ? Colors.blue : Colors.white) : (isGlass ? Colors.black : Colors.transparent),
+                              width: isGlass && !isSelected ? 1 : 3,
+                            ),
+                            boxShadow: isSelected ? [BoxShadow(color: themeColors[index].withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 2)] : null,
+                            backgroundBlendMode: isGlass ? BlendMode.srcOver : null,
                           ),
-                          boxShadow: isSelected
-                              ? [
-                                  BoxShadow(
-                                    color: themeColors[index].withOpacity(0.3),
-                                    blurRadius: 8,
-                                    spreadRadius: 2,
-                                  )
-                                ]
-                              : null,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Text(
-                                  themeNames[index],
-                                  style: TextStyle(
-                                    color: index == 2 ? Colors.black87 : Colors.white,
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                if (isSelected)
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: index == 2 ? Colors.blue : Colors.white,
-                                    size: 20,
-                                  ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              themeDescriptions[index],
-                              style: TextStyle(
-                                color: index == 2 
-                                    ? Colors.black54 
-                                    : Colors.white70,
-                                fontSize: 12,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(themeNames[index], style: TextStyle(color: isJadeWhite ? Colors.black87 : textColor, fontSize: 16, fontWeight: FontWeight.bold)),
+                                  const SizedBox(width: 8),
+                                  if (isSelected) Icon(Icons.check_circle, color: isJadeWhite ? Colors.blue : Colors.white, size: 20),
+                                ],
                               ),
-                            ),
-                          ],
+                              const SizedBox(height: 4),
+                              Text(themeDescriptions[index], style: TextStyle(color: isJadeWhite ? Colors.black54 : textColor.withOpacity(0.7), fontSize: 12)),
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('关闭'),
-                ),
-              ],
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('关闭')),
+                ],
+              ),
             ),
-          ),
-        );
-      },
-    ),
-  );
-}
-  void _showToast(String message, {bool isError = false}) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: isError ? Colors.red : Colors.green,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
+          );
+        },
       ),
     );
   }
+
+  void _showToast(String message, {bool isError = false}) {
+  // 防止空消息
+  if (message.trim().isEmpty) {
+    message = '操作完成';
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        message,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
 
   Widget _buildProjectCard(int index) {
     return ValueListenableBuilder<String>(
@@ -1696,160 +1443,59 @@ class _MainScreenState extends State<MainScreen> {
         final weight = double.tryParse(weightControllers[index].text) ?? 0;
         final sets = int.tryParse(setsControllers[index].text) ?? 0;
         final reps = int.tryParse(repsControllers[index].text) ?? 0;
-        final work = WorkoutProject(
-          name: '',
-          part: part,
-          weight: weight,
-          sets: sets,
-          repsPerSet: reps,
-          feeling: '',
-          supplement: '',
-        ).calculateWork();
-
+        final work = WorkoutProject(name: '', part: part, weight: weight, sets: sets, repsPerSet: reps, feeling: '', supplement: '').calculateWork();
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Theme.of(context).primaryColor.withOpacity(0.3),
-            ),
+            border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
-              Row(
-                children: [
-                  Text(
-                    '项目 ${index + 1}',
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+              Row(children: [Text('项目 ${index + 1}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))]),
               const SizedBox(height: 12),
-
               Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: nameControllers[index],
-                      decoration: const InputDecoration(
-                        labelText: '项目名称',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: nameControllers[index], decoration: const InputDecoration(labelText: '项目名称', border: OutlineInputBorder()))),
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       initialValue: part,
-                      decoration: const InputDecoration(
-                        labelText: '锻炼部位',
-                        border: OutlineInputBorder(),
-                      ),
-                      items: const ['胸', '背', '腿', '肩', '腹']
-                          .map((part) => DropdownMenuItem(
-                                value: part,
-                                child: Text(part),
-                              ))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) {
-                          partNotifiers[index].value = value;
-                        }
-                      },
+                      decoration: const InputDecoration(labelText: '锻炼部位', border: OutlineInputBorder()),
+                      items: const ['胸', '背', '腿', '肩', '腹'].map((part) => DropdownMenuItem(value: part, child: Text(part))).toList(),
+                      onChanged: (value) { if (value != null) partNotifiers[index].value = value; },
                     ),
                   ),
                 ],
               ),
-
               const SizedBox(height: 16),
-
               Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: weightControllers[index],
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: '重量 (kg)',
-                        border: OutlineInputBorder(),
-                        suffixText: 'kg',
-                      ),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: weightControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '重量 (kg)', border: OutlineInputBorder(), suffixText: 'kg'))),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: setsControllers[index],
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: '组数',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: setsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '组数', border: OutlineInputBorder()))),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: repsControllers[index],
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: '每组数量',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: repsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '每组数量', border: OutlineInputBorder()))),
                 ],
               ),
-
               const SizedBox(height: 16),
-
               Row(
                 children: [
                   const Icon(Icons.bar_chart, color: Colors.orange),
                   const SizedBox(width: 8),
-                  const Text(
-                    '做功:',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
+                  const Text('做功:', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
-                  Text(
-                    '${work.toStringAsFixed(0)} J',
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
+                  Text('${work.toStringAsFixed(0)} J', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
-
               const SizedBox(height: 16),
-
               Row(
                 children: [
-                  Expanded(
-                    child: TextField(
-                      controller: feelingControllers[index],
-                      decoration: const InputDecoration(
-                        labelText: '感受',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: feelingControllers[index], decoration: const InputDecoration(labelText: '感受', border: OutlineInputBorder()))),
                   const SizedBox(width: 16),
-                  Expanded(
-                    child: TextField(
-                      controller: supplementControllers[index],
-                      decoration: const InputDecoration(
-                        labelText: '补剂',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                  ),
+                  Expanded(child: TextField(controller: supplementControllers[index], decoration: const InputDecoration(labelText: '补剂', border: OutlineInputBorder()))),
                 ],
               ),
             ],
@@ -1862,6 +1508,13 @@ class _MainScreenState extends State<MainScreen> {
   @override
   Widget build(BuildContext context) {
     final duration = DateTime.now().difference(firstWorkoutDate);
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final isGlass = theme.scaffoldBackgroundColor == Colors.transparent;
+
+    // 获取当前主题的输入框边框样式（用于日期选择框）
+    final inputBorder = theme.inputDecorationTheme.border ?? const OutlineInputBorder();
+    final enabledBorder = theme.inputDecorationTheme.enabledBorder ?? inputBorder;
 
     return Scaffold(
       appBar: AppBar(
@@ -1869,30 +1522,14 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             const Icon(Icons.fitness_center),
             const SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                '健身数据管理系统 Win_v3.0',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'SimSun',
-                  fontSize: 14,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
+            Flexible(child: Text('健身数据管理系统 Win_v3.0.1', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'SimSun', fontSize: 14), overflow: TextOverflow.ellipsis, maxLines: 1)),
             const SizedBox(width: 8),
             SizedBox(
               width: 700,
               height: kToolbarHeight,
               child: Align(
                 alignment: Alignment.centerRight,
-                child: RoamingCat(
-                  maxWidth: 700,
-                  maxHeight: kToolbarHeight - 8,
-                  githubUrl: 'https://github.com/MrKedow/Fitness-Tracker',
-                  catSize: 45.0,
-                ),
+                child: RoamingCat(maxWidth: 700, maxHeight: kToolbarHeight - 8, githubUrl: 'https://github.com/MrKedow/Fitness-Tracker', catSize: 45.0),
               ),
             ),
           ],
@@ -1905,76 +1542,35 @@ class _MainScreenState extends State<MainScreen> {
                   padding: const EdgeInsets.only(right: 8.0),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.cloud_done, color: Colors.green, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        nutstore.username ?? '',
-                        style: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
+                    children: [const Icon(Icons.cloud_done, color: Colors.green, size: 20), const SizedBox(width: 4), Text(nutstore.username ?? '', style: const TextStyle(color: Colors.green, fontSize: 14, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)],
                   ),
                 );
               }
               return const SizedBox.shrink();
             },
           ),
-          IconButton(
-            icon: const Icon(Icons.history),
-            onPressed: () => _showHistory(context),
-            tooltip: '历史记录',
-          ),
-          IconButton(
-            icon: const Icon(Icons.palette),
-            onPressed: () => _showThemeSelector(context),
-            tooltip: '切换主题',
-          ),
+          IconButton(icon: const Icon(Icons.history), onPressed: () => _showHistory(context), tooltip: '历史记录'),
+          IconButton(icon: const Icon(Icons.palette), onPressed: () => _showThemeSelector(context), tooltip: '切换主题'),
           Consumer<NutstoreService>(
             builder: (context, nutstore, child) {
               return IconButton(
                 icon: const Icon(Icons.cloud),
                 onPressed: () {
-                  if (nutstore.isConnected) {
-                    _showCloudMenu(context);
-                  } else {
-                    _showCloudLoginDialog(context);
-                  }
+                  if (nutstore.isConnected) _showCloudMenu(context);
+                  else _showCloudLoginDialog(context);
                 },
                 tooltip: '云服务',
               );
             },
           ),
-          if (_isLoading)
-            const Padding(
-              padding: EdgeInsets.all(8.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
-            ),
+          if (_isLoading) const Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
         ],
       ),
       body: _isLoading
-          ? const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  CircularProgressIndicator(),
-                  SizedBox(height: 20),
-                  Text('处理中...'),
-                ],
-              ),
-            )
+          ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 20), Text('处理中...')]))
           : Consumer<WorkoutProvider>(
               builder: (context, provider, child) {
-                final recentRecords = provider.records.take(5).toList();
-
+                final recentRecords = provider.records.reversed.take(5).toList();
                 return Padding(
                   padding: const EdgeInsets.all(20),
                   child: Column(
@@ -1985,54 +1581,22 @@ class _MainScreenState extends State<MainScreen> {
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text(
-                                    '健身坚持统计',
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '每一次努力都值得记录',
-                                    style: TextStyle(
-                                      color: Colors.grey[400],
-                                    ),
-                                  ),
-                                ],
-                              ),
+                              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('健身坚持统计', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 8), Text('每一次努力都值得记录', style: TextStyle(color: Colors.grey[400]))]),
                               Column(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
                                   GestureDetector(
                                     onTap: _pickFirstWorkoutDate,
-                                    child: Text(
-                                      '${duration.inDays} 天',
-                                      style: TextStyle(
-                                        fontSize: 32,
-                                        fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).primaryColor,
-                                      ),
-                                    ),
+                                    child: Text('${duration.inDays} 天', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
                                   ),
-                                  Text(
-                                    '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
-                                    style: TextStyle(
-                                      color: Colors.grey[400],
-                                    ),
-                                  ),
+                                  Text('${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟', style: TextStyle(color: Colors.grey[400])),
                                 ],
                               ),
                             ],
                           ),
                         ),
                       ),
-
                       const SizedBox(height: 24),
-
                       Expanded(
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -2045,15 +1609,8 @@ class _MainScreenState extends State<MainScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        '填写训练记录',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      const Text('填写训练记录', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 20),
-
                                       Row(
                                         children: [
                                           Expanded(
@@ -2069,6 +1626,10 @@ class _MainScreenState extends State<MainScreen> {
                                                     decoration: BoxDecoration(
                                                       color: Theme.of(context).cardColor,
                                                       borderRadius: BorderRadius.circular(12),
+                                                      // 统一使用主题的输入框边框样式
+                                                      border: enabledBorder.borderSide != BorderSide.none
+                                                          ? Border.all(color: enabledBorder.borderSide.color, width: enabledBorder.borderSide.width)
+                                                          : null,
                                                     ),
                                                     child: Row(
                                                       children: [
@@ -2092,19 +1653,12 @@ class _MainScreenState extends State<MainScreen> {
                                                 const Text('#️⃣ 第几次训练'),
                                                 const SizedBox(height: 8),
                                                 TextField(
-                                                  controller: TextEditingController(
-                                                    text: sessionNumber.toString(),
-                                                  ),
+                                                  controller: TextEditingController(text: sessionNumber.toString()),
                                                   keyboardType: TextInputType.number,
-                                                  decoration: const InputDecoration(
-                                                    hintText: '输入次数',
-                                                    border: OutlineInputBorder(),
-                                                  ),
+                                                  decoration: const InputDecoration(hintText: '输入次数', border: OutlineInputBorder()),
                                                   onChanged: (value) {
                                                     final num = int.tryParse(value) ?? 1;
-                                                    setState(() {
-                                                      sessionNumber = num;
-                                                    });
+                                                    setState(() => sessionNumber = num);
                                                   },
                                                 ),
                                               ],
@@ -2112,68 +1666,42 @@ class _MainScreenState extends State<MainScreen> {
                                           ),
                                         ],
                                       ),
-
                                       const SizedBox(height: 30),
-
-                                      const Text(
-                                        '训练项目',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      const Text('训练项目', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 16),
-
                                       Expanded(
                                         child: ListView.builder(
                                           shrinkWrap: true,
                                           itemCount: projects.length,
-                                          itemBuilder: (context, index) {
-                                            return _buildProjectCard(index);
-                                          },
+                                          itemBuilder: (context, index) => _buildProjectCard(index),
                                         ),
                                       ),
-
                                       const SizedBox(height: 20),
-
                                       Row(
                                         children: [
-                                          ElevatedButton.icon(
-                                            onPressed: _addProject,
-                                            icon: const Icon(Icons.add),
-                                            label: const Text('添加项目'),
-                                          ),
+                                          ElevatedButton.icon(onPressed: _addProject, icon: const Icon(Icons.add), label: const Text('添加项目')),
                                           const SizedBox(width: 12),
                                           ElevatedButton.icon(
                                             onPressed: _removeProject,
                                             icon: const Icon(Icons.remove),
                                             label: const Text('删除项目'),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: Theme.of(context).cardColor,
-                                            ),
+                                            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).cardColor),
                                           ),
                                         ],
                                       ),
-
                                       const SizedBox(height: 30),
-
                                       ElevatedButton.icon(
                                         onPressed: () => _saveWorkout(context),
                                         icon: const Icon(Icons.save),
                                         label: const Text('保存记录'),
-                                        style: ElevatedButton.styleFrom(
-                                          backgroundColor: const Color(0xFF34C759),
-                                          minimumSize: const Size(double.infinity, 56),
-                                        ),
+                                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF34C759), minimumSize: const Size(double.infinity, 56)),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
                             ),
-
                             const SizedBox(width: 24),
-
                             Expanded(
                               flex: 2,
                               child: Card(
@@ -2182,28 +1710,11 @@ class _MainScreenState extends State<MainScreen> {
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        '最近记录',
-                                        style: TextStyle(
-                                          fontSize: 18,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
+                                      const Text('最近记录', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                                       const SizedBox(height: 20),
-
                                       Expanded(
                                         child: recentRecords.isEmpty
-                                            ? const Center(
-                                                child: Column(
-                                                  mainAxisAlignment: MainAxisAlignment.center,
-                                                  children: [
-                                                    Icon(Icons.history, size: 60, color: Colors.grey),
-                                                    SizedBox(height: 16),
-                                                    Text('暂无记录'),
-                                                    Text('开始您的第一次训练吧！', style: TextStyle(fontSize: 12)),
-                                                  ],
-                                                ),
-                                              )
+                                            ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.history, size: 60, color: Colors.grey), SizedBox(height: 16), Text('暂无记录'), Text('开始您的第一次训练吧！', style: TextStyle(fontSize: 12))]))
                                             : ListView.builder(
                                                 shrinkWrap: true,
                                                 itemCount: recentRecords.length,
@@ -2215,7 +1726,7 @@ class _MainScreenState extends State<MainScreen> {
                                                     margin: const EdgeInsets.only(bottom: 12),
                                                     padding: const EdgeInsets.all(16),
                                                     decoration: BoxDecoration(
-                                                      color: Theme.of(context).cardColor,
+                                                      color: isGlass ? Colors.grey.shade800.withValues(alpha: 0.5) : Theme.of(context).cardColor,
                                                       borderRadius: BorderRadius.circular(12),
                                                     ),
                                                     child: Column(
@@ -2228,28 +1739,19 @@ class _MainScreenState extends State<MainScreen> {
                                                             Container(
                                                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                               decoration: BoxDecoration(
-                                                                color: Theme.of(context).primaryColor,
+                                                                color: isLight ? Colors.green.shade700 : Theme.of(context).primaryColor,
                                                                 borderRadius: BorderRadius.circular(6),
                                                               ),
-                                                              child: Text('第${record.sessionNumber}次', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                                                              child: Text('第${record.sessionNumber}次', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isLight ? Colors.white : Colors.black)),
                                                             ),
                                                           ],
                                                         ),
                                                         const SizedBox(height: 8),
-                                                        Text(
-                                                          projectNames.isNotEmpty ? projectNames : '无项目名称',
-                                                          style: TextStyle(color: Colors.grey[400]),
-                                                        ),
+                                                        Text(projectNames.isNotEmpty ? projectNames : '无项目名称', style: TextStyle(color: Colors.grey[400])),
                                                         const SizedBox(height: 8),
                                                         Row(
                                                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            const Text('总做功'),
-                                                            Text(
-                                                              '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
-                                                              style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
-                                                            ),
-                                                          ],
+                                                          children: [const Text('总做功'), Text('${(record.totalWork / 1000).toStringAsFixed(1)}千焦', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange))],
                                                         ),
                                                       ],
                                                     ),
@@ -2257,16 +1759,12 @@ class _MainScreenState extends State<MainScreen> {
                                                 },
                                               ),
                                       ),
-
                                       const SizedBox(height: 20),
-
                                       OutlinedButton.icon(
                                         onPressed: () => _showHistory(context),
                                         icon: const Icon(Icons.list),
                                         label: const Text('查看全部记录'),
-                                        style: OutlinedButton.styleFrom(
-                                          minimumSize: const Size(double.infinity, 48),
-                                        ),
+                                        style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
                                       ),
                                     ],
                                   ),
@@ -2290,14 +1788,7 @@ class HistoryScreen extends StatefulWidget {
   final VoidCallback onExport;
   final VoidCallback onUpload;
   final VoidCallback onDownload;
-
-  const HistoryScreen({
-    super.key,
-    required this.onExport,
-    required this.onUpload,
-    required this.onDownload,
-  });
-
+  const HistoryScreen({super.key, required this.onExport, required this.onUpload, required this.onDownload});
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
@@ -2305,52 +1796,126 @@ class HistoryScreen extends StatefulWidget {
 class _HistoryScreenState extends State<HistoryScreen> {
   String? _selectedRecordId;
   WorkoutRecord? _recordToEdit;
+  final ScrollController _horizontalScrollController = ScrollController();
+  bool _showHorizontalScrollbar = false;
+  Set<int> _collapsedColumns = {}; // 0:日期,1:第几次,2:项目详情,3:总做功,4:操作
+  final List<String> _columnNames = ['日期', '第几次', '项目详情', '总做功', '操作'];
+
+  @override
+  void dispose() {
+    _horizontalScrollController.dispose();
+    super.dispose();
+  }
+
+  void _toggleColumn(int index) {
+    // 获取当前可见列的数量
+    final visibleCount = _columnNames.length - _collapsedColumns.length;
+    // 如果当前列是可见列中的最后一列，则展开所有列
+    if (visibleCount == 1 && !_collapsedColumns.contains(index)) {
+      _expandAllColumns();
+      return;
+    }
+    setState(() {
+      if (_collapsedColumns.contains(index)) {
+        _collapsedColumns.remove(index);
+      } else {
+        _collapsedColumns.add(index);
+      }
+    });
+  }
+
+  void _expandAllColumns() {
+    setState(() {
+      _collapsedColumns.clear();
+    });
+  }
+
+  void _collapseCurrentColumn(int index) {
+    final visibleCount = _columnNames.length - _collapsedColumns.length;
+    // 如果只剩一列，不允许折叠
+    if (visibleCount == 1 && !_collapsedColumns.contains(index)) {
+      _showToast('至少保留一列');
+      return;
+    }
+    setState(() {
+      if (!_collapsedColumns.contains(index)) {
+        _collapsedColumns.add(index);
+      }
+    });
+  }
+
+  void _showContextMenuForColumn(TapDownDetails details, int columnIndex) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final position = RelativeRect.fromRect(
+      details.globalPosition & const Size(40, 40),
+      Offset.zero & overlay.size,
+    );
+    showMenu(
+      context: context,
+      position: position,
+      items: [
+        const PopupMenuItem(value: 'expand', child: Text('展开折叠列')),
+        const PopupMenuItem(value: 'collapse', child: Text('折叠当前列')),
+      ],
+    ).then((value) {
+      if (value == 'expand') {
+        _expandAllColumns();
+      } else if (value == 'collapse') {
+        _collapseCurrentColumn(columnIndex);
+      }
+    });
+  }
+
+  Future<void> _mergeSameDayRecords() async {
+    final provider = Provider.of<WorkoutProvider>(context, listen: false);
+    final shouldMerge = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('整合同一天记录'),
+        content: const Text('将同一天的多条记录合并为一条（项目合并，次数取最大值）。是否继续？'),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('整合')),
+        ],
+      ),
+    );
+    if (shouldMerge == true) {
+      provider.mergeSameDayRecords();
+      _showToast('已整合同一天的记录');
+    }
+  }
+
+  void _showToast(String message, {bool isError = false}) {
+  // 防止空消息
+  if (message.trim().isEmpty) {
+    message = '操作完成';
+  }
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(
+        message,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+      ),
+      backgroundColor: isError ? Colors.red : Colors.green,
+      duration: const Duration(seconds: 2),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
 
   void _showContextMenu(BuildContext context, WorkoutRecord record) {
     final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-        button.localToGlobal(Offset.zero, ancestor: overlay),
-        button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay),
-      ),
+      Rect.fromPoints(button.localToGlobal(Offset.zero, ancestor: overlay), button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay)),
       Offset.zero & overlay.size,
     );
-
     showMenu(
       context: context,
       position: position,
       items: [
-        PopupMenuItem(
-          value: 'edit',
-          child: const Row(
-            children: [
-              Icon(Icons.edit, size: 20),
-              SizedBox(width: 8),
-              Text('编辑'),
-            ],
-          ),
-          onTap: () {
-            Future.delayed(Duration.zero, () {
-              _editRecord(record);
-            });
-          },
-        ),
-        PopupMenuItem(
-          value: 'delete',
-          child: const Row(
-            children: [
-              Icon(Icons.delete, color: Colors.red, size: 20),
-              SizedBox(width: 8),
-              Text('删除', style: TextStyle(color: Colors.red)),
-            ],
-          ),
-          onTap: () {
-            Future.delayed(Duration.zero, () {
-              _deleteRecord(context, record);
-            });
-          },
-        ),
+        PopupMenuItem(value: 'edit', child: const Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('编辑')]), onTap: () => Future.delayed(Duration.zero, () => _editRecord(record))),
+        PopupMenuItem(value: 'delete', child: const Row(children: [Icon(Icons.delete, color: Colors.red, size: 20), SizedBox(width: 8), Text('删除', style: TextStyle(color: Colors.red))]), onTap: () => Future.delayed(Duration.zero, () => _deleteRecord(context, record))),
       ],
     );
   }
@@ -2358,25 +1923,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void _editRecord(WorkoutRecord record) {
     setState(() {
       _selectedRecordId = record.id;
-      _recordToEdit = WorkoutRecord(
-        id: record.id,
-        date: record.date,
-        sessionNumber: record.sessionNumber,
-        projects: record.projects.map((p) => p.copy()).toList(),
-        timestamp: record.timestamp,
-      );
+      _recordToEdit = WorkoutRecord(id: record.id, date: record.date, sessionNumber: record.sessionNumber, projects: record.projects.map((p) => p.copy()).toList(), timestamp: record.timestamp);
     });
-
     _showEditDialog();
   }
 
   void _showEditDialog() {
     if (_recordToEdit == null) return;
-
     final record = _recordToEdit!;
     final dateController = TextEditingController(text: DateFormat('yyyy-MM-dd').format(record.date));
     final sessionController = TextEditingController(text: record.sessionNumber.toString());
-
     final List<TextEditingController> nameControllers = [];
     final List<TextEditingController> weightControllers = [];
     final List<TextEditingController> setsControllers = [];
@@ -2384,7 +1940,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final List<TextEditingController> feelingControllers = [];
     final List<TextEditingController> supplementControllers = [];
     final List<ValueNotifier<String>> partNotifiers = [];
-
     for (var project in record.projects) {
       nameControllers.add(TextEditingController(text: project.name));
       weightControllers.add(TextEditingController(text: project.weight.toString()));
@@ -2394,7 +1949,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
       supplementControllers.add(TextEditingController(text: project.supplement));
       partNotifiers.add(ValueNotifier<String>(project.part));
     }
-
     showDialog(
       context: context,
       builder: (context) => StatefulBuilder(
@@ -2411,7 +1965,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               partNotifiers.add(ValueNotifier<String>('胸'));
             });
           }
-
           void removeProject() {
             if (record.projects.length > 1) {
               setState(() {
@@ -2426,15 +1979,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
               });
             }
           }
-
           Future<void> selectDate() async {
             final DateTime? picked = await showDatePicker(
               context: context,
               initialDate: record.date,
               firstDate: DateTime(2020),
               lastDate: DateTime.now(),
+              builder: (context, child) {
+                final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+                return Theme(
+                  data: Theme.of(context).copyWith(
+                    dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+                  ),
+                  child: child!,
+                );
+              },
             );
-
             if (picked != null && picked != record.date) {
               setState(() {
                 record.date = picked;
@@ -2442,7 +2002,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
               });
             }
           }
-
           Widget buildProjectCard(int index) {
             return ValueListenableBuilder<String>(
               valueListenable: partNotifiers[index],
@@ -2450,88 +2009,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 final weight = double.tryParse(weightControllers[index].text) ?? 0;
                 final sets = int.tryParse(setsControllers[index].text) ?? 0;
                 final reps = int.tryParse(repsControllers[index].text) ?? 0;
-                final work = WorkoutProject(
-                  name: '',
-                  part: part,
-                  weight: weight,
-                  sets: sets,
-                  repsPerSet: reps,
-                  feeling: '',
-                  supplement: '',
-                ).calculateWork();
-
+                final work = WorkoutProject(name: '', part: part, weight: weight, sets: sets, repsPerSet: reps, feeling: '', supplement: '').calculateWork();
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Theme.of(context).primaryColor.withOpacity(0.3),
-                    ),
+                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
-                      Row(
-                        children: [
-                          Text(
-                            '项目 ${index + 1}',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const Spacer(),
-                          if (record.projects.length > 1)
-                            IconButton(
-                              icon: const Icon(Icons.close, size: 20),
-                              onPressed: () {
-                                setState(() {
-                                  if (record.projects.length > 1) {
-                                    record.projects.removeAt(index);
-                                    nameControllers.removeAt(index);
-                                    weightControllers.removeAt(index);
-                                    setsControllers.removeAt(index);
-                                    repsControllers.removeAt(index);
-                                    feelingControllers.removeAt(index);
-                                    supplementControllers.removeAt(index);
-                                    partNotifiers.removeAt(index);
-                                  }
-                                });
-                              },
-                            ),
-                        ],
-                      ),
+                      Row(children: [Text('项目 ${index + 1}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), const Spacer(), if (record.projects.length > 1) IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () {
+                        setState(() {
+                          if (record.projects.length > 1) {
+                            record.projects.removeAt(index);
+                            nameControllers.removeAt(index);
+                            weightControllers.removeAt(index);
+                            setsControllers.removeAt(index);
+                            repsControllers.removeAt(index);
+                            feelingControllers.removeAt(index);
+                            supplementControllers.removeAt(index);
+                            partNotifiers.removeAt(index);
+                          }
+                        });
+                      })]),
                       const SizedBox(height: 12),
-
                       Row(
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: nameControllers[index],
-                              decoration: const InputDecoration(
-                                labelText: '项目名称',
-                                border: OutlineInputBorder(),
-                              ),
-                              onChanged: (value) {
-                                record.projects[index].name = value;
-                              },
-                            ),
-                          ),
+                          Expanded(child: TextField(controller: nameControllers[index], decoration: const InputDecoration(labelText: '项目名称', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].name = value)),
                           const SizedBox(width: 16),
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: part,
-                              decoration: const InputDecoration(
-                                labelText: '锻炼部位',
-                                border: OutlineInputBorder(),
-                              ),
-                              items: const ['胸', '背', '腿', '肩', '腹']
-                                  .map((part) => DropdownMenuItem(
-                                        value: part,
-                                        child: Text(part),
-                                      ))
-                                  .toList(),
+                              decoration: const InputDecoration(labelText: '锻炼部位', border: OutlineInputBorder()),
+                              items: const ['胸', '背', '腿', '肩', '腹'].map((part) => DropdownMenuItem(value: part, child: Text(part))).toList(),
                               onChanged: (value) {
                                 if (value != null) {
                                   partNotifiers[index].value = value;
@@ -2542,106 +2054,24 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                         ],
                       ),
-
                       const SizedBox(height: 16),
-
                       Row(
                         children: [
-                          Expanded(
-                            child: TextField(
-                              controller: weightControllers[index],
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: '重量 (kg)',
-                                border: OutlineInputBorder(),
-                                suffixText: 'kg',
-                              ),
-                              onChanged: (value) {
-                                record.projects[index].weight = double.tryParse(value) ?? 0;
-                              },
-                            ),
-                          ),
+                          Expanded(child: TextField(controller: weightControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '重量 (kg)', border: OutlineInputBorder(), suffixText: 'kg'), onChanged: (value) => record.projects[index].weight = double.tryParse(value) ?? 0)),
                           const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: setsControllers[index],
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: '组数',
-                                border: OutlineInputBorder(),
-                              ),
-                              onChanged: (value) {
-                                record.projects[index].sets = int.tryParse(value) ?? 0;
-                              },
-                            ),
-                          ),
+                          Expanded(child: TextField(controller: setsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '组数', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].sets = int.tryParse(value) ?? 0)),
                           const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: repsControllers[index],
-                              keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                labelText: '每组数量',
-                                border: OutlineInputBorder(),
-                              ),
-                              onChanged: (value) {
-                                record.projects[index].repsPerSet = int.tryParse(value) ?? 0;
-                              },
-                            ),
-                          ),
+                          Expanded(child: TextField(controller: repsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '每组数量', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].repsPerSet = int.tryParse(value) ?? 0)),
                         ],
                       ),
-
                       const SizedBox(height: 16),
-
+                      Row(children: [const Icon(Icons.bar_chart, color: Colors.orange), const SizedBox(width: 8), const Text('做功:', style: TextStyle(fontWeight: FontWeight.bold)), const SizedBox(width: 8), Text('${work.toStringAsFixed(0)} J', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))]),
+                      const SizedBox(height: 16),
                       Row(
                         children: [
-                          const Icon(Icons.bar_chart, color: Colors.orange),
-                          const SizedBox(width: 8),
-                          const Text(
-                            '做功:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            '${work.toStringAsFixed(0)} J',
-                            style: const TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 16),
-
-                      Row(
-                        children: [
-                          Expanded(
-                            child: TextField(
-                              controller: feelingControllers[index],
-                              decoration: const InputDecoration(
-                                labelText: '感受',
-                                border: OutlineInputBorder(),
-                              ),
-                              onChanged: (value) {
-                                record.projects[index].feeling = value;
-                              },
-                            ),
-                          ),
+                          Expanded(child: TextField(controller: feelingControllers[index], decoration: const InputDecoration(labelText: '感受', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].feeling = value)),
                           const SizedBox(width: 16),
-                          Expanded(
-                            child: TextField(
-                              controller: supplementControllers[index],
-                              decoration: const InputDecoration(
-                                labelText: '补剂',
-                                border: OutlineInputBorder(),
-                              ),
-                              onChanged: (value) {
-                                record.projects[index].supplement = value;
-                              },
-                            ),
-                          ),
+                          Expanded(child: TextField(controller: supplementControllers[index], decoration: const InputDecoration(labelText: '补剂', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].supplement = value)),
                         ],
                       ),
                     ],
@@ -2650,15 +2080,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
               },
             );
           }
-
           return AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.edit, color: Colors.blue),
-                SizedBox(width: 10),
-                Text('编辑记录'),
-              ],
-            ),
+            title: const Row(children: [Icon(Icons.edit, color: Colors.blue), SizedBox(width: 10), Text('编辑记录')]),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2676,19 +2099,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               onTap: selectDate,
                               child: Container(
                                 padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  color: Theme.of(context).cardColor,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor),
-                                    const SizedBox(width: 8),
-                                    Text(dateController.text),
-                                    const Spacer(),
-                                    const Icon(Icons.arrow_drop_down),
-                                  ],
-                                ),
+                                decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12)),
+                                child: Row(children: [Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor), const SizedBox(width: 8), Text(dateController.text), const Spacer(), const Icon(Icons.arrow_drop_down)]),
                               ),
                             ),
                           ],
@@ -2704,15 +2116,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             TextField(
                               controller: sessionController,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(
-                                hintText: '输入次数',
-                                border: OutlineInputBorder(),
-                              ),
+                              decoration: const InputDecoration(hintText: '输入次数', border: OutlineInputBorder()),
                               onChanged: (value) {
                                 final num = int.tryParse(value) ?? 1;
-                                setState(() {
-                                  record.sessionNumber = num;
-                                });
+                                setState(() => record.sessionNumber = num);
                               },
                             ),
                           ],
@@ -2720,55 +2127,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       ),
                     ],
                   ),
-
                   const SizedBox(height: 20),
-
                   ...List.generate(record.projects.length, (index) => buildProjectCard(index)),
-
                   const SizedBox(height: 16),
-
                   Row(
                     children: [
-                      ElevatedButton.icon(
-                        onPressed: addProject,
-                        icon: const Icon(Icons.add),
-                        label: const Text('添加项目'),
-                      ),
+                      ElevatedButton.icon(onPressed: addProject, icon: const Icon(Icons.add), label: const Text('添加项目')),
                       const SizedBox(width: 12),
-                      ElevatedButton.icon(
-                        onPressed: removeProject,
-                        icon: const Icon(Icons.remove),
-                        label: const Text('删除项目'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).cardColor,
-                        ),
-                      ),
+                      ElevatedButton.icon(onPressed: removeProject, icon: const Icon(Icons.remove), label: const Text('删除项目'), style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).cardColor)),
                     ],
                   ),
                 ],
               ),
             ),
             actions: [
-              TextButton(
-                onPressed: () {
-                  setState(() {
-                    _selectedRecordId = null;
-                    _recordToEdit = null;
-                  });
-                  Navigator.pop(context);
-                },
-                child: const Text('取消'),
-              ),
+              TextButton(onPressed: () { setState(() { _selectedRecordId = null; _recordToEdit = null; }); Navigator.pop(context); }, child: const Text('取消')),
               ElevatedButton(
                 onPressed: () {
                   final provider = Provider.of<WorkoutProvider>(context, listen: false);
                   provider.updateRecord(record.id, record);
-
-                  setState(() {
-                    _selectedRecordId = null;
-                    _recordToEdit = null;
-                  });
-
+                  setState(() { _selectedRecordId = null; _recordToEdit = null; });
                   Navigator.pop(context);
                   _showToast('记录更新成功！');
                 },
@@ -2785,48 +2163,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.warning, color: Colors.orange),
-            SizedBox(width: 10),
-            Text('确认删除'),
-          ],
-        ),
+        title: const Row(children: [Icon(Icons.warning, color: Colors.orange), SizedBox(width: 10), Text('确认删除')]),
         content: const Text('确定要删除这条记录吗？此操作不可撤销。'),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('取消'),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              final provider = Provider.of<WorkoutProvider>(context, listen: false);
-              provider.deleteRecord(record.id);
-              Navigator.pop(context);
-              _showToast('记录已删除');
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
-            child: const Text('删除'),
-          ),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          ElevatedButton(onPressed: () { Provider.of<WorkoutProvider>(context, listen: false).deleteRecord(record.id); Navigator.pop(context); _showToast('记录已删除'); }, style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('删除')),
         ],
       ),
     );
   }
 
-  void _showToast(String message) {
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(message),
-      backgroundColor: Colors.green,
-      duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-}
   @override
   Widget build(BuildContext context) {
+    final isGlassTheme = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+
+    // 确保至少有一列可见，避免空列错误
+    if (_collapsedColumns.length == _columnNames.length) {
+      _collapsedColumns.clear();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('来时的路 - 完整历史记录'),
@@ -2834,48 +2189,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
           PopupMenuButton<String>(
             onSelected: (value) {
               switch (value) {
-                case 'export':
-                  widget.onExport();
-                  break;
-                case 'upload':
-                  widget.onUpload();
-                  break;
-                case 'download':
-                  widget.onDownload();
-                  break;
+                case 'export': widget.onExport(); break;
+                case 'upload': widget.onUpload(); break;
+                case 'download': widget.onDownload(); break;
               }
             },
             itemBuilder: (context) => [
-              const PopupMenuItem<String>(
-                value: 'export',
-                child: Row(
-                  children: [
-                    Icon(Icons.download, size: 20),
-                    SizedBox(width: 8),
-                    Text('📤 导出CSV'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'upload',
-                child: Row(
-                  children: [
-                    Icon(Icons.cloud_upload, size: 20),
-                    SizedBox(width: 8),
-                    Text('☁️ 上云'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'download',
-                child: Row(
-                  children: [
-                    Icon(Icons.cloud_download, size: 20),
-                    SizedBox(width: 8),
-                    Text('📥 读云'),
-                  ],
-                ),
-              ),
+              const PopupMenuItem(value: 'export', child: Row(children: [Icon(Icons.download, size: 20), SizedBox(width: 8), Text('📤 导出CSV')])),
+              const PopupMenuItem(value: 'upload', child: Row(children: [Icon(Icons.cloud_upload, size: 20), SizedBox(width: 8), Text('☁️ 上云')])),
+              const PopupMenuItem(value: 'download', child: Row(children: [Icon(Icons.cloud_download, size: 20), SizedBox(width: 8), Text('📥 读云')])),
             ],
           ),
         ],
@@ -2888,72 +2210,123 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               Expanded(
                 flex: 2,
-                child: records.isEmpty
-                    ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            const Icon(Icons.history_toggle_off, size: 80, color: Colors.grey),
-                            const SizedBox(height: 20),
-                            const Text('暂无历史记录'),
-                            const SizedBox(height: 10),
-                            const Text('开始您的第一次训练吧！'),
-                            const SizedBox(height: 30),
-                            ElevatedButton.icon(
-                              onPressed: widget.onExport,
-                              icon: const Icon(Icons.download),
-                              label: const Text('导出空模板'),
-                            ),
-                          ],
-                        ),
-                      )
-                    : SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        child: DataTable(
-                          columns: const [
-                            DataColumn(label: Text('日期')),
-                            DataColumn(label: Text('第几次')),
-                            DataColumn(label: Text('项目数')),
-                            DataColumn(label: Text('总做功')),
-                            DataColumn(label: Text('详细内容')),
-                            DataColumn(label: Text('操作')),
-                          ],
-                          rows: records.reversed.map((record) {
-                            final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-                            final details = record.projects.map((p) {
-                              if (p.name.isEmpty) return '';
-                              return '${p.name}(${p.part}): ${p.weight}kg×${p.sets}×${p.repsPerSet}';
-                            }).where((d) => d.isNotEmpty).join(' | ');
-                            return DataRow(
-                              onLongPress: () => _showContextMenu(context, record),
-                              cells: [
-                                DataCell(Text(dateStr)),
-                                DataCell(Text('第${record.sessionNumber}次')),
-                                DataCell(Text('${record.projects.length}')),
-                                DataCell(Text('${(record.totalWork / 1000).toStringAsFixed(1)}千焦')),
-                                DataCell(ConstrainedBox(
-                                  constraints: const BoxConstraints(maxWidth: 400),
-                                  child: Text(details.isNotEmpty ? details : '无详细信息'),
-                                )),
-                                DataCell(Row(
+                child: MouseRegion(
+                  onEnter: (_) => setState(() => _showHorizontalScrollbar = true),
+                  onExit: (_) => setState(() => _showHorizontalScrollbar = false),
+                  child: Scrollbar(
+                    controller: _horizontalScrollController,
+                    thumbVisibility: _showHorizontalScrollbar,
+                    child: SingleChildScrollView(
+                      controller: _horizontalScrollController,
+                      scrollDirection: Axis.horizontal,
+                      child: records.isEmpty
+                          ? Center(
+                              child: Container(
+                                padding: const EdgeInsets.all(40),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
-                                    IconButton(
-                                      icon: const Icon(Icons.edit, size: 20),
-                                      onPressed: () => _editRecord(record),
-                                      tooltip: '编辑',
-                                    ),
-                                    IconButton(
-                                      icon: const Icon(Icons.delete, size: 20, color: Colors.red),
-                                      onPressed: () => _deleteRecord(context, record),
-                                      tooltip: '删除',
-                                    ),
+                                    const Icon(Icons.history_toggle_off, size: 80, color: Colors.grey),
+                                    const SizedBox(height: 20),
+                                    const Text('暂无历史记录'),
+                                    const SizedBox(height: 10),
+                                    const Text('开始您的第一次训练吧！'),
+                                    const SizedBox(height: 30),
+                                    ElevatedButton.icon(onPressed: widget.onExport, icon: const Icon(Icons.download), label: const Text('导出空模板')),
                                   ],
-                                )),
-                              ],
-                            );
-                          }).toList(),
-                        ),
-                      ),
+                                ),
+                              ),
+                            )
+                          : Theme(
+                              data: Theme.of(context).copyWith(
+                                cardColor: isGlassTheme ? Colors.grey.shade800.withOpacity(0.5) : null,
+                                dividerColor: Colors.grey.withOpacity(0.2),
+                              ),
+                              child: DataTable(
+                                columnSpacing: 24,
+                                headingRowHeight: 56,
+                                dataRowMinHeight: 60,
+                                dataRowMaxHeight: 80,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      Theme.of(context).primaryColor.withOpacity(0.05),
+                                      Theme.of(context).primaryColor.withOpacity(0.0),
+                                    ],
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                columns: _columnNames.asMap().entries.where((entry) => !_collapsedColumns.contains(entry.key)).map((entry) {
+                                  final index = entry.key;
+                                  final title = entry.value;
+                                  return DataColumn(
+                                    label: MouseRegion(
+                                      child: GestureDetector(
+                                        onTapDown: (details) => _showContextMenuForColumn(details, index),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+                                          decoration: BoxDecoration(
+                                            gradient: LinearGradient(
+                                              colors: [Theme.of(context).primaryColor.withOpacity(0.3), Theme.of(context).primaryColor.withOpacity(0.1)],
+                                              begin: Alignment.topLeft,
+                                              end: Alignment.bottomRight,
+                                            ),
+                                            borderRadius: BorderRadius.circular(12),
+                                            boxShadow: [
+                                              BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 4, offset: const Offset(0, 2)),
+                                            ],
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                              const SizedBox(width: 8),
+                                              _buildCollapseIcon(index, _collapsedColumns.contains(index)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  );
+                                }).toList(),
+                                rows: records.reversed.map((record) {
+                                  final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
+                                  final details = record.projects.map((p) => p.name.isNotEmpty ? '${p.name} (${p.part}): ${p.sets}组×${p.repsPerSet}个, ${p.weight}kg' : '').where((d) => d.isNotEmpty).join('\n');
+                                  final cells = <DataCell>[];
+                                  if (!_collapsedColumns.contains(0)) cells.add(DataCell(Text(dateStr, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500))));
+                                  if (!_collapsedColumns.contains(1)) cells.add(DataCell(Text('第${record.sessionNumber}次', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500))));
+                                  if (!_collapsedColumns.contains(2)) cells.add(DataCell(ConstrainedBox(
+                                    constraints: const BoxConstraints(maxWidth: 350),
+                                    child: Tooltip(message: details, child: Text(details, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
+                                  )));
+                                  if (!_collapsedColumns.contains(3)) cells.add(DataCell(Text('${(record.totalWork / 1000).toStringAsFixed(1)}千焦', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500))));
+                                  if (!_collapsedColumns.contains(4)) {
+                                    cells.add(DataCell(Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        IconButton(icon: const Icon(Icons.edit, size: 20, color: Colors.blue), onPressed: () => _editRecord(record), tooltip: '编辑'),
+                                        IconButton(icon: const Icon(Icons.delete, size: 20, color: Colors.red), onPressed: () => _deleteRecord(context, record), tooltip: '删除'),
+                                        IconButton(icon: const Icon(Icons.merge_type, size: 20), onPressed: _mergeSameDayRecords, tooltip: '整合同一天记录'),
+                                      ],
+                                    )));
+                                  }
+                                  return DataRow(
+                                    onLongPress: () => _showContextMenu(context, record),
+                                    cells: cells,
+                                    selected: false,
+                                    color: MaterialStateProperty.resolveWith<Color?>((states) {
+                                      if (states.contains(MaterialState.selected)) return null;
+                                      return Colors.transparent;
+                                    }),
+                                  );
+                                }).toList(),
+                              ),
+                            ),
+                    ),
+                  ),
+                ),
               ),
               Expanded(
                 flex: 1,
@@ -2966,6 +2339,41 @@ class _HistoryScreenState extends State<HistoryScreen> {
           );
         },
       ),
+    );
+  }
+
+  Widget _buildCollapseIcon(int columnIndex, bool isCollapsed) {
+    bool isHovering = false;
+    bool isHoveringIcon = false;
+    return StatefulBuilder(
+      builder: (context, setState) {
+        return MouseRegion(
+          onEnter: (_) => setState(() { isHovering = true; }),
+          onExit: (_) => setState(() { isHovering = false; }),
+          child: GestureDetector(
+            onTap: () => _toggleColumn(columnIndex),
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isHoveringIcon ? Colors.grey.shade300.withValues(alpha: 0.5) : Colors.transparent,
+              ),
+              child: MouseRegion(
+                onEnter: (_) => setState(() { isHoveringIcon = true; }),
+                onExit: (_) => setState(() { isHoveringIcon = false; }),
+                child: Text(
+                  '↩',
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: isHovering ? Theme.of(context).primaryColor : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
     );
   }
 }
