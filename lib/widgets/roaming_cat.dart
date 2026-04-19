@@ -21,7 +21,8 @@ class RoamingCat extends StatefulWidget {
   State<RoamingCat> createState() => _RoamingCatState();
 }
 
-class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateMixin {
+class _RoamingCatState extends State<RoamingCat>
+    with SingleTickerProviderStateMixin {
   Offset _position = Offset.zero;
   Timer? _moveTimer;
   bool _isHovering = false;
@@ -40,7 +41,8 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
   void initState() {
     super.initState();
     final maxX = (widget.maxWidth - widget.catSize).clamp(0.0, double.infinity);
-    final maxY = (widget.maxHeight - widget.catSize).clamp(0.0, double.infinity);
+    final maxY =
+        (widget.maxHeight - widget.catSize).clamp(0.0, double.infinity);
     _position = Offset(
       _randomDouble(0, maxX),
       _randomDouble(0, maxY),
@@ -60,7 +62,9 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
 
   void _scheduleNextMove() {
     final interval = _minInterval +
-        Duration(milliseconds: _randomInt(0, _maxInterval.inMilliseconds - _minInterval.inMilliseconds));
+        Duration(
+            milliseconds: _randomInt(
+                0, _maxInterval.inMilliseconds - _minInterval.inMilliseconds));
     _moveTimer = Timer(interval, _moveRandomly);
   }
 
@@ -69,7 +73,8 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
     final dx = _position.dx + _randomStep();
     final dy = _position.dy + _randomStep();
     final maxX = (widget.maxWidth - widget.catSize).clamp(0.0, double.infinity);
-    final maxY = (widget.maxHeight - widget.catSize).clamp(0.0, double.infinity);
+    final maxY =
+        (widget.maxHeight - widget.catSize).clamp(0.0, double.infinity);
     final newDx = dx.clamp(0.0, maxX);
     final newDy = dy.clamp(0.0, maxY);
 
@@ -85,13 +90,13 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
   }
 
   double _randomStep() => _randomDouble(-_stepMax, _stepMax);
-  
+
   double _randomDouble(double min, double max) {
     if (max - min <= 0.0) return min;
     final random = Random();
     return min + random.nextDouble() * (max - min);
   }
-  
+
   int _randomInt(int min, int max) {
     if (max - min <= 0) return min;
     final random = Random();
@@ -174,9 +179,13 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
                         color: const Color(0xFFFDF5E6).withValues(alpha: 0.98),
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
-                          BoxShadow(color: Colors.black.withValues(alpha: 0.2), blurRadius: 6, offset: const Offset(2, 2)),
+                          BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.2),
+                              blurRadius: 6,
+                              offset: const Offset(2, 2)),
                         ],
-                        border: Border.all(color: Colors.brown.shade400, width: 2),
+                        border:
+                            Border.all(color: Colors.brown.shade400, width: 2),
                       ),
                       child: Row(
                         children: [
@@ -185,14 +194,17 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
                             height: double.infinity,
                             decoration: BoxDecoration(
                               color: Colors.brown.shade800,
-                              borderRadius: const BorderRadius.horizontal(left: Radius.circular(6)),
+                              borderRadius: const BorderRadius.horizontal(
+                                  left: Radius.circular(6)),
                             ),
                           ),
                           Expanded(
                             child: GestureDetector(
-                              onTap: () async => await launchUrl(Uri.parse(widget.githubUrl)),
+                              onTap: () async =>
+                                  await launchUrl(Uri.parse(widget.githubUrl)),
                               child: Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                                padding:
+                                    const EdgeInsets.symmetric(horizontal: 8.0),
                                 child: Center(
                                   child: Text(
                                     widget.githubUrl,
@@ -215,7 +227,8 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
                             height: double.infinity,
                             decoration: BoxDecoration(
                               color: Colors.brown.shade800,
-                              borderRadius: const BorderRadius.horizontal(right: Radius.circular(6)),
+                              borderRadius: const BorderRadius.horizontal(
+                                  right: Radius.circular(6)),
                             ),
                           ),
                         ],
@@ -230,14 +243,16 @@ class _RoamingCatState extends State<RoamingCat> with SingleTickerProviderStateM
               top: _position.dy,
               child: Transform(
                 alignment: Alignment.center,
-                transform: Matrix4.diagonal3Values(_isFacingRight ? 1.0 : -1.0, 1.0, 1.0),
+                transform: Matrix4.diagonal3Values(
+                    _isFacingRight ? 1.0 : -1.0, 1.0, 1.0),
                 child: SizedBox(
                   width: widget.catSize,
                   height: widget.catSize,
                   child: Image.asset(
                     'assets/吉祥物奔奔猫.gif',
                     fit: BoxFit.contain,
-                    errorBuilder: (context, error, stackTrace) => const Text('🐱', style: TextStyle(fontSize: 30)),
+                    errorBuilder: (context, error, stackTrace) =>
+                        const Text('🐱', style: TextStyle(fontSize: 30)),
                   ),
                 ),
               ),

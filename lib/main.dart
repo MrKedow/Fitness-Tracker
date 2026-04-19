@@ -8,7 +8,9 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'package:fitness_tracker/widgets/roaming_cat.dart';
 import 'package:fitness_tracker/widgets/coach_character.dart';
-
+// import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' hide Border; // 避免与 Flutter 的 Border 冲突
+import 'package:fitness_tracker/widgets/draggable_cat.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
@@ -38,6 +40,7 @@ class ThemeProvider extends ChangeNotifier {
     await prefs.setInt('selected_theme', index);
     notifyListeners();
   }
+
   ThemeData get currentTheme => _themes[_selectedThemeIndex];
 
   static final List<ThemeData> _themes = [
@@ -53,11 +56,11 @@ class ThemeProvider extends ChangeNotifier {
       ),
       scaffoldBackgroundColor: const Color(0xFF1A2A3A),
       cardColor: const Color(0xFF2A3A4A),
-      dialogBackgroundColor: const Color(0xFF2A3A4A),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF2A3A4A),
         elevation: 0,
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        titleTextStyle: TextStyle(
+            color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         iconTheme: IconThemeData(color: Colors.white),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -65,13 +68,16 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF3AB8C7),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF3A4A5A),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white70),
         hintStyle: const TextStyle(color: Colors.white54),
@@ -80,6 +86,7 @@ class ThemeProvider extends ChangeNotifier {
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white70),
       ),
+      dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF2A3A4A)),
     ),
     // 1: 萤石黑
     ThemeData(
@@ -93,11 +100,11 @@ class ThemeProvider extends ChangeNotifier {
       ),
       scaffoldBackgroundColor: const Color(0xFF000000),
       cardColor: const Color(0xFF1C1C1E),
-      dialogBackgroundColor: const Color(0xFF1C1C1E),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF1C1C1E),
         elevation: 0,
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        titleTextStyle: TextStyle(
+            color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         iconTheme: IconThemeData(color: Color(0xFF007AFF)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -105,13 +112,16 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF007AFF),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF2C2C2E),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white60),
         hintStyle: const TextStyle(color: Colors.white38),
@@ -120,6 +130,7 @@ class ThemeProvider extends ChangeNotifier {
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white70),
       ),
+      dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF1C1C1E)),
     ),
     // 2: 珠玉白
     ThemeData(
@@ -133,11 +144,11 @@ class ThemeProvider extends ChangeNotifier {
       ),
       scaffoldBackgroundColor: const Color(0xFFF8F9FA),
       cardColor: Colors.white,
-      dialogBackgroundColor: Colors.white,
       appBarTheme: const AppBarTheme(
         backgroundColor: Colors.white,
         elevation: 1,
-        titleTextStyle: TextStyle(color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
+        titleTextStyle: TextStyle(
+            color: Colors.black87, fontSize: 18, fontWeight: FontWeight.bold),
         iconTheme: IconThemeData(color: Color(0xFF4A6FA5)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -145,7 +156,8 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF4A6FA5),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -163,6 +175,7 @@ class ThemeProvider extends ChangeNotifier {
         bodyLarge: TextStyle(color: Colors.black87),
         bodyMedium: TextStyle(color: Colors.black54),
       ),
+      dialogTheme: const DialogThemeData(backgroundColor: Colors.white),
     ),
     // 3: 活力橙
     ThemeData(
@@ -176,11 +189,11 @@ class ThemeProvider extends ChangeNotifier {
       ),
       scaffoldBackgroundColor: const Color(0xFF1A1A1A),
       cardColor: const Color(0xFF2A2A2A),
-      dialogBackgroundColor: const Color(0xFF2A2A2A),
       appBarTheme: const AppBarTheme(
         backgroundColor: Color(0xFF2A2A2A),
         elevation: 0,
-        titleTextStyle: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        titleTextStyle: TextStyle(
+            color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         iconTheme: IconThemeData(color: Color(0xFFFF9500)),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -188,13 +201,16 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFFFF9500),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF3A3A3A),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
+        border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white60),
         hintStyle: const TextStyle(color: Colors.white38),
@@ -203,8 +219,9 @@ class ThemeProvider extends ChangeNotifier {
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white70),
       ),
+      dialogTheme: const DialogThemeData(backgroundColor: Color(0xFF2A2A2A)),
     ),
-    // 4: 全透明（仿真玻璃 + 细边框 + 半透明背景）
+    // 4: 全透明
     ThemeData(
       brightness: Brightness.dark,
       primaryColor: Colors.white,
@@ -216,11 +233,11 @@ class ThemeProvider extends ChangeNotifier {
       ),
       scaffoldBackgroundColor: Colors.transparent,
       cardColor: Colors.black.withValues(alpha: 0.6),
-      dialogBackgroundColor: Colors.grey.shade800.withValues(alpha: 0.85), // 半透明灰色，隐约见背景
       appBarTheme: AppBarTheme(
         backgroundColor: Colors.black.withValues(alpha: 0.7),
         elevation: 0,
-        titleTextStyle: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+        titleTextStyle: const TextStyle(
+            color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
       elevatedButtonTheme: ElevatedButtonThemeData(
@@ -228,7 +245,8 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: Colors.white.withValues(alpha: 0.3),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -254,6 +272,8 @@ class ThemeProvider extends ChangeNotifier {
         bodyLarge: TextStyle(color: Colors.white),
         bodyMedium: TextStyle(color: Colors.white70),
       ),
+      dialogTheme: DialogThemeData(
+          backgroundColor: Colors.grey.shade800.withValues(alpha: 0.85)),
     ),
   ];
 }
@@ -323,7 +343,7 @@ class WorkoutProject {
   }
 
   double calculateWork() {
-    final travelDistances = {
+    const travelDistances = {
       '肩': 0.6,
       '背': 0.6,
       '腿': 0.7,
@@ -366,7 +386,8 @@ class WorkoutProvider extends ChangeNotifier {
   }
 
   void addRecord(WorkoutRecord newRecord) {
-    final existingIndex = _records.indexWhere((r) => isSameDay(r.date, newRecord.date));
+    final existingIndex =
+        _records.indexWhere((r) => isSameDay(r.date, newRecord.date));
     if (existingIndex != -1) {
       final existing = _records[existingIndex];
       final mergedProjects = [...existing.projects, ...newRecord.projects];
@@ -502,13 +523,179 @@ class WorkoutProvider extends ChangeNotifier {
 
 // ==================== Excel/CSV 服务 ====================
 class ExcelCSVService {
-  static const String _defaultFilename = '健身数据实时表.csv';
+  static const String _defaultFilename = '健身数据实时表.xlsx';
 
+  // 导出为 Excel 文件，相同日期合并单元格并居中
+  Future<String?> exportToExcel(List<WorkoutRecord> records) async {
+    try {
+      final excel = Excel.createExcel();
+      final sheet = excel['健身记录'];
+
+      // 表头
+      final headers = [
+        '日期',
+        '第几次健身',
+        '项目名称',
+        '锻炼部位',
+        '重量(kg)',
+        '组数',
+        '每组数量',
+        '做功(J)',
+        '感受',
+        '补剂',
+        '记录时间'
+      ];
+      sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
+      // 表头样式（加粗居中）
+      for (int i = 0; i < headers.length; i++) {
+        final cell =
+            sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
+        cell.cellStyle = CellStyle(
+          bold: true,
+          horizontalAlign: HorizontalAlign.Center,
+          verticalAlign: VerticalAlign.Center,
+        );
+      }
+
+      // 按日期排序
+      final sortedRecords = List<WorkoutRecord>.from(records)
+        ..sort((a, b) => a.date.compareTo(b.date));
+
+      // 添加数据行
+      for (var record in sortedRecords) {
+        final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
+        for (var project in record.projects) {
+          if (project.name.isEmpty) continue;
+          final row = <CellValue?>[
+            TextCellValue(dateStr),
+            IntCellValue(record.sessionNumber),
+            TextCellValue(project.name),
+            TextCellValue(project.part),
+            DoubleCellValue(project.weight),
+            IntCellValue(project.sets),
+            IntCellValue(project.repsPerSet),
+            DoubleCellValue(project.calculateWork()),
+            TextCellValue(project.feeling),
+            TextCellValue(project.supplement),
+            TextCellValue(record.timestamp.toIso8601String()),
+          ];
+          sheet.appendRow(row);
+        }
+      }
+
+      // 合并相同日期的单元格（日期列，索引0）
+      int currentRow = 1; // 从数据第一行开始
+      while (currentRow < sheet.rows.length) {
+        final currentDate = sheet.rows[currentRow]?[0]?.value?.toString();
+        if (currentDate == null) break;
+        int endRow = currentRow;
+        while (endRow + 1 < sheet.rows.length &&
+            sheet.rows[endRow + 1]?[0]?.value?.toString() == currentDate) {
+          endRow++;
+        }
+        if (endRow > currentRow) {
+          final startCell =
+              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow);
+          final endCell =
+              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: endRow);
+          sheet.merge(startCell, endCell);
+          for (int r = currentRow; r <= endRow; r++) {
+            final cell = sheet
+                .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: r));
+            cell.cellStyle = CellStyle(
+              horizontalAlign: HorizontalAlign.Center,
+              verticalAlign: VerticalAlign.Center,
+            );
+          }
+        } else {
+          final cell = sheet.cell(
+              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow));
+          cell.cellStyle = CellStyle(
+            horizontalAlign: HorizontalAlign.Center,
+            verticalAlign: VerticalAlign.Center,
+          );
+        }
+        currentRow = endRow + 1;
+      }
+
+      final directory = await getApplicationDocumentsDirectory();
+      final filePath = '${directory.path}/$_defaultFilename';
+      final file = File(filePath);
+      await file.writeAsBytes(excel.encode()!);
+      debugPrint('Excel文件已保存到: $filePath');
+      return filePath;
+    } catch (e) {
+      debugPrint('导出Excel失败: $e');
+      rethrow;
+    }
+  }
+
+  // 从 Excel 文件导入记录
+  Future<List<WorkoutRecord>> importFromExcel(String filePath) async {
+    try {
+      final file = File(filePath);
+      if (!await file.exists()) {
+        throw Exception('文件不存在: $filePath');
+      }
+      final bytes = await file.readAsBytes();
+      final excel = Excel.decodeBytes(bytes);
+      final sheet = excel.tables[excel.tables.keys.first];
+      if (sheet == null) return [];
+
+      final Map<String, WorkoutRecord> recordMap = {};
+      // 跳过表头，从第1行开始
+      for (int rowIndex = 1; rowIndex < sheet.rows.length; rowIndex++) {
+        final row = sheet.rows[rowIndex];
+        if (row == null || row.length < 3) continue;
+        final dateStr = row[0]?.value?.toString() ?? '';
+        final sessionNum = int.tryParse(row[1]?.value?.toString() ?? '') ?? 0;
+        final projectName = row[2]?.value?.toString() ?? '';
+        if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) continue;
+
+        final date = DateFormat('yyyy-MM-dd').parse(dateStr);
+        final key = date.toIso8601String();
+        if (!recordMap.containsKey(key)) {
+          recordMap[key] = WorkoutRecord(
+            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            date: date,
+            sessionNumber: sessionNum,
+            projects: [],
+            timestamp: row.length > 10
+                ? DateTime.tryParse(row[10]?.value?.toString() ?? '') ??
+                    DateTime.now()
+                : DateTime.now(),
+          );
+        }
+        final project = WorkoutProject(
+          name: projectName,
+          part: row.length > 3 ? row[3]?.value?.toString() ?? '胸' : '胸',
+          weight: row.length > 4
+              ? double.tryParse(row[4]?.value?.toString() ?? '') ?? 0
+              : 0,
+          sets: row.length > 5
+              ? int.tryParse(row[5]?.value?.toString() ?? '') ?? 0
+              : 0,
+          repsPerSet: row.length > 6
+              ? int.tryParse(row[6]?.value?.toString() ?? '') ?? 0
+              : 0,
+          feeling: row.length > 8 ? row[8]?.value?.toString() ?? '' : '',
+          supplement: row.length > 9 ? row[9]?.value?.toString() ?? '' : '',
+        );
+        recordMap[key]!.projects.add(project);
+      }
+      return recordMap.values.toList();
+    } catch (e) {
+      debugPrint('导入Excel失败: $e');
+      rethrow;
+    }
+  }
+
+  // 保留 CSV 导出/导入用于兼容
   Future<String?> exportToCSV(List<WorkoutRecord> records) async {
     try {
       final csvContent = _createCSVContent(records);
       final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$_defaultFilename';
+      final filePath = '${directory.path}/健身数据实时表.csv';
       final file = File(filePath);
       await file.writeAsString(csvContent, encoding: utf8);
       debugPrint('CSV文件已保存到: $filePath');
@@ -523,14 +710,9 @@ class ExcelCSVService {
     final buffer = StringBuffer();
     buffer.write('\uFEFF');
     buffer.writeln('日期,第几次健身,项目名称,锻炼部位,重量(kg),组数,每组数量,做功(J),感受,补剂,记录时间');
-
-    if (records.isEmpty) {
-      return buffer.toString();
-    }
-
+    if (records.isEmpty) return buffer.toString();
     final sortedRecords = List<WorkoutRecord>.from(records)
       ..sort((a, b) => a.date.compareTo(b.date));
-
     for (final record in sortedRecords) {
       final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
       for (final project in record.projects) {
@@ -563,40 +745,34 @@ class ExcelCSVService {
   Future<List<WorkoutRecord>> importFromCSV(String filePath) async {
     try {
       final file = File(filePath);
-      if (!await file.exists()) {
-        throw Exception('文件不存在: $filePath');
-      }
+      if (!await file.exists()) throw Exception('文件不存在: $filePath');
       final content = await file.readAsString(encoding: utf8);
       final lines = LineSplitter.split(content).toList();
       if (lines.isEmpty) return [];
-
-      if (lines[0].startsWith('\uFEFF')) {
-        lines[0] = lines[0].substring(1);
-      }
-
+      if (lines[0].startsWith('\uFEFF')) lines[0] = lines[0].substring(1);
       final Map<String, WorkoutRecord> recordMap = {};
       for (int i = 1; i < lines.length; i++) {
         final line = lines[i];
         if (line.trim().isEmpty) continue;
         final cells = _parseCSVLine(line);
         if (cells.length < 3) continue;
-
         try {
           final dateStr = cells[0];
           final sessionNum = int.tryParse(cells[1]) ?? 0;
           final projectName = cells[2];
-          if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) continue;
-
+          if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty)
+            continue;
           final date = DateFormat('yyyy-MM-dd').parse(dateStr);
           final key = date.toIso8601String();
-
           if (!recordMap.containsKey(key)) {
             recordMap[key] = WorkoutRecord(
               id: DateTime.now().microsecondsSinceEpoch.toString(),
               date: date,
               sessionNumber: sessionNum,
               projects: [],
-              timestamp: cells.length > 10 ? DateTime.parse(cells[10]) : DateTime.now(),
+              timestamp: cells.length > 10
+                  ? DateTime.parse(cells[10])
+                  : DateTime.now(),
             );
           }
           final project = WorkoutProject(
@@ -650,7 +826,7 @@ class ExcelCSVService {
 class NutstoreService extends ChangeNotifier {
   static const String _baseUrl = 'https://dav.jianguoyun.com/dav/';
   static const String _cloudFolder = '健身数据管理系统';
-  static const String _defaultFilename = '健身数据实时表.csv';
+  static const String _defaultFilename = '健身数据实时表.xlsx'; // 改为 Excel
 
   String? _username;
   String? _password;
@@ -714,7 +890,8 @@ class NutstoreService extends ChangeNotifier {
       final username = prefs.getString('nutstore_username');
       final password = prefs.getString('nutstore_password');
       if (username == null || password == null) return false;
-      return await connect(username: username, password: password, saveCredentials: false);
+      return await connect(
+          username: username, password: password, saveCredentials: false);
     } catch (e) {
       debugPrint('加载保存的配置失败: $e');
       return false;
@@ -723,7 +900,8 @@ class NutstoreService extends ChangeNotifier {
 
   Future<void> _ensureCloudFolder() async {
     try {
-      final folderUrl = Uri.parse('$_baseUrl${Uri.encodeComponent(_cloudFolder)}');
+      final folderUrl =
+          Uri.parse('$_baseUrl${Uri.encodeComponent(_cloudFolder)}');
       final client = http.Client();
       final checkReq = http.Request('PROPFIND', Uri.parse('$folderUrl/'));
       checkReq.headers['Authorization'] = _getAuthHeader();
@@ -752,7 +930,8 @@ class NutstoreService extends ChangeNotifier {
     try {
       final file = File(localFilePath);
       if (!await file.exists()) return false;
-      final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
+      final remotePath =
+          '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
       final bytes = await file.readAsBytes();
       final url = Uri.parse(remotePath);
       final client = http.Client();
@@ -760,7 +939,8 @@ class NutstoreService extends ChangeNotifier {
         url,
         headers: {
           'Authorization': _getAuthHeader(),
-          'Content-Type': 'text/csv',
+          'Content-Type':
+              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         },
         body: bytes,
       );
@@ -774,7 +954,8 @@ class NutstoreService extends ChangeNotifier {
 
   Future<bool> downloadFile(String savePath) async {
     try {
-      final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
+      final remotePath =
+          '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
       final url = Uri.parse(remotePath);
       final client = http.Client();
       final response = await client.get(
@@ -798,7 +979,8 @@ class NutstoreService extends ChangeNotifier {
 
   Future<bool> checkFileExists() async {
     try {
-      final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
+      final remotePath =
+          '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
       final url = Uri.parse(remotePath);
       final client = http.Client();
       final response = await client.head(
@@ -863,7 +1045,7 @@ class FitnessApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: '健身数据管理系统 Fitness-Tracker_Win_v3.0.1',
+          title: '健身数据管理系统 Fitness-Tracker_Win_v3.1.1',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.currentTheme,
           home: const MainScreen(),
@@ -908,14 +1090,16 @@ class _MainScreenState extends State<MainScreen> {
 
   void _loadData() async {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
+    final nutstore = Provider.of<NutstoreService>(context, listen: false);
     await provider.loadSavedRecords();
     await provider.loadLastExportPath();
-    final nutstore = Provider.of<NutstoreService>(context, listen: false);
     await nutstore.loadSavedConfig();
     if (mounted) {
       setState(() {
         if (provider.records.isNotEmpty) {
-          final maxSession = provider.records.map((r) => r.sessionNumber).reduce((a, b) => a > b ? a : b);
+          final maxSession = provider.records
+              .map((r) => r.sessionNumber)
+              .reduce((a, b) => a > b ? a : b);
           sessionNumber = maxSession + 1;
         }
       });
@@ -947,10 +1131,14 @@ class _MainScreenState extends State<MainScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (context, child) {
-        final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+        final isGlass =
+            Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
         return Theme(
           data: Theme.of(context).copyWith(
-            dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+            dialogTheme: DialogThemeData(
+                backgroundColor: isGlass
+                    ? Colors.grey.shade800.withValues(alpha: 0.85)
+                    : null),
           ),
           child: child!,
         );
@@ -961,10 +1149,14 @@ class _MainScreenState extends State<MainScreen> {
       context: context,
       initialTime: TimeOfDay.fromDateTime(firstWorkoutDate),
       builder: (context, child) {
-        final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+        final isGlass =
+            Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
         return Theme(
           data: Theme.of(context).copyWith(
-            dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+            dialogTheme: DialogThemeData(
+                backgroundColor: isGlass
+                    ? Colors.grey.shade800.withValues(alpha: 0.85)
+                    : null),
           ),
           child: child!,
         );
@@ -979,19 +1171,53 @@ class _MainScreenState extends State<MainScreen> {
       pickedTime.minute,
     );
     await _saveFirstWorkoutDate(newDateTime);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('起始日期已更新，坚持天数已重新计算')),
-    );
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('起始日期已更新，坚持天数已重新计算')),
+      );
+    }
+  }
+
+  void _clearControllers() {
+    for (var c in nameControllers) {
+      c.dispose();
+    }
+    for (var c in weightControllers) {
+      c.dispose();
+    }
+    for (var c in setsControllers) {
+      c.dispose();
+    }
+    for (var c in repsControllers) {
+      c.dispose();
+    }
+    for (var c in feelingControllers) {
+      c.dispose();
+    }
+    for (var c in supplementControllers) {
+      c.dispose();
+    }
+    nameControllers.clear();
+    weightControllers.clear();
+    setsControllers.clear();
+    repsControllers.clear();
+    feelingControllers.clear();
+    supplementControllers.clear();
+    partNotifiers.clear();
   }
 
   void _initializeControllers() {
+    _clearControllers();
     for (var project in projects) {
       nameControllers.add(TextEditingController(text: project.name));
-      weightControllers.add(TextEditingController(text: project.weight.toString()));
+      weightControllers
+          .add(TextEditingController(text: project.weight.toString()));
       setsControllers.add(TextEditingController(text: project.sets.toString()));
-      repsControllers.add(TextEditingController(text: project.repsPerSet.toString()));
+      repsControllers
+          .add(TextEditingController(text: project.repsPerSet.toString()));
       feelingControllers.add(TextEditingController(text: project.feeling));
-      supplementControllers.add(TextEditingController(text: project.supplement));
+      supplementControllers
+          .add(TextEditingController(text: project.supplement));
       partNotifiers.add(ValueNotifier<String>(project.part));
     }
   }
@@ -1013,12 +1239,12 @@ class _MainScreenState extends State<MainScreen> {
     if (projects.length > 1) {
       setState(() {
         projects.removeLast();
-        nameControllers.removeLast();
-        weightControllers.removeLast();
-        setsControllers.removeLast();
-        repsControllers.removeLast();
-        feelingControllers.removeLast();
-        supplementControllers.removeLast();
+        nameControllers.removeLast().dispose();
+        weightControllers.removeLast().dispose();
+        setsControllers.removeLast().dispose();
+        repsControllers.removeLast().dispose();
+        feelingControllers.removeLast().dispose();
+        supplementControllers.removeLast().dispose();
         partNotifiers.removeLast();
       });
     }
@@ -1031,10 +1257,14 @@ class _MainScreenState extends State<MainScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (context, child) {
-        final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+        final isGlass =
+            Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
         return Theme(
           data: Theme.of(context).copyWith(
-            dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+            dialogTheme: DialogThemeData(
+                backgroundColor: isGlass
+                    ? Colors.grey.shade800.withValues(alpha: 0.85)
+                    : null),
           ),
           child: child!,
         );
@@ -1080,13 +1310,6 @@ class _MainScreenState extends State<MainScreen> {
 
     setState(() {
       projects.clear();
-      nameControllers.clear();
-      weightControllers.clear();
-      setsControllers.clear();
-      repsControllers.clear();
-      feelingControllers.clear();
-      supplementControllers.clear();
-      partNotifiers.clear();
       projects.add(WorkoutProject.empty());
       _initializeControllers();
       sessionNumber++;
@@ -1094,22 +1317,25 @@ class _MainScreenState extends State<MainScreen> {
     _showToast('训练记录保存成功！');
   }
 
-  Future<void> _exportToCSV(BuildContext context) async {
+  // 导出为 Excel
+  Future<void> _exportToExcel(BuildContext context) async {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
     final excelService = Provider.of<ExcelCSVService>(context, listen: false);
     setState(() => _isLoading = true);
     try {
-      final filePath = await excelService.exportToCSV(provider.records);
+      final filePath = await excelService.exportToExcel(provider.records);
       if (filePath != null) {
         provider.setLastExportPath(filePath);
-        _showExportSuccessDialog(context, filePath, provider.records.isEmpty);
+        if (mounted) {
+          _showExportSuccessDialog(context, filePath, provider.records.isEmpty);
+        }
       } else {
-        _showToast('导出失败', isError: true);
+        if (mounted) _showToast('导出失败', isError: true);
       }
     } catch (e) {
-      _showToast('导出失败: $e', isError: true);
+      if (mounted) _showToast('导出失败: $e', isError: true);
     } finally {
-      setState(() => _isLoading = false);
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -1123,7 +1349,7 @@ class _MainScreenState extends State<MainScreen> {
     }
     setState(() => _isLoading = true);
     try {
-      final filePath = await excelService.exportToCSV(provider.records);
+      final filePath = await excelService.exportToExcel(provider.records);
       if (filePath == null) throw Exception('导出数据失败');
       provider.setLastExportPath(filePath);
       await nutstore.uploadFile(filePath);
@@ -1153,18 +1379,21 @@ class _MainScreenState extends State<MainScreen> {
       String savePath;
       if (provider.lastExportPath == null) {
         final directory = await getApplicationDocumentsDirectory();
-        savePath = '${directory.path}/健身数据实时表.csv';
+        savePath = '${directory.path}/健身数据实时表.xlsx';
         provider.setLastExportPath(savePath);
       } else {
         savePath = provider.lastExportPath!;
       }
       await nutstore.downloadFile(savePath);
-      final records = await excelService.importFromCSV(savePath);
+      final records = await excelService.importFromExcel(savePath);
       if (records.isNotEmpty) {
-        provider.loadRecords(records);
-        _showDownloadSuccessDialog(context, savePath);
+        if (mounted) {
+          _showDownloadSuccessDialog(context, savePath);
+        }
       } else {
-        _showToast('下载成功但导入失败，文件可能为空或格式错误', isError: true);
+        if (mounted) {
+          _showToast('下载成功但导入失败，文件可能为空或格式错误', isError: true);
+        }
       }
     } catch (e) {
       _showToast('下载失败: $e', isError: true);
@@ -1184,30 +1413,62 @@ class _MainScreenState extends State<MainScreen> {
           bool isConnecting = false;
           return AlertDialog(
             title: const Row(
-              children: [Icon(Icons.cloud, color: Colors.blue), SizedBox(width: 10), Text('连接坚果云服务')],
+              children: [
+                Icon(Icons.cloud, color: Colors.blue),
+                SizedBox(width: 10),
+                Text('连接坚果云服务')
+              ],
             ),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('服务器地址：', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('服务器地址：',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  const Text('https://dav.jianguoyun.com/dav', style: TextStyle(color: Colors.blue)),
+                  const Text('https://dav.jianguoyun.com/dav',
+                      style: TextStyle(color: Colors.blue)),
                   const SizedBox(height: 15),
-                  const Text('账户邮箱：', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('账户邮箱：',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  TextField(controller: usernameController, decoration: const InputDecoration(hintText: '您的坚果云邮箱', border: OutlineInputBorder())),
+                  TextField(
+                      controller: usernameController,
+                      decoration: const InputDecoration(
+                          hintText: '您的坚果云邮箱', border: OutlineInputBorder())),
                   const SizedBox(height: 15),
-                  const Text('应用密码：', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('应用密码：',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  TextField(controller: passwordController, obscureText: true, decoration: const InputDecoration(hintText: '坚果云应用密码', border: OutlineInputBorder())),
+                  TextField(
+                      controller: passwordController,
+                      obscureText: true,
+                      decoration: const InputDecoration(
+                          hintText: '坚果云应用密码', border: OutlineInputBorder())),
                   const SizedBox(height: 15),
-                  Row(children: [Checkbox(value: rememberPassword, onChanged: (v) => setState(() => rememberPassword = v ?? true)), const Text('记住密码')]),
+                  Row(children: [
+                    Checkbox(
+                        value: rememberPassword,
+                        onChanged: (v) =>
+                            setState(() => rememberPassword = v ?? true)),
+                    const Text('记住密码')
+                  ]),
                   const SizedBox(height: 10),
                   TextButton(
                     onPressed: () {
-                      showDialog(context: context, builder: (_) => AlertDialog(title: const Text('坚果云配置帮助'), content: Text(NutstoreService.getHelpMessage()), actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('关闭'))]));
+                      showDialog(
+                          context: context,
+                          builder: (_) =>
+                              AlertDialog(
+                                  title: const Text('坚果云配置帮助'),
+                                  content:
+                                      Text(NutstoreService.getHelpMessage()),
+                                  actions: [
+                                    TextButton(
+                                        onPressed: () => Navigator.pop(context),
+                                        child: const Text('关闭'))
+                                  ]));
                     },
                     child: const Text('查看配置说明'),
                   ),
@@ -1215,21 +1476,36 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             actions: [
-              TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
+              TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('取消')),
               ElevatedButton(
-                onPressed: isConnecting ? null : () async {
-                  setState(() => isConnecting = true);
-                  final nutstore = Provider.of<NutstoreService>(context, listen: false);
-                  final connected = await nutstore.connect(username: usernameController.text, password: passwordController.text, saveCredentials: rememberPassword);
-                  if (connected && mounted) {
-                    Navigator.pop(context);
-                    _showToast('坚果云连接成功！');
-                  } else {
-                    _showToast('连接失败，请检查配置', isError: true);
-                  }
-                  setState(() => isConnecting = false);
-                },
-                child: isConnecting ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)) : const Text('连接'),
+                onPressed: isConnecting
+                    ? null
+                    : () async {
+                        setState(() => isConnecting = true);
+                        final nutstore = Provider.of<NutstoreService>(context,
+                            listen: false);
+                        final connected = await nutstore.connect(
+                            username: usernameController.text,
+                            password: passwordController.text,
+                            saveCredentials: rememberPassword);
+                        if (connected && mounted) {
+                          Navigator.pop(context);
+                          _showToast('坚果云连接成功！');
+                        } else {
+                          if (mounted) {
+                            _showToast('连接失败，请检查配置', isError: true);
+                          }
+                        }
+                        setState(() => isConnecting = false);
+                      },
+                child: isConnecting
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('连接'),
               ),
             ],
           );
@@ -1240,18 +1516,28 @@ class _MainScreenState extends State<MainScreen> {
 
   void _showCloudMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(button.localToGlobal(Offset.zero, ancestor: overlay), button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay)),
+      Rect.fromPoints(
+          button.localToGlobal(Offset.zero, ancestor: overlay),
+          button.localToGlobal(button.size.bottomRight(Offset.zero),
+              ancestor: overlay)),
       Offset.zero & overlay.size,
     );
     showMenu(
       context: context,
       position: position,
-      items: const [PopupMenuItem(value: 'logout', child: Text('退出云服务')), PopupMenuItem(value: 'switch', child: Text('切换云账号'))],
+      items: const [
+        PopupMenuItem(value: 'logout', child: Text('退出云服务')),
+        PopupMenuItem(value: 'switch', child: Text('切换云账号')),
+      ],
     ).then((value) {
-      if (value == 'logout') _logoutCloud();
-      else if (value == 'switch') _switchCloudAccount();
+      if (value == 'logout') {
+        _logoutCloud();
+      } else if (value == 'switch') {
+        _switchCloudAccount();
+      }
     });
   }
 
@@ -1263,30 +1549,48 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _switchCloudAccount() async {
     await _logoutCloud();
-    _showCloudLoginDialog(context);
+    if (mounted) {
+      _showCloudLoginDialog(context);
+    }
   }
 
-  void _showExportSuccessDialog(BuildContext context, String filePath, bool isEmpty) {
+  void _showExportSuccessDialog(
+      BuildContext context, String filePath, bool isEmpty) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Row(children: [Icon(isEmpty ? Icons.info_outline : Icons.check_circle, color: isEmpty ? Colors.orange : Colors.green), const SizedBox(width: 10), Text(isEmpty ? '导出空模板成功' : '导出成功')]),
+        title: Row(children: [
+          Icon(isEmpty ? Icons.info_outline : Icons.check_circle,
+              color: isEmpty ? Colors.orange : Colors.green),
+          const SizedBox(width: 10),
+          Text(isEmpty ? '导出空模板成功' : '导出成功')
+        ]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(isEmpty ? '空模板已成功导出到：' : '数据已成功导出到：'),
             const SizedBox(height: 10),
-            Text(filePath, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(filePath,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 15),
             Text(isEmpty ? '这是一个空模板，您可以填写数据后导入使用。' : '文件已记录，可点击"上云"按钮上传到坚果云。'),
             if (!isEmpty) const SizedBox(height: 10),
-            if (!isEmpty) const Text('注意：同一天的训练项目在Excel中可以手动合并单元格，日期只在第一行显示。', style: TextStyle(fontSize: 12, color: Colors.orange)),
+            if (!isEmpty)
+              const Text('注意：同一天的训练项目在Excel中可以手动合并单元格，日期只在第一行显示。',
+                  style: TextStyle(fontSize: 12, color: Colors.orange)),
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
-          if (!isEmpty) ElevatedButton(onPressed: () { Navigator.pop(context); _uploadToCloud(context); }, child: const Text('立即上云')),
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text('确定')),
+          if (!isEmpty)
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  _uploadToCloud(context);
+                },
+                child: const Text('立即上云')),
         ],
       ),
     );
@@ -1296,19 +1600,27 @@ class _MainScreenState extends State<MainScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(children: [Icon(Icons.check_circle, color: Colors.green), SizedBox(width: 10), Text('下载成功')]),
+        title: const Row(children: [
+          Icon(Icons.check_circle, color: Colors.green),
+          SizedBox(width: 10),
+          Text('下载成功')
+        ]),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text('数据已从坚果云下载到：'),
             const SizedBox(height: 10),
-            Text(filePath, style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(filePath,
+                style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 15),
             const Text('云数据已成功替换本地数据。'),
           ],
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定'))],
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text('确定'))
+        ],
       ),
     );
   }
@@ -1316,7 +1628,11 @@ class _MainScreenState extends State<MainScreen> {
   void _showHistory(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => HistoryScreen(onExport: () => _exportToCSV(context), onUpload: () => _uploadToCloud(context), onDownload: () => _downloadFromCloud(context))),
+      MaterialPageRoute(
+          builder: (context) => HistoryScreen(
+              onExport: () => _exportToExcel(context),
+              onUpload: () => _uploadToCloud(context),
+              onDownload: () => _downloadFromCloud(context))),
     );
   }
 
@@ -1324,7 +1640,8 @@ class _MainScreenState extends State<MainScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           final themeNames = ['远山青', '萤石黑', '珠玉白', '活力橙', '全透明'];
@@ -1336,10 +1653,22 @@ class _MainScreenState extends State<MainScreen> {
             Colors.white,
           ];
           final List<LinearGradient?> gradients = [
-            const LinearGradient(colors: [Color(0xFF3AB8C7), Color(0xFF2E8B9E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-            const LinearGradient(colors: [Color(0xFF1C1C1E), Color(0xFF2C2C2E)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-            const LinearGradient(colors: [Color(0xFFFDFBF7), Color(0xFFF0EDE5)], begin: Alignment.topLeft, end: Alignment.bottomRight),
-            const LinearGradient(colors: [Color(0xFFFF9500), Color(0xFFFF6B00)], begin: Alignment.topLeft, end: Alignment.bottomRight),
+            const LinearGradient(
+                colors: [Color(0xFF3AB8C7), Color(0xFF2E8B9E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight),
+            const LinearGradient(
+                colors: [Color(0xFF1C1C1E), Color(0xFF2C2C2E)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight),
+            const LinearGradient(
+                colors: [Color(0xFFFDFBF7), Color(0xFFF0EDE5)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight),
+            const LinearGradient(
+                colors: [Color(0xFFFF9500), Color(0xFFFF6B00)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight),
             null,
           ];
           final themeDescriptions = [
@@ -1356,20 +1685,26 @@ class _MainScreenState extends State<MainScreen> {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Text('选择主题', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                  const Text('选择主题',
+                      style:
+                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
-                  const Text('不同主题会改变整体配色方案', style: TextStyle(fontSize: 12, color: Colors.grey)),
+                  const Text('不同主题会改变整体配色方案',
+                      style: TextStyle(fontSize: 12, color: Colors.grey)),
                   const SizedBox(height: 20),
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: themeNames.length,
                     itemBuilder: (context, index) {
-                      final isSelected = themeProvider.selectedThemeIndex == index;
+                      final isSelected =
+                          themeProvider.selectedThemeIndex == index;
                       final bool isJadeWhite = index == 2;
                       final bool isGlass = index == 4;
-                      final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
-                      final Color textColor = isLightTheme ? Colors.black87 : Colors.white;
+                      final bool isLightTheme =
+                          Theme.of(context).brightness == Brightness.light;
+                      final Color textColor =
+                          isLightTheme ? Colors.black87 : Colors.white;
                       return GestureDetector(
                         onTap: () {
                           themeProvider.setTheme(index);
@@ -1380,27 +1715,58 @@ class _MainScreenState extends State<MainScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             gradient: isGlass ? null : gradients[index],
-                            color: isGlass ? Colors.white.withValues(alpha: 0.2) : null,
+                            color: isGlass
+                                ? Colors.white.withValues(alpha: 0.2)
+                                : null,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: isSelected ? (isJadeWhite ? Colors.blue : Colors.white) : (isGlass ? Colors.black : Colors.transparent),
+                              color: isSelected
+                                  ? (isJadeWhite ? Colors.blue : Colors.white)
+                                  : (isGlass
+                                      ? Colors.black
+                                      : Colors.transparent),
                               width: isGlass && !isSelected ? 1 : 3,
                             ),
-                            boxShadow: isSelected ? [BoxShadow(color: themeColors[index].withValues(alpha: 0.3), blurRadius: 8, spreadRadius: 2)] : null,
-                            backgroundBlendMode: isGlass ? BlendMode.srcOver : null,
+                            boxShadow: isSelected
+                                ? [
+                                    BoxShadow(
+                                        color: themeColors[index]
+                                            .withValues(alpha: 0.3),
+                                        blurRadius: 8,
+                                        spreadRadius: 2)
+                                  ]
+                                : null,
+                            backgroundBlendMode:
+                                isGlass ? BlendMode.srcOver : null,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Row(
                                 children: [
-                                  Text(themeNames[index], style: TextStyle(color: isJadeWhite ? Colors.black87 : textColor, fontSize: 16, fontWeight: FontWeight.bold)),
+                                  Text(themeNames[index],
+                                      style: TextStyle(
+                                          color: isJadeWhite
+                                              ? Colors.black87
+                                              : textColor,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold)),
                                   const SizedBox(width: 8),
-                                  if (isSelected) Icon(Icons.check_circle, color: isJadeWhite ? Colors.blue : Colors.white, size: 20),
+                                  if (isSelected)
+                                    Icon(Icons.check_circle,
+                                        color: isJadeWhite
+                                            ? Colors.blue
+                                            : Colors.white,
+                                        size: 20),
                                 ],
                               ),
                               const SizedBox(height: 4),
-                              Text(themeDescriptions[index], style: TextStyle(color: isJadeWhite ? Colors.black54 : textColor.withOpacity(0.7), fontSize: 12)),
+                              Text(themeDescriptions[index],
+                                  style: TextStyle(
+                                      color: isJadeWhite
+                                          ? Colors.black54
+                                          : textColor.withValues(alpha: 0.7),
+                                      fontSize: 12)),
                             ],
                           ),
                         ),
@@ -1408,7 +1774,9 @@ class _MainScreenState extends State<MainScreen> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('关闭')),
+                  OutlinedButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('关闭')),
                 ],
               ),
             ),
@@ -1419,22 +1787,17 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _showToast(String message, {bool isError = false}) {
-  // 防止空消息
-  if (message.trim().isEmpty) {
-    message = '操作完成';
-  }
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        message,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+    if (message.trim().isEmpty) message = '操作完成';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(color: Colors.white, fontSize: 14)),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
-      backgroundColor: isError ? Colors.red : Colors.green,
-      duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-}
+    );
+  }
 
   Widget _buildProjectCard(int index) {
     return ValueListenableBuilder<String>(
@@ -1443,29 +1806,53 @@ class _MainScreenState extends State<MainScreen> {
         final weight = double.tryParse(weightControllers[index].text) ?? 0;
         final sets = int.tryParse(setsControllers[index].text) ?? 0;
         final reps = int.tryParse(repsControllers[index].text) ?? 0;
-        final work = WorkoutProject(name: '', part: part, weight: weight, sets: sets, repsPerSet: reps, feeling: '', supplement: '').calculateWork();
+        final work = WorkoutProject(
+                name: '',
+                part: part,
+                weight: weight,
+                sets: sets,
+                repsPerSet: reps,
+                feeling: '',
+                supplement: '')
+            .calculateWork();
         return Container(
           margin: const EdgeInsets.only(bottom: 16),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+            border: Border.all(
+                color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
           ),
           child: Column(
             children: [
-              Row(children: [Text('项目 ${index + 1}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))]),
+              Row(children: [
+                Text('项目 ${index + 1}',
+                    style: const TextStyle(
+                        fontSize: 16, fontWeight: FontWeight.bold))
+              ]),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  Expanded(child: TextField(controller: nameControllers[index], decoration: const InputDecoration(labelText: '项目名称', border: OutlineInputBorder()))),
+                  Expanded(
+                      child: TextField(
+                          controller: nameControllers[index],
+                          decoration: const InputDecoration(
+                              labelText: '项目名称',
+                              border: OutlineInputBorder()))),
                   const SizedBox(width: 16),
                   Expanded(
                     child: DropdownButtonFormField<String>(
                       initialValue: part,
-                      decoration: const InputDecoration(labelText: '锻炼部位', border: OutlineInputBorder()),
-                      items: const ['胸', '背', '腿', '肩', '腹'].map((part) => DropdownMenuItem(value: part, child: Text(part))).toList(),
-                      onChanged: (value) { if (value != null) partNotifiers[index].value = value; },
+                      decoration: const InputDecoration(
+                          labelText: '锻炼部位', border: OutlineInputBorder()),
+                      items: const ['胸', '背', '腿', '肩', '腹']
+                          .map((part) =>
+                              DropdownMenuItem(value: part, child: Text(part)))
+                          .toList(),
+                      onChanged: (value) {
+                        if (value != null) partNotifiers[index].value = value;
+                      },
                     ),
                   ),
                 ],
@@ -1473,11 +1860,29 @@ class _MainScreenState extends State<MainScreen> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: TextField(controller: weightControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '重量 (kg)', border: OutlineInputBorder(), suffixText: 'kg'))),
+                  Expanded(
+                      child: TextField(
+                          controller: weightControllers[index],
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              labelText: '重量 (kg)',
+                              border: OutlineInputBorder(),
+                              suffixText: 'kg'))),
                   const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: setsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '组数', border: OutlineInputBorder()))),
+                  Expanded(
+                      child: TextField(
+                          controller: setsControllers[index],
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              labelText: '组数', border: OutlineInputBorder()))),
                   const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: repsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '每组数量', border: OutlineInputBorder()))),
+                  Expanded(
+                      child: TextField(
+                          controller: repsControllers[index],
+                          keyboardType: TextInputType.number,
+                          decoration: const InputDecoration(
+                              labelText: '每组数量',
+                              border: OutlineInputBorder()))),
                 ],
               ),
               const SizedBox(height: 16),
@@ -1485,17 +1890,28 @@ class _MainScreenState extends State<MainScreen> {
                 children: [
                   const Icon(Icons.bar_chart, color: Colors.orange),
                   const SizedBox(width: 8),
-                  const Text('做功:', style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('做功:',
+                      style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(width: 8),
-                  Text('${work.toStringAsFixed(0)} J', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text('${work.toStringAsFixed(0)} J',
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
               const SizedBox(height: 16),
               Row(
                 children: [
-                  Expanded(child: TextField(controller: feelingControllers[index], decoration: const InputDecoration(labelText: '感受', border: OutlineInputBorder()))),
+                  Expanded(
+                      child: TextField(
+                          controller: feelingControllers[index],
+                          decoration: const InputDecoration(
+                              labelText: '感受', border: OutlineInputBorder()))),
                   const SizedBox(width: 16),
-                  Expanded(child: TextField(controller: supplementControllers[index], decoration: const InputDecoration(labelText: '补剂', border: OutlineInputBorder()))),
+                  Expanded(
+                      child: TextField(
+                          controller: supplementControllers[index],
+                          decoration: const InputDecoration(
+                              labelText: '补剂', border: OutlineInputBorder()))),
                 ],
               ),
             ],
@@ -1506,281 +1922,526 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    final duration = DateTime.now().difference(firstWorkoutDate);
-    final theme = Theme.of(context);
-    final isLight = theme.brightness == Brightness.light;
-    final isGlass = theme.scaffoldBackgroundColor == Colors.transparent;
+  void dispose() {
+    dateController.dispose();
+    for (var c in nameControllers) {
+      c.dispose();
+    }
+    for (var c in weightControllers) {
+      c.dispose();
+    }
+    for (var c in setsControllers) {
+      c.dispose();
+    }
+    for (var c in repsControllers) {
+      c.dispose();
+    }
+    for (var c in feelingControllers) {
+      c.dispose();
+    }
+    for (var c in supplementControllers) {
+      c.dispose();
+    }
+    super.dispose();
+  }
 
-    // 获取当前主题的输入框边框样式（用于日期选择框）
-    final inputBorder = theme.inputDecorationTheme.border ?? const OutlineInputBorder();
-    final enabledBorder = theme.inputDecorationTheme.enabledBorder ?? inputBorder;
+@override
+Widget build(BuildContext context) {
+  final duration = DateTime.now().difference(firstWorkoutDate);
+  final theme = Theme.of(context);
+  final isLight = theme.brightness == Brightness.light;
+  final isGlass = theme.scaffoldBackgroundColor == Colors.transparent;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            const Icon(Icons.fitness_center),
-            const SizedBox(width: 8),
-            Flexible(child: Text('健身数据管理系统 Win_v3.0.1', style: const TextStyle(fontWeight: FontWeight.bold, fontFamily: 'SimSun', fontSize: 14), overflow: TextOverflow.ellipsis, maxLines: 1)),
-            const SizedBox(width: 8),
-            SizedBox(
-              width: 700,
-              height: kToolbarHeight,
-              child: Align(
-                alignment: Alignment.centerRight,
-                child: RoamingCat(maxWidth: 700, maxHeight: kToolbarHeight - 8, githubUrl: 'https://github.com/MrKedow/Fitness-Tracker', catSize: 45.0),
+  final inputBorder =
+      theme.inputDecorationTheme.border ?? const OutlineInputBorder();
+  final enabledBorder =
+      theme.inputDecorationTheme.enabledBorder ?? inputBorder;
+
+  return Scaffold(
+    appBar: AppBar(
+      title: const Row(
+        children: [
+          Icon(Icons.fitness_center),
+          SizedBox(width: 8),
+          Flexible(
+            child: Text(
+              '健身数据管理系统 Win_v3.1.1',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontFamily: 'SimSun',
+                fontSize: 14,
               ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
-          ],
-        ),
-        actions: [
-          Consumer<NutstoreService>(
-            builder: (context, nutstore, child) {
-              if (nutstore.isConnected) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [const Icon(Icons.cloud_done, color: Colors.green, size: 20), const SizedBox(width: 4), Text(nutstore.username ?? '', style: const TextStyle(color: Colors.green, fontSize: 14, fontWeight: FontWeight.w500), overflow: TextOverflow.ellipsis)],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
-            },
           ),
-          IconButton(icon: const Icon(Icons.history), onPressed: () => _showHistory(context), tooltip: '历史记录'),
-          IconButton(icon: const Icon(Icons.palette), onPressed: () => _showThemeSelector(context), tooltip: '切换主题'),
-          Consumer<NutstoreService>(
-            builder: (context, nutstore, child) {
-              return IconButton(
-                icon: const Icon(Icons.cloud),
-                onPressed: () {
-                  if (nutstore.isConnected) _showCloudMenu(context);
-                  else _showCloudLoginDialog(context);
-                },
-                tooltip: '云服务',
-              );
-            },
-          ),
-          if (_isLoading) const Padding(padding: EdgeInsets.all(8.0), child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))),
         ],
       ),
-      body: _isLoading
-          ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [CircularProgressIndicator(), SizedBox(height: 20), Text('处理中...')]))
-          : Consumer<WorkoutProvider>(
-              builder: (context, provider, child) {
-                final recentRecords = provider.records.reversed.take(5).toList();
-                return Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Card(
-                        child: Padding(
-                          padding: const EdgeInsets.all(20),
+      actions: [
+        Consumer<NutstoreService>(
+          builder: (context, nutstore, child) {
+            if (nutstore.isConnected) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.cloud_done, color: Colors.green, size: 20),
+                    const SizedBox(width: 4),
+                    Text(
+                      nutstore.username ?? '',
+                      style: const TextStyle(
+                        color: Colors.green,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              );
+            }
+            return const SizedBox.shrink();
+          },
+        ),
+        IconButton(
+          icon: const Icon(Icons.history),
+          onPressed: () => _showHistory(context),
+          tooltip: '历史记录',
+        ),
+        IconButton(
+          icon: const Icon(Icons.palette),
+          onPressed: () => _showThemeSelector(context),
+          tooltip: '切换主题',
+        ),
+        Consumer<NutstoreService>(
+          builder: (context, nutstore, child) {
+            return IconButton(
+              icon: const Icon(Icons.cloud),
+              onPressed: () {
+                if (nutstore.isConnected) {
+                  _showCloudMenu(context);
+                } else {
+                  _showCloudLoginDialog(context);
+                }
+              },
+              tooltip: '云服务',
+            );
+          },
+        ),
+        if (_isLoading)
+          const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+      ],
+    ),
+    body: LayoutBuilder(
+  builder: (context, constraints) {
+    final parentSize = constraints.biggest;
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        _isLoading
+            ? const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(),
+                    SizedBox(height: 20),
+                    Text('处理中...'),
+                  ],
+                ),
+              )
+            : Consumer<WorkoutProvider>(
+                builder: (context, provider, child) {
+                  final recentRecords =
+                      provider.records.reversed.take(5).toList();
+                  return Padding(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      children: [
+                        Card(
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text('健身坚持统计',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold)),
+                                    const SizedBox(height: 8),
+                                    Text('每一次努力都值得记录',
+                                        style: TextStyle(color: Colors.grey[400])),
+                                  ],
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    GestureDetector(
+                                      onTap: _pickFirstWorkoutDate,
+                                      child: Text('${duration.inDays} 天',
+                                          style: TextStyle(
+                                              fontSize: 32,
+                                              fontWeight: FontWeight.bold,
+                                              color: Theme.of(context).primaryColor)),
+                                    ),
+                                    Text(
+                                        '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
+                                        style: TextStyle(color: Colors.grey[400])),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        Expanded(
                           child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Column(crossAxisAlignment: CrossAxisAlignment.start, children: [const Text('健身坚持统计', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)), const SizedBox(height: 8), Text('每一次努力都值得记录', style: TextStyle(color: Colors.grey[400]))]),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  GestureDetector(
-                                    onTap: _pickFirstWorkoutDate,
-                                    child: Text('${duration.inDays} 天', style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Theme.of(context).primaryColor)),
+                              Expanded(
+                                flex: 3,
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text('填写训练记录',
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text('📅 日期'),
+                                                  const SizedBox(height: 8),
+                                                  GestureDetector(
+                                                    onTap: () =>
+                                                        _selectDate(context),
+                                                    child: Container(
+                                                      padding:
+                                                          const EdgeInsets.all(12),
+                                                      decoration: BoxDecoration(
+                                                        color: Theme.of(context)
+                                                            .cardColor,
+                                                        borderRadius:
+                                                            BorderRadius.circular(12),
+                                                        border: enabledBorder
+                                                                    .borderSide !=
+                                                                BorderSide.none
+                                                            ? Border.all(
+                                                                color: enabledBorder
+                                                                    .borderSide
+                                                                    .color,
+                                                                width: enabledBorder
+                                                                    .borderSide
+                                                                    .width,
+                                                              )
+                                                            : null,
+                                                      ),
+                                                      child: Row(
+                                                        children: [
+                                                          Icon(
+                                                            Icons.calendar_today,
+                                                            size: 20,
+                                                            color: Theme.of(context)
+                                                                .primaryColor,
+                                                          ),
+                                                          const SizedBox(width: 8),
+                                                          Text(dateController.text),
+                                                          const Spacer(),
+                                                          const Icon(Icons.arrow_drop_down),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 20),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  const Text('#️⃣ 第几次训练'),
+                                                  const SizedBox(height: 8),
+                                                  TextField(
+                                                    controller:
+                                                        TextEditingController(
+                                                            text: sessionNumber
+                                                                .toString()),
+                                                    keyboardType:
+                                                        TextInputType.number,
+                                                    decoration:
+                                                        const InputDecoration(
+                                                      hintText: '输入次数',
+                                                      border:
+                                                          OutlineInputBorder(),
+                                                    ),
+                                                    onChanged: (value) {
+                                                      final num =
+                                                          int.tryParse(value) ?? 1;
+                                                      setState(() =>
+                                                          sessionNumber = num);
+                                                    },
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 30),
+                                        const Text('训练项目',
+                                            style: TextStyle(
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 16),
+                                        Expanded(
+                                          child: ListView.builder(
+                                            shrinkWrap: true,
+                                            itemCount: projects.length,
+                                            itemBuilder: (context, index) =>
+                                                _buildProjectCard(index),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 20),
+                                        Row(
+                                          children: [
+                                            ElevatedButton.icon(
+                                                onPressed: _addProject,
+                                                icon: const Icon(Icons.add),
+                                                label: const Text('添加项目')),
+                                            const SizedBox(width: 12),
+                                            ElevatedButton.icon(
+                                              onPressed: _removeProject,
+                                              icon: const Icon(Icons.remove),
+                                              label: const Text('删除项目'),
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      Theme.of(context).cardColor),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 30),
+                                        ElevatedButton.icon(
+                                          onPressed: () => _saveWorkout(context),
+                                          icon: const Icon(Icons.save),
+                                          label: const Text('保存记录'),
+                                          style: ElevatedButton.styleFrom(
+                                              backgroundColor:
+                                                  const Color(0xFF34C759),
+                                              minimumSize:
+                                                  const Size(double.infinity, 56)),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  Text('${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟', style: TextStyle(color: Colors.grey[400])),
-                                ],
+                                ),
+                              ),
+                              const SizedBox(width: 24),
+                              Expanded(
+                                flex: 2,
+                                child: Card(
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(20),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        const Text('最近记录',
+                                            style: TextStyle(
+                                                fontSize: 18,
+                                                fontWeight: FontWeight.bold)),
+                                        const SizedBox(height: 20),
+                                        Expanded(
+                                          child: recentRecords.isEmpty
+                                              ? const Center(
+                                                  child: Column(
+                                                    mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                    children: [
+                                                      Icon(Icons.history,
+                                                          size: 60,
+                                                          color: Colors.grey),
+                                                      SizedBox(height: 16),
+                                                      Text('暂无记录'),
+                                                      Text('开始您的第一次训练吧！',
+                                                          style: TextStyle(
+                                                              fontSize: 12)),
+                                                    ],
+                                                  ),
+                                                )
+                                              : ListView.builder(
+                                                  shrinkWrap: true,
+                                                  itemCount:
+                                                      recentRecords.length,
+                                                  itemBuilder:
+                                                      (context, index) {
+                                                    final record =
+                                                        recentRecords[index];
+                                                    final dateStr =
+                                                        DateFormat('yyyy-MM-dd')
+                                                            .format(record.date);
+                                                    final projectNames = record
+                                                        .projects
+                                                        .map((p) => p.name)
+                                                        .where((name) =>
+                                                            name.isNotEmpty)
+                                                        .join('、');
+                                                    return Container(
+                                                      margin: const EdgeInsets.only(
+                                                          bottom: 12),
+                                                      padding:
+                                                          const EdgeInsets.all(16),
+                                                      decoration: BoxDecoration(
+                                                        color: isGlass
+                                                            ? Colors.grey.shade800
+                                                                .withValues(
+                                                                    alpha: 0.5)
+                                                            : Theme.of(context)
+                                                                .cardColor,
+                                                        borderRadius:
+                                                            BorderRadius.circular(
+                                                                12),
+                                                      ),
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              Text(dateStr,
+                                                                  style:
+                                                                      const TextStyle(
+                                                                          fontWeight:
+                                                                              FontWeight.bold)),
+                                                              Container(
+                                                                padding:
+                                                                    const EdgeInsets
+                                                                        .symmetric(
+                                                                        horizontal:
+                                                                            8,
+                                                                        vertical:
+                                                                            4),
+                                                                decoration:
+                                                                    BoxDecoration(
+                                                                  color: isLight
+                                                                      ? Colors
+                                                                          .green
+                                                                          .shade700
+                                                                      : Theme.of(
+                                                                              context)
+                                                                          .primaryColor,
+                                                                  borderRadius:
+                                                                      BorderRadius
+                                                                          .circular(
+                                                                              6),
+                                                                ),
+                                                                child: Text(
+                                                                  '第${record.sessionNumber}次',
+                                                                  style: TextStyle(
+                                                                      fontSize:
+                                                                          12,
+                                                                      fontWeight:
+                                                                          FontWeight
+                                                                              .bold,
+                                                                      color: isLight
+                                                                          ? Colors
+                                                                              .white
+                                                                          : Colors
+                                                                              .black),
+                                                                ),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 8),
+                                                          Text(
+                                                            projectNames
+                                                                    .isNotEmpty
+                                                                ? projectNames
+                                                                : '无项目名称',
+                                                            style: TextStyle(
+                                                                color: Colors
+                                                                    .grey[400]),
+                                                          ),
+                                                          const SizedBox(
+                                                              height: 8),
+                                                          Row(
+                                                            mainAxisAlignment:
+                                                                MainAxisAlignment
+                                                                    .spaceBetween,
+                                                            children: [
+                                                              const Text('总做功'),
+                                                              Text(
+                                                                '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
+                                                                style: const TextStyle(
+                                                                    fontWeight:
+                                                                        FontWeight
+                                                                            .bold,
+                                                                    color: Colors
+                                                                        .orange),
+                                                              ),
+                                                            ],
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                        ),
+                                        const SizedBox(height: 20),
+                                        OutlinedButton.icon(
+                                          onPressed: () => _showHistory(context),
+                                          icon: const Icon(Icons.list),
+                                          label: const Text('查看全部记录'),
+                                          style: OutlinedButton.styleFrom(
+                                              minimumSize:
+                                                  const Size(double.infinity, 48)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      Expanded(
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Expanded(
-                              flex: 3,
-                              child: Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text('填写训练记录', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 20),
-                                      Row(
-                                        children: [
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text('📅 日期'),
-                                                const SizedBox(height: 8),
-                                                GestureDetector(
-                                                  onTap: () => _selectDate(context),
-                                                  child: Container(
-                                                    padding: const EdgeInsets.all(12),
-                                                    decoration: BoxDecoration(
-                                                      color: Theme.of(context).cardColor,
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      // 统一使用主题的输入框边框样式
-                                                      border: enabledBorder.borderSide != BorderSide.none
-                                                          ? Border.all(color: enabledBorder.borderSide.color, width: enabledBorder.borderSide.width)
-                                                          : null,
-                                                    ),
-                                                    child: Row(
-                                                      children: [
-                                                        Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor),
-                                                        const SizedBox(width: 8),
-                                                        Text(dateController.text),
-                                                        const Spacer(),
-                                                        const Icon(Icons.arrow_drop_down),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(width: 20),
-                                          Expanded(
-                                            child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
-                                              children: [
-                                                const Text('#️⃣ 第几次训练'),
-                                                const SizedBox(height: 8),
-                                                TextField(
-                                                  controller: TextEditingController(text: sessionNumber.toString()),
-                                                  keyboardType: TextInputType.number,
-                                                  decoration: const InputDecoration(hintText: '输入次数', border: OutlineInputBorder()),
-                                                  onChanged: (value) {
-                                                    final num = int.tryParse(value) ?? 1;
-                                                    setState(() => sessionNumber = num);
-                                                  },
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 30),
-                                      const Text('训练项目', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 16),
-                                      Expanded(
-                                        child: ListView.builder(
-                                          shrinkWrap: true,
-                                          itemCount: projects.length,
-                                          itemBuilder: (context, index) => _buildProjectCard(index),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      Row(
-                                        children: [
-                                          ElevatedButton.icon(onPressed: _addProject, icon: const Icon(Icons.add), label: const Text('添加项目')),
-                                          const SizedBox(width: 12),
-                                          ElevatedButton.icon(
-                                            onPressed: _removeProject,
-                                            icon: const Icon(Icons.remove),
-                                            label: const Text('删除项目'),
-                                            style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).cardColor),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 30),
-                                      ElevatedButton.icon(
-                                        onPressed: () => _saveWorkout(context),
-                                        icon: const Icon(Icons.save),
-                                        label: const Text('保存记录'),
-                                        style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF34C759), minimumSize: const Size(double.infinity, 56)),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 24),
-                            Expanded(
-                              flex: 2,
-                              child: Card(
-                                child: Padding(
-                                  padding: const EdgeInsets.all(20),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text('最近记录', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                                      const SizedBox(height: 20),
-                                      Expanded(
-                                        child: recentRecords.isEmpty
-                                            ? const Center(child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(Icons.history, size: 60, color: Colors.grey), SizedBox(height: 16), Text('暂无记录'), Text('开始您的第一次训练吧！', style: TextStyle(fontSize: 12))]))
-                                            : ListView.builder(
-                                                shrinkWrap: true,
-                                                itemCount: recentRecords.length,
-                                                itemBuilder: (context, index) {
-                                                  final record = recentRecords[index];
-                                                  final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-                                                  final projectNames = record.projects.map((p) => p.name).where((name) => name.isNotEmpty).join('、');
-                                                  return Container(
-                                                    margin: const EdgeInsets.only(bottom: 12),
-                                                    padding: const EdgeInsets.all(16),
-                                                    decoration: BoxDecoration(
-                                                      color: isGlass ? Colors.grey.shade800.withValues(alpha: 0.5) : Theme.of(context).cardColor,
-                                                      borderRadius: BorderRadius.circular(12),
-                                                    ),
-                                                    child: Column(
-                                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                                      children: [
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [
-                                                            Text(dateStr, style: const TextStyle(fontWeight: FontWeight.bold)),
-                                                            Container(
-                                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                                              decoration: BoxDecoration(
-                                                                color: isLight ? Colors.green.shade700 : Theme.of(context).primaryColor,
-                                                                borderRadius: BorderRadius.circular(6),
-                                                              ),
-                                                              child: Text('第${record.sessionNumber}次', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: isLight ? Colors.white : Colors.black)),
-                                                            ),
-                                                          ],
-                                                        ),
-                                                        const SizedBox(height: 8),
-                                                        Text(projectNames.isNotEmpty ? projectNames : '无项目名称', style: TextStyle(color: Colors.grey[400])),
-                                                        const SizedBox(height: 8),
-                                                        Row(
-                                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                          children: [const Text('总做功'), Text('${(record.totalWork / 1000).toStringAsFixed(1)}千焦', style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange))],
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                      ),
-                                      const SizedBox(height: 20),
-                                      OutlinedButton.icon(
-                                        onPressed: () => _showHistory(context),
-                                        icon: const Icon(Icons.list),
-                                        label: const Text('查看全部记录'),
-                                        style: OutlinedButton.styleFrom(minimumSize: const Size(double.infinity, 48)),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+        // 可拖拽小猫
+        DraggableCat(
+          catSize: 100.0,
+          githubUrl: 'https://github.com/MrKedow/Fitness-Tracker',
+          parentSize: parentSize,
+        ),
+      ],
     );
-  }
+    resizeToAvoidBottomInset: false;
+  }));
+}  
 }
 
 // ==================== 历史记录页面 ====================
@@ -1788,17 +2449,20 @@ class HistoryScreen extends StatefulWidget {
   final VoidCallback onExport;
   final VoidCallback onUpload;
   final VoidCallback onDownload;
-  const HistoryScreen({super.key, required this.onExport, required this.onUpload, required this.onDownload});
+  const HistoryScreen(
+      {super.key,
+      required this.onExport,
+      required this.onUpload,
+      required this.onDownload});
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  String? _selectedRecordId;
   WorkoutRecord? _recordToEdit;
   final ScrollController _horizontalScrollController = ScrollController();
   bool _showHorizontalScrollbar = false;
-  Set<int> _collapsedColumns = {}; // 0:日期,1:第几次,2:项目详情,3:总做功,4:操作
+  final Set<int> _collapsedColumns = {};
   final List<String> _columnNames = ['日期', '第几次', '项目详情', '总做功', '操作'];
 
   @override
@@ -1808,9 +2472,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _toggleColumn(int index) {
-    // 获取当前可见列的数量
     final visibleCount = _columnNames.length - _collapsedColumns.length;
-    // 如果当前列是可见列中的最后一列，则展开所有列
     if (visibleCount == 1 && !_collapsedColumns.contains(index)) {
       _expandAllColumns();
       return;
@@ -1832,7 +2494,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   void _collapseCurrentColumn(int index) {
     final visibleCount = _columnNames.length - _collapsedColumns.length;
-    // 如果只剩一列，不允许折叠
     if (visibleCount == 1 && !_collapsedColumns.contains(index)) {
       _showToast('至少保留一列');
       return;
@@ -1845,7 +2506,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showContextMenuForColumn(TapDownDetails details, int columnIndex) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     final position = RelativeRect.fromRect(
       details.globalPosition & const Size(40, 40),
       Offset.zero & overlay.size,
@@ -1874,8 +2536,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text('整合同一天记录'),
         content: const Text('将同一天的多条记录合并为一条（项目合并，次数取最大值）。是否继续？'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
-          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('整合')),
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('取消')),
+          ElevatedButton(
+              onPressed: () => Navigator.pop(context, true),
+              child: const Text('整合')),
         ],
       ),
     );
@@ -1886,44 +2552,75 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showToast(String message, {bool isError = false}) {
-  // 防止空消息
-  if (message.trim().isEmpty) {
-    message = '操作完成';
-  }
-  ScaffoldMessenger.of(context).showSnackBar(
-    SnackBar(
-      content: Text(
-        message,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+    if (message.trim().isEmpty) message = '操作完成';
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message,
+            style: const TextStyle(color: Colors.white, fontSize: 14)),
+        backgroundColor: isError ? Colors.red : Colors.green,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.floating,
       ),
-      backgroundColor: isError ? Colors.red : Colors.green,
-      duration: const Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
-}
+    );
+  }
 
   void _showContextMenu(BuildContext context, WorkoutRecord record) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(button.localToGlobal(Offset.zero, ancestor: overlay), button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay)),
+      Rect.fromPoints(
+          button.localToGlobal(Offset.zero, ancestor: overlay),
+          button.localToGlobal(button.size.bottomRight(Offset.zero),
+              ancestor: overlay)),
       Offset.zero & overlay.size,
     );
     showMenu(
       context: context,
       position: position,
       items: [
-        PopupMenuItem(value: 'edit', child: const Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('编辑')]), onTap: () => Future.delayed(Duration.zero, () => _editRecord(record))),
-        PopupMenuItem(value: 'delete', child: const Row(children: [Icon(Icons.delete, color: Colors.red, size: 20), SizedBox(width: 8), Text('删除', style: TextStyle(color: Colors.red))]), onTap: () => Future.delayed(Duration.zero, () => _deleteRecord(context, record))),
+        PopupMenuItem(
+          value: 'edit',
+          child: const Row(children: [
+            Icon(Icons.edit, size: 20),
+            SizedBox(width: 8),
+            Text('编辑')
+          ]),
+          onTap: () {
+            Future.delayed(Duration.zero, () {
+              if (mounted) {
+                _editRecord(record);
+              }
+            });
+          },
+        ),
+        PopupMenuItem(
+          value: 'delete',
+          child: const Row(children: [
+            Icon(Icons.delete, color: Colors.red, size: 20),
+            SizedBox(width: 8),
+            Text('删除', style: TextStyle(color: Colors.red))
+          ]),
+          onTap: () {
+            Future.delayed(Duration.zero, () {
+              if (mounted) {
+                _deleteRecord(context, record);
+              }
+            });
+          },
+        ),
       ],
     );
   }
 
   void _editRecord(WorkoutRecord record) {
     setState(() {
-      _selectedRecordId = record.id;
-      _recordToEdit = WorkoutRecord(id: record.id, date: record.date, sessionNumber: record.sessionNumber, projects: record.projects.map((p) => p.copy()).toList(), timestamp: record.timestamp);
+      _recordToEdit = WorkoutRecord(
+          id: record.id,
+          date: record.date,
+          sessionNumber: record.sessionNumber,
+          projects: record.projects.map((p) => p.copy()).toList(),
+          timestamp: record.timestamp);
     });
     _showEditDialog();
   }
@@ -1931,8 +2628,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void _showEditDialog() {
     if (_recordToEdit == null) return;
     final record = _recordToEdit!;
-    final dateController = TextEditingController(text: DateFormat('yyyy-MM-dd').format(record.date));
-    final sessionController = TextEditingController(text: record.sessionNumber.toString());
+    final dateController = TextEditingController(
+        text: DateFormat('yyyy-MM-dd').format(record.date));
+    final sessionController =
+        TextEditingController(text: record.sessionNumber.toString());
     final List<TextEditingController> nameControllers = [];
     final List<TextEditingController> weightControllers = [];
     final List<TextEditingController> setsControllers = [];
@@ -1942,11 +2641,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final List<ValueNotifier<String>> partNotifiers = [];
     for (var project in record.projects) {
       nameControllers.add(TextEditingController(text: project.name));
-      weightControllers.add(TextEditingController(text: project.weight.toString()));
+      weightControllers
+          .add(TextEditingController(text: project.weight.toString()));
       setsControllers.add(TextEditingController(text: project.sets.toString()));
-      repsControllers.add(TextEditingController(text: project.repsPerSet.toString()));
+      repsControllers
+          .add(TextEditingController(text: project.repsPerSet.toString()));
       feelingControllers.add(TextEditingController(text: project.feeling));
-      supplementControllers.add(TextEditingController(text: project.supplement));
+      supplementControllers
+          .add(TextEditingController(text: project.supplement));
       partNotifiers.add(ValueNotifier<String>(project.part));
     }
     showDialog(
@@ -1965,6 +2667,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               partNotifiers.add(ValueNotifier<String>('胸'));
             });
           }
+
           void removeProject() {
             if (record.projects.length > 1) {
               setState(() {
@@ -1979,6 +2682,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               });
             }
           }
+
           Future<void> selectDate() async {
             final DateTime? picked = await showDatePicker(
               context: context,
@@ -1986,10 +2690,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
               firstDate: DateTime(2020),
               lastDate: DateTime.now(),
               builder: (context, child) {
-                final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+                final isGlass = Theme.of(context).scaffoldBackgroundColor ==
+                    Colors.transparent;
                 return Theme(
                   data: Theme.of(context).copyWith(
-                    dialogBackgroundColor: isGlass ? Colors.grey.shade800.withOpacity(0.85) : null,
+                    dialogTheme: DialogThemeData(
+                        backgroundColor: isGlass
+                            ? Colors.grey.shade800.withValues(alpha: 0.85)
+                            : null),
                   ),
                   child: child!,
                 );
@@ -2002,48 +2710,82 @@ class _HistoryScreenState extends State<HistoryScreen> {
               });
             }
           }
+
           Widget buildProjectCard(int index) {
             return ValueListenableBuilder<String>(
               valueListenable: partNotifiers[index],
               builder: (context, part, child) {
-                final weight = double.tryParse(weightControllers[index].text) ?? 0;
+                final weight =
+                    double.tryParse(weightControllers[index].text) ?? 0;
                 final sets = int.tryParse(setsControllers[index].text) ?? 0;
                 final reps = int.tryParse(repsControllers[index].text) ?? 0;
-                final work = WorkoutProject(name: '', part: part, weight: weight, sets: sets, repsPerSet: reps, feeling: '', supplement: '').calculateWork();
+                final work = WorkoutProject(
+                        name: '',
+                        part: part,
+                        weight: weight,
+                        sets: sets,
+                        repsPerSet: reps,
+                        feeling: '',
+                        supplement: '')
+                    .calculateWork();
                 return Container(
                   margin: const EdgeInsets.only(bottom: 16),
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+                    border: Border.all(
+                        color: Theme.of(context)
+                            .primaryColor
+                            .withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
-                      Row(children: [Text('项目 ${index + 1}', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), const Spacer(), if (record.projects.length > 1) IconButton(icon: const Icon(Icons.close, size: 20), onPressed: () {
-                        setState(() {
-                          if (record.projects.length > 1) {
-                            record.projects.removeAt(index);
-                            nameControllers.removeAt(index);
-                            weightControllers.removeAt(index);
-                            setsControllers.removeAt(index);
-                            repsControllers.removeAt(index);
-                            feelingControllers.removeAt(index);
-                            supplementControllers.removeAt(index);
-                            partNotifiers.removeAt(index);
-                          }
-                        });
-                      })]),
+                      Row(children: [
+                        Text('项目 ${index + 1}',
+                            style: const TextStyle(
+                                fontSize: 16, fontWeight: FontWeight.bold)),
+                        const Spacer(),
+                        if (record.projects.length > 1)
+                          IconButton(
+                              icon: const Icon(Icons.close, size: 20),
+                              onPressed: () {
+                                setState(() {
+                                  if (record.projects.length > 1) {
+                                    record.projects.removeAt(index);
+                                    nameControllers.removeAt(index);
+                                    weightControllers.removeAt(index);
+                                    setsControllers.removeAt(index);
+                                    repsControllers.removeAt(index);
+                                    feelingControllers.removeAt(index);
+                                    supplementControllers.removeAt(index);
+                                    partNotifiers.removeAt(index);
+                                  }
+                                });
+                              })
+                      ]),
                       const SizedBox(height: 12),
                       Row(
                         children: [
-                          Expanded(child: TextField(controller: nameControllers[index], decoration: const InputDecoration(labelText: '项目名称', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].name = value)),
+                          Expanded(
+                              child: TextField(
+                                  controller: nameControllers[index],
+                                  decoration: const InputDecoration(
+                                      labelText: '项目名称',
+                                      border: OutlineInputBorder()),
+                                  onChanged: (value) =>
+                                      record.projects[index].name = value)),
                           const SizedBox(width: 16),
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: part,
-                              decoration: const InputDecoration(labelText: '锻炼部位', border: OutlineInputBorder()),
-                              items: const ['胸', '背', '腿', '肩', '腹'].map((part) => DropdownMenuItem(value: part, child: Text(part))).toList(),
+                              decoration: const InputDecoration(
+                                  labelText: '锻炼部位',
+                                  border: OutlineInputBorder()),
+                              items: const ['胸', '背', '腿', '肩', '腹']
+                                  .map((part) => DropdownMenuItem(
+                                      value: part, child: Text(part)))
+                                  .toList(),
                               onChanged: (value) {
                                 if (value != null) {
                                   partNotifiers[index].value = value;
@@ -2057,21 +2799,69 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Expanded(child: TextField(controller: weightControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '重量 (kg)', border: OutlineInputBorder(), suffixText: 'kg'), onChanged: (value) => record.projects[index].weight = double.tryParse(value) ?? 0)),
+                          Expanded(
+                              child: TextField(
+                                  controller: weightControllers[index],
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                      labelText: '重量 (kg)',
+                                      border: OutlineInputBorder(),
+                                      suffixText: 'kg'),
+                                  onChanged: (value) => record.projects[index]
+                                      .weight = double.tryParse(value) ?? 0)),
                           const SizedBox(width: 16),
-                          Expanded(child: TextField(controller: setsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '组数', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].sets = int.tryParse(value) ?? 0)),
+                          Expanded(
+                              child: TextField(
+                                  controller: setsControllers[index],
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                      labelText: '组数',
+                                      border: OutlineInputBorder()),
+                                  onChanged: (value) => record.projects[index]
+                                      .sets = int.tryParse(value) ?? 0)),
                           const SizedBox(width: 16),
-                          Expanded(child: TextField(controller: repsControllers[index], keyboardType: TextInputType.number, decoration: const InputDecoration(labelText: '每组数量', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].repsPerSet = int.tryParse(value) ?? 0)),
+                          Expanded(
+                              child: TextField(
+                                  controller: repsControllers[index],
+                                  keyboardType: TextInputType.number,
+                                  decoration: const InputDecoration(
+                                      labelText: '每组数量',
+                                      border: OutlineInputBorder()),
+                                  onChanged: (value) => record.projects[index]
+                                      .repsPerSet = int.tryParse(value) ?? 0)),
                         ],
                       ),
                       const SizedBox(height: 16),
-                      Row(children: [const Icon(Icons.bar_chart, color: Colors.orange), const SizedBox(width: 8), const Text('做功:', style: TextStyle(fontWeight: FontWeight.bold)), const SizedBox(width: 8), Text('${work.toStringAsFixed(0)} J', style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))]),
+                      Row(children: [
+                        const Icon(Icons.bar_chart, color: Colors.orange),
+                        const SizedBox(width: 8),
+                        const Text('做功:',
+                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        Text('${work.toStringAsFixed(0)} J',
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold))
+                      ]),
                       const SizedBox(height: 16),
                       Row(
                         children: [
-                          Expanded(child: TextField(controller: feelingControllers[index], decoration: const InputDecoration(labelText: '感受', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].feeling = value)),
+                          Expanded(
+                              child: TextField(
+                                  controller: feelingControllers[index],
+                                  decoration: const InputDecoration(
+                                      labelText: '感受',
+                                      border: OutlineInputBorder()),
+                                  onChanged: (value) =>
+                                      record.projects[index].feeling = value)),
                           const SizedBox(width: 16),
-                          Expanded(child: TextField(controller: supplementControllers[index], decoration: const InputDecoration(labelText: '补剂', border: OutlineInputBorder()), onChanged: (value) => record.projects[index].supplement = value)),
+                          Expanded(
+                              child: TextField(
+                                  controller: supplementControllers[index],
+                                  decoration: const InputDecoration(
+                                      labelText: '补剂',
+                                      border: OutlineInputBorder()),
+                                  onChanged: (value) => record
+                                      .projects[index].supplement = value)),
                         ],
                       ),
                     ],
@@ -2080,8 +2870,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
               },
             );
           }
+
           return AlertDialog(
-            title: const Row(children: [Icon(Icons.edit, color: Colors.blue), SizedBox(width: 10), Text('编辑记录')]),
+            title: const Row(children: [
+              Icon(Icons.edit, color: Colors.blue),
+              SizedBox(width: 10),
+              Text('编辑记录')
+            ]),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -2099,8 +2894,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               onTap: selectDate,
                               child: Container(
                                 padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12)),
-                                child: Row(children: [Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor), const SizedBox(width: 8), Text(dateController.text), const Spacer(), const Icon(Icons.arrow_drop_down)]),
+                                decoration: BoxDecoration(
+                                    color: Theme.of(context).cardColor,
+                                    borderRadius: BorderRadius.circular(12)),
+                                child: Row(children: [
+                                  Icon(Icons.calendar_today,
+                                      size: 20,
+                                      color: Theme.of(context).primaryColor),
+                                  const SizedBox(width: 8),
+                                  Text(dateController.text),
+                                  const Spacer(),
+                                  const Icon(Icons.arrow_drop_down)
+                                ]),
                               ),
                             ),
                           ],
@@ -2116,7 +2921,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             TextField(
                               controller: sessionController,
                               keyboardType: TextInputType.number,
-                              decoration: const InputDecoration(hintText: '输入次数', border: OutlineInputBorder()),
+                              decoration: const InputDecoration(
+                                  hintText: '输入次数',
+                                  border: OutlineInputBorder()),
                               onChanged: (value) {
                                 final num = int.tryParse(value) ?? 1;
                                 setState(() => record.sessionNumber = num);
@@ -2128,25 +2935,44 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  ...List.generate(record.projects.length, (index) => buildProjectCard(index)),
+                  ...List.generate(record.projects.length,
+                      (index) => buildProjectCard(index)),
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      ElevatedButton.icon(onPressed: addProject, icon: const Icon(Icons.add), label: const Text('添加项目')),
+                      ElevatedButton.icon(
+                          onPressed: addProject,
+                          icon: const Icon(Icons.add),
+                          label: const Text('添加项目')),
                       const SizedBox(width: 12),
-                      ElevatedButton.icon(onPressed: removeProject, icon: const Icon(Icons.remove), label: const Text('删除项目'), style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).cardColor)),
+                      ElevatedButton.icon(
+                          onPressed: removeProject,
+                          icon: const Icon(Icons.remove),
+                          label: const Text('删除项目'),
+                          style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).cardColor)),
                     ],
                   ),
                 ],
               ),
             ),
             actions: [
-              TextButton(onPressed: () { setState(() { _selectedRecordId = null; _recordToEdit = null; }); Navigator.pop(context); }, child: const Text('取消')),
+              TextButton(
+                  onPressed: () {
+                    setState(() {
+                      _recordToEdit = null;
+                    });
+                    Navigator.pop(context);
+                  },
+                  child: const Text('取消')),
               ElevatedButton(
                 onPressed: () {
-                  final provider = Provider.of<WorkoutProvider>(context, listen: false);
+                  final provider =
+                      Provider.of<WorkoutProvider>(context, listen: false);
                   provider.updateRecord(record.id, record);
-                  setState(() { _selectedRecordId = null; _recordToEdit = null; });
+                  setState(() {
+                    _recordToEdit = null;
+                  });
                   Navigator.pop(context);
                   _showToast('记录更新成功！');
                 },
@@ -2163,21 +2989,51 @@ class _HistoryScreenState extends State<HistoryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(children: [Icon(Icons.warning, color: Colors.orange), SizedBox(width: 10), Text('确认删除')]),
+        title: const Row(children: [
+          Icon(Icons.warning, color: Colors.orange),
+          SizedBox(width: 10),
+          Text('确认删除')
+        ]),
         content: const Text('确定要删除这条记录吗？此操作不可撤销。'),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
-          ElevatedButton(onPressed: () { Provider.of<WorkoutProvider>(context, listen: false).deleteRecord(record.id); Navigator.pop(context); _showToast('记录已删除'); }, style: ElevatedButton.styleFrom(backgroundColor: Colors.red), child: const Text('删除')),
+          TextButton(
+              onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          ElevatedButton(
+            onPressed: () {
+              final provider =
+                  Provider.of<WorkoutProvider>(context, listen: false);
+              provider.deleteRecord(record.id);
+              Navigator.pop(context);
+              _showToast('记录已删除');
+            },
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            child: const Text('删除'),
+          ),
         ],
       ),
     );
   }
 
+  Future<void> _exportEmptyTemplate() async {
+    final excelService = ExcelCSVService();
+    try {
+      final filePath = await excelService.exportToExcel([]);
+      if (filePath != null) {
+        _showToast('空模板已导出到: $filePath');
+      } else {
+        _showToast('导出失败', isError: true);
+      }
+    } catch (e) {
+      _showToast('导出失败: ${e.toString()}', isError: true);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final isGlassTheme = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+    final isGlassTheme =
+        Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+    final records = Provider.of<WorkoutProvider>(context).records;
 
-    // 确保至少有一列可见，避免空列错误
     if (_collapsedColumns.length == _columnNames.length) {
       _collapsedColumns.clear();
     }
@@ -2186,159 +3042,232 @@ class _HistoryScreenState extends State<HistoryScreen> {
       appBar: AppBar(
         title: const Text('来时的路 - 完整历史记录'),
         actions: [
-          PopupMenuButton<String>(
-            onSelected: (value) {
-              switch (value) {
-                case 'export': widget.onExport(); break;
-                case 'upload': widget.onUpload(); break;
-                case 'download': widget.onDownload(); break;
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(value: 'export', child: Row(children: [Icon(Icons.download, size: 20), SizedBox(width: 8), Text('📤 导出CSV')])),
-              const PopupMenuItem(value: 'upload', child: Row(children: [Icon(Icons.cloud_upload, size: 20), SizedBox(width: 8), Text('☁️ 上云')])),
-              const PopupMenuItem(value: 'download', child: Row(children: [Icon(Icons.cloud_download, size: 20), SizedBox(width: 8), Text('📥 读云')])),
-            ],
+          IconButton(
+            icon: const Icon(Icons.download),
+            onPressed: widget.onExport,
+            tooltip: '导出数据',
+          ),
+          IconButton(
+            icon: const Icon(Icons.insert_drive_file),
+            onPressed: _exportEmptyTemplate,
+            tooltip: '导出空模板',
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_upload),
+            onPressed: widget.onUpload,
+            tooltip: '上云',
+          ),
+          IconButton(
+            icon: const Icon(Icons.cloud_download),
+            onPressed: widget.onDownload,
+            tooltip: '读云',
           ),
         ],
       ),
-      body: Consumer<WorkoutProvider>(
-        builder: (context, provider, child) {
-          final records = provider.records;
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                flex: 2,
-                child: MouseRegion(
-                  onEnter: (_) => setState(() => _showHorizontalScrollbar = true),
-                  onExit: (_) => setState(() => _showHorizontalScrollbar = false),
-                  child: Scrollbar(
-                    controller: _horizontalScrollController,
-                    thumbVisibility: _showHorizontalScrollbar,
-                    child: SingleChildScrollView(
+      body: records.isEmpty
+          ? Center(
+              child: CoachCharacter(records: records),
+            )
+          : Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  flex: 2,
+                  child: MouseRegion(
+                    onEnter: (_) =>
+                        setState(() => _showHorizontalScrollbar = true),
+                    onExit: (_) =>
+                        setState(() => _showHorizontalScrollbar = false),
+                    child: Scrollbar(
                       controller: _horizontalScrollController,
-                      scrollDirection: Axis.horizontal,
-                      child: records.isEmpty
-                          ? Center(
-                              child: Container(
-                                padding: const EdgeInsets.all(40),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    const Icon(Icons.history_toggle_off, size: 80, color: Colors.grey),
-                                    const SizedBox(height: 20),
-                                    const Text('暂无历史记录'),
-                                    const SizedBox(height: 10),
-                                    const Text('开始您的第一次训练吧！'),
-                                    const SizedBox(height: 30),
-                                    ElevatedButton.icon(onPressed: widget.onExport, icon: const Icon(Icons.download), label: const Text('导出空模板')),
-                                  ],
-                                ),
+                      thumbVisibility: _showHorizontalScrollbar,
+                      child: SingleChildScrollView(
+                        controller: _horizontalScrollController,
+                        scrollDirection: Axis.horizontal,
+                        child: Theme(
+                          data: Theme.of(context).copyWith(
+                            cardColor: isGlassTheme
+                                ? Colors.grey.shade800.withValues(alpha: 0.5)
+                                : null,
+                            dividerColor: Colors.grey.withValues(alpha: 0.2),
+                          ),
+                          child: DataTable(
+                            columnSpacing: 24,
+                            headingRowHeight: 56,
+                            dataRowMinHeight: 60,
+                            dataRowMaxHeight: double.infinity, // 允许自适应高度
+
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  Theme.of(context)
+                                      .primaryColor
+                                      .withValues(alpha: 0.05),
+                                  Theme.of(context)
+                                      .primaryColor
+                                      .withValues(alpha: 0.0),
+                                ],
                               ),
-                            )
-                          : Theme(
-                              data: Theme.of(context).copyWith(
-                                cardColor: isGlassTheme ? Colors.grey.shade800.withOpacity(0.5) : null,
-                                dividerColor: Colors.grey.withOpacity(0.2),
-                              ),
-                              child: DataTable(
-                                columnSpacing: 24,
-                                headingRowHeight: 56,
-                                dataRowMinHeight: 60,
-                                dataRowMaxHeight: 80,
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.topLeft,
-                                    end: Alignment.bottomRight,
-                                    colors: [
-                                      Theme.of(context).primaryColor.withOpacity(0.05),
-                                      Theme.of(context).primaryColor.withOpacity(0.0),
-                                    ],
-                                  ),
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                columns: _columnNames.asMap().entries.where((entry) => !_collapsedColumns.contains(entry.key)).map((entry) {
-                                  final index = entry.key;
-                                  final title = entry.value;
-                                  return DataColumn(
-                                    label: MouseRegion(
-                                      child: GestureDetector(
-                                        onTapDown: (details) => _showContextMenuForColumn(details, index),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-                                          decoration: BoxDecoration(
-                                            gradient: LinearGradient(
-                                              colors: [Theme.of(context).primaryColor.withOpacity(0.3), Theme.of(context).primaryColor.withOpacity(0.1)],
-                                              begin: Alignment.topLeft,
-                                              end: Alignment.bottomRight,
-                                            ),
-                                            borderRadius: BorderRadius.circular(12),
-                                            boxShadow: [
-                                              BoxShadow(color: Colors.black.withOpacity(0.15), blurRadius: 4, offset: const Offset(0, 2)),
-                                            ],
-                                          ),
-                                          child: Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Text(title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                              const SizedBox(width: 8),
-                                              _buildCollapseIcon(index, _collapsedColumns.contains(index)),
-                                            ],
-                                          ),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            columns: _columnNames
+                                .asMap()
+                                .entries
+                                .where((entry) =>
+                                    !_collapsedColumns.contains(entry.key))
+                                .map((entry) {
+                              final index = entry.key;
+                              final title = entry.value;
+                              return DataColumn(
+                                label: MouseRegion(
+                                  child: GestureDetector(
+                                    onTapDown: (details) =>
+                                        _showContextMenuForColumn(
+                                            details, index),
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                          vertical: 8, horizontal: 12),
+                                      decoration: BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Theme.of(context)
+                                                .primaryColor
+                                                .withValues(alpha: 0.3),
+                                            Theme.of(context)
+                                                .primaryColor
+                                                .withValues(alpha: 0.1)
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
                                         ),
+                                        borderRadius: BorderRadius.circular(12),
+                                        boxShadow: [
+                                          BoxShadow(
+                                              color: Colors.black
+                                                  .withValues(alpha: 0.15),
+                                              blurRadius: 4,
+                                              offset: const Offset(0, 2)),
+                                        ],
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Text(title,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 15)),
+                                          const SizedBox(width: 8),
+                                          _buildCollapseIcon(
+                                              index,
+                                              _collapsedColumns
+                                                  .contains(index)),
+                                        ],
                                       ),
                                     ),
-                                  );
-                                }).toList(),
-                                rows: records.reversed.map((record) {
-                                  final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-                                  final details = record.projects.map((p) => p.name.isNotEmpty ? '${p.name} (${p.part}): ${p.sets}组×${p.repsPerSet}个, ${p.weight}kg' : '').where((d) => d.isNotEmpty).join('\n');
-                                  final cells = <DataCell>[];
-                                  if (!_collapsedColumns.contains(0)) cells.add(DataCell(Text(dateStr, textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500))));
-                                  if (!_collapsedColumns.contains(1)) cells.add(DataCell(Text('第${record.sessionNumber}次', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500))));
-                                  if (!_collapsedColumns.contains(2)) cells.add(DataCell(ConstrainedBox(
-                                    constraints: const BoxConstraints(maxWidth: 350),
-                                    child: Tooltip(message: details, child: Text(details, maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
-                                  )));
-                                  if (!_collapsedColumns.contains(3)) cells.add(DataCell(Text('${(record.totalWork / 1000).toStringAsFixed(1)}千焦', textAlign: TextAlign.center, style: const TextStyle(fontWeight: FontWeight.w500))));
-                                  if (!_collapsedColumns.contains(4)) {
-                                    cells.add(DataCell(Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        IconButton(icon: const Icon(Icons.edit, size: 20, color: Colors.blue), onPressed: () => _editRecord(record), tooltip: '编辑'),
-                                        IconButton(icon: const Icon(Icons.delete, size: 20, color: Colors.red), onPressed: () => _deleteRecord(context, record), tooltip: '删除'),
-                                        IconButton(icon: const Icon(Icons.merge_type, size: 20), onPressed: _mergeSameDayRecords, tooltip: '整合同一天记录'),
-                                      ],
-                                    )));
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            rows: records.reversed.map((record) {
+                              final dateStr =
+                                  DateFormat('yyyy-MM-dd').format(record.date);
+                              final details = record.projects
+                                  .map((p) => p.name.isNotEmpty
+                                      ? '${p.name} (${p.part}): ${p.sets}组×${p.repsPerSet}个, ${p.weight}kg'
+                                      : '')
+                                  .where((d) => d.isNotEmpty)
+                                  .join('\n');
+                              final cells = <DataCell>[];
+                              if (!_collapsedColumns.contains(0)) {
+                                cells.add(DataCell(Text(dateStr,
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500))));
+                              }
+                              if (!_collapsedColumns.contains(1)) {
+                                cells.add(DataCell(Text(
+                                    '第${record.sessionNumber}次',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500))));
+                              }
+                              if (!_collapsedColumns.contains(2)) {
+                                cells.add(DataCell(Container(
+                                  constraints:
+                                      const BoxConstraints(maxWidth: 350),
+                                  child: Tooltip(
+                                    message: details,
+                                    child: Text(details,
+                                        softWrap: true,
+                                        overflow: TextOverflow.visible,
+                                        style: const TextStyle(fontSize: 13)),
+                                  ),
+                                )));
+                              }
+                              if (!_collapsedColumns.contains(3)) {
+                                cells.add(DataCell(Text(
+                                    '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(
+                                        fontWeight: FontWeight.w500))));
+                              }
+                              if (!_collapsedColumns.contains(4)) {
+                                cells.add(DataCell(Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                        icon: const Icon(Icons.edit,
+                                            size: 20, color: Colors.blue),
+                                        onPressed: () => _editRecord(record),
+                                        tooltip: '编辑'),
+                                    IconButton(
+                                        icon: const Icon(Icons.delete,
+                                            size: 20, color: Colors.red),
+                                        onPressed: () =>
+                                            _deleteRecord(context, record),
+                                        tooltip: '删除'),
+                                    IconButton(
+                                        icon: const Icon(Icons.merge_type,
+                                            size: 20),
+                                        onPressed: _mergeSameDayRecords,
+                                        tooltip: '整合同一天记录'),
+                                  ],
+                                )));
+                              }
+                              return DataRow(
+                                onLongPress: () =>
+                                    _showContextMenu(context, record),
+                                cells: cells,
+                                selected: false,
+                                color: WidgetStateProperty.resolveWith<Color?>(
+                                    (states) {
+                                  if (states.contains(WidgetState.selected)) {
+                                    return null;
                                   }
-                                  return DataRow(
-                                    onLongPress: () => _showContextMenu(context, record),
-                                    cells: cells,
-                                    selected: false,
-                                    color: MaterialStateProperty.resolveWith<Color?>((states) {
-                                      if (states.contains(MaterialState.selected)) return null;
-                                      return Colors.transparent;
-                                    }),
-                                  );
-                                }).toList(),
-                              ),
-                            ),
+                                  return Colors.transparent;
+                                }),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              Expanded(
-                flex: 1,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  child: CoachCharacter(records: records),
+                Expanded(
+                  flex: 1,
+                  child: ClipRect(
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      constraints: const BoxConstraints(minHeight: 300),
+                      child: CoachCharacter(records: records),
+                    ),
+                  ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            ),
     );
   }
 
@@ -2348,24 +3277,36 @@ class _HistoryScreenState extends State<HistoryScreen> {
     return StatefulBuilder(
       builder: (context, setState) {
         return MouseRegion(
-          onEnter: (_) => setState(() { isHovering = true; }),
-          onExit: (_) => setState(() { isHovering = false; }),
+          onEnter: (_) => setState(() {
+            isHovering = true;
+          }),
+          onExit: (_) => setState(() {
+            isHovering = false;
+          }),
           child: GestureDetector(
             onTap: () => _toggleColumn(columnIndex),
             child: Container(
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isHoveringIcon ? Colors.grey.shade300.withValues(alpha: 0.5) : Colors.transparent,
+                color: isHoveringIcon
+                    ? Colors.grey.shade300.withValues(alpha: 0.5)
+                    : Colors.transparent,
               ),
               child: MouseRegion(
-                onEnter: (_) => setState(() { isHoveringIcon = true; }),
-                onExit: (_) => setState(() { isHoveringIcon = false; }),
+                onEnter: (_) => setState(() {
+                  isHoveringIcon = true;
+                }),
+                onExit: (_) => setState(() {
+                  isHoveringIcon = false;
+                }),
                 child: Text(
                   '↩',
                   style: TextStyle(
                     fontSize: 14,
-                    color: isHovering ? Theme.of(context).primaryColor : Colors.grey,
+                    color: isHovering
+                        ? Theme.of(context).primaryColor
+                        : Colors.grey,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
