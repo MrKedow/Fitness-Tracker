@@ -1,7 +1,10 @@
 # 💪 Fitness Tracker – 个人健身数据管理系统
 一个专为个人健身记录设计的"本地优先、云端同步"的现代化桌面/移动应用。告别纸笔和复杂表格，用优雅的界面记录每一次训练，自动计算做功，并支持坚果云 WebDAV 一键同步。
 
-#### 🐦‍🔥本项目CSDN链接：[https://blog.csdn.net/Ethocas/article/details/160226942?fromshare=blogdetail&sharetype=blogdetail&sharerId=160226942&sharerefer=PC&sharesource=Ethocas&sharefrom=from_link](https://blog.csdn.net/Ethocas/article/details/160226942?fromshare=blogdetail&sharetype=blogdetail&sharerId=160226942&sharerefer=PC&sharesource=Ethocas&sharefrom=from_link)
+### 🐦‍🔥本项目CSDN链接：[Ethocas的博客](https://blog.csdn.net/Ethocas?type=blog)
+
+## [🔈2026.04.20 点击进入：Fitness-Tracker_Win_v4.0 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Win_v4.0)
+## [🔈2026.04.19 点击进入：Fitness-Tracker_Win_v3.1.1 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Win_v3.1.1)
 ## [🔈2026.04.16 点击进入：Fitness-Tracker_Win_v3.0 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Win_Newest_Stable)
 ## [🔈2026.04.15 点击进入：Fitness-Tracker_Win_v2.0 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Win_Newest_Stable)
 ---
