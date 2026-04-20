@@ -10,7 +10,6 @@ import 'package:fitness_tracker/widgets/coach_character.dart';
 // import 'package:excel/excel.dart';
 import 'package:excel/excel.dart' hide Border; // 避免与 Flutter 的 Border 冲突
 import 'package:fitness_tracker/widgets/draggable_cat.dart';
-import 'package:process_run/process_run.dart';
 
 // ==================== Python 脚本服务 ====================
 class PythonUpdateService {
@@ -305,7 +304,7 @@ class ThemeProvider extends ChangeNotifier {
 class WorkoutRecord {
   final String id;
   DateTime date;
-  int sessionNumber;
+  int? sessionNumber; // 改为可空
   List<WorkoutProject> projects;
   final DateTime timestamp;
 
@@ -467,7 +466,9 @@ class WorkoutProvider extends ChangeNotifier {
       if (merged.containsKey(key)) {
         final existing = merged[key]!;
         existing.projects.addAll(record.projects);
-        if (record.sessionNumber > existing.sessionNumber) {
+        if (record.sessionNumber != null &&
+            (existing.sessionNumber == null ||
+                record.sessionNumber! > existing.sessionNumber!)) {
           existing.sessionNumber = record.sessionNumber;
         }
       } else {
@@ -591,7 +592,9 @@ class ExcelCSVService {
           if (project.name.isEmpty) continue;
           final row = <CellValue?>[
             TextCellValue(dateStr),
-            IntCellValue(record.sessionNumber),
+            record.sessionNumber != null
+                ? IntCellValue(record.sessionNumber!)
+                : TextCellValue(''),
             TextCellValue(project.name),
             TextCellValue(project.part),
             DoubleCellValue(project.weight),
@@ -671,7 +674,9 @@ class ExcelCSVService {
         final row = sheet.rows[rowIndex];
         if (row.length < 3) continue;
         final dateStr = row[0]?.value?.toString() ?? '';
-        final sessionNum = int.tryParse(row[1]?.value?.toString() ?? '') ?? 0;
+        final sessionNumStr = row[1]?.value?.toString() ?? '';
+        final sessionNum =
+            sessionNumStr.isEmpty ? null : int.tryParse(sessionNumStr);
         final projectName = row[2]?.value?.toString() ?? '';
         if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) continue;
 
@@ -741,7 +746,7 @@ class ExcelCSVService {
       for (final project in record.projects) {
         if (project.name.isNotEmpty) {
           buffer.write('$dateStr,');
-          buffer.write('${record.sessionNumber},');
+          buffer.write('${record.sessionNumber?.toString() ?? ''},');
           buffer.write('"${_escapeCSV(project.name)}",');
           buffer.write('${project.part},');
           buffer.write('${project.weight},');
@@ -1069,7 +1074,7 @@ class FitnessApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: '健身数据管理系统 Fitness-Tracker_Win_v4.0',
+          title: '健身数据管理系统 Fitness-Tracker_Win_v4.0.2',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.currentTheme,
           home: const MainScreen(),
@@ -1088,7 +1093,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   DateTime selectedDate = DateTime.now();
-  int sessionNumber = 1;
+  int? sessionNumber;
   final List<WorkoutProject> projects = [WorkoutProject.empty()];
   DateTime firstWorkoutDate = DateTime(2025, 6, 9, 18, 29);
 
@@ -1144,14 +1149,8 @@ class _MainScreenState extends State<MainScreen> {
     await provider.loadLastExportPath();
     await nutstore.loadSavedConfig();
     if (mounted) {
-      setState(() {
-        if (provider.records.isNotEmpty) {
-          final maxSession = provider.records
-              .map((r) => r.sessionNumber)
-              .reduce((a, b) => a > b ? a : b);
-          sessionNumber = maxSession + 1;
-        }
-      });
+      setState(() {});
+      _updateSessionNumberForDate(selectedDate);
     }
   }
 
@@ -1299,6 +1298,29 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
+  void _updateSessionNumberForDate(DateTime date) {
+    final provider = Provider.of<WorkoutProvider>(context, listen: false);
+    final recordsOnDate = provider.records
+        .where((r) =>
+            r.date.year == date.year &&
+            r.date.month == date.month &&
+            r.date.day == date.day)
+        .toList();
+    if (recordsOnDate.isNotEmpty) {
+      // 过滤掉 null，只保留非空值
+      final numbers =
+          recordsOnDate.map((r) => r.sessionNumber).whereType<int>().toList();
+      if (numbers.isNotEmpty) {
+        sessionNumber = numbers.reduce((a, b) => a > b ? a : b);
+      } else {
+        sessionNumber = null;
+      }
+    } else {
+      sessionNumber = null;
+    }
+    setState(() {});
+  }
+
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
@@ -1324,6 +1346,7 @@ class _MainScreenState extends State<MainScreen> {
         selectedDate = picked;
         dateController.text = DateFormat('yyyy-MM-dd').format(picked);
       });
+      _updateSessionNumberForDate(picked);
     }
   }
 
@@ -1350,7 +1373,7 @@ class _MainScreenState extends State<MainScreen> {
     final record = WorkoutRecord(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
       date: selectedDate,
-      sessionNumber: sessionNumber,
+      sessionNumber: sessionNumber, // 直接使用，允许为 null
       projects: validProjects,
       timestamp: DateTime.now(),
     );
@@ -1361,8 +1384,8 @@ class _MainScreenState extends State<MainScreen> {
       projects.clear();
       projects.add(WorkoutProject.empty());
       _initializeControllers();
-      sessionNumber++;
     });
+    _updateSessionNumberForDate(selectedDate);
     _showToast('训练记录保存成功！');
   }
 
@@ -1849,124 +1872,16 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   Widget _buildProjectCard(int index) {
-    return ValueListenableBuilder<String>(
-      valueListenable: partNotifiers[index],
-      builder: (context, part, child) {
-        final weight = double.tryParse(weightControllers[index].text) ?? 0;
-        final sets = int.tryParse(setsControllers[index].text) ?? 0;
-        final reps = int.tryParse(repsControllers[index].text) ?? 0;
-        final work = WorkoutProject(
-                name: '',
-                part: part,
-                weight: weight,
-                sets: sets,
-                repsPerSet: reps,
-                feeling: '',
-                supplement: '')
-            .calculateWork();
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Theme.of(context).cardColor,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-                color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
-          ),
-          child: Column(
-            children: [
-              Row(children: [
-                Text('项目 ${index + 1}',
-                    style: const TextStyle(
-                        fontSize: 16, fontWeight: FontWeight.bold))
-              ]),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                      child: TextField(
-                          controller: nameControllers[index],
-                          decoration: const InputDecoration(
-                              labelText: '项目名称',
-                              border: OutlineInputBorder()))),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: DropdownButtonFormField<String>(
-                      initialValue: part,
-                      decoration: const InputDecoration(
-                          labelText: '锻炼部位', border: OutlineInputBorder()),
-                      items: const ['胸', '背', '腿', '肩', '腹']
-                          .map((part) =>
-                              DropdownMenuItem(value: part, child: Text(part)))
-                          .toList(),
-                      onChanged: (value) {
-                        if (value != null) partNotifiers[index].value = value;
-                      },
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                      child: TextField(
-                          controller: weightControllers[index],
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                              labelText: '重量 (kg)',
-                              border: OutlineInputBorder(),
-                              suffixText: 'kg'))),
-                  const SizedBox(width: 16),
-                  Expanded(
-                      child: TextField(
-                          controller: setsControllers[index],
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                              labelText: '组数', border: OutlineInputBorder()))),
-                  const SizedBox(width: 16),
-                  Expanded(
-                      child: TextField(
-                          controller: repsControllers[index],
-                          keyboardType: TextInputType.number,
-                          decoration: const InputDecoration(
-                              labelText: '每组数量',
-                              border: OutlineInputBorder()))),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  const Icon(Icons.bar_chart, color: Colors.orange),
-                  const SizedBox(width: 8),
-                  const Text('做功:',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(width: 8),
-                  Text('${work.toStringAsFixed(0)} J',
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold)),
-                ],
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                      child: TextField(
-                          controller: feelingControllers[index],
-                          decoration: const InputDecoration(
-                              labelText: '感受', border: OutlineInputBorder()))),
-                  const SizedBox(width: 16),
-                  Expanded(
-                      child: TextField(
-                          controller: supplementControllers[index],
-                          decoration: const InputDecoration(
-                              labelText: '补剂', border: OutlineInputBorder()))),
-                ],
-              ),
-            ],
-          ),
-        );
-      },
+    return _ProjectCard(
+      key: UniqueKey(), // 强制每次重建时创建新 State，避免复用
+      index: index,
+      partNotifier: partNotifiers[index],
+      nameController: nameControllers[index],
+      weightController: weightControllers[index],
+      setsController: setsControllers[index],
+      repsController: repsControllers[index],
+      feelingController: feelingControllers[index],
+      supplementController: supplementControllers[index],
     );
   }
 
@@ -2015,7 +1930,7 @@ class _MainScreenState extends State<MainScreen> {
             SizedBox(width: 8),
             Flexible(
               child: Text(
-                '健身数据管理系统 Win_v4.0',
+                '健身数据管理系统 Win_v4.0.2',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontFamily: 'SimSun',
@@ -2258,26 +2173,34 @@ class _MainScreenState extends State<MainScreen> {
                                                         controller:
                                                             TextEditingController(
                                                                 text: sessionNumber
-                                                                    .toString()),
+                                                                        ?.toString() ??
+                                                                    ''),
                                                         keyboardType:
                                                             TextInputType
                                                                 .number,
                                                         decoration:
                                                             const InputDecoration(
-                                                          hintText: '输入次数',
+                                                          hintText: '输入数字',
                                                           border:
                                                               OutlineInputBorder(),
                                                         ),
                                                         onChanged: (value) {
-                                                          final num =
-                                                              int.tryParse(
-                                                                      value) ??
-                                                                  1;
-                                                          setState(() =>
-                                                              sessionNumber =
-                                                                  num);
+                                                          if (value.isEmpty) {
+                                                            setState(() =>
+                                                                sessionNumber =
+                                                                    null);
+                                                          } else {
+                                                            final num =
+                                                                int.tryParse(
+                                                                    value);
+                                                            if (num != null) {
+                                                              setState(() =>
+                                                                  sessionNumber =
+                                                                      num);
+                                                            }
+                                                          }
                                                         },
-                                                      ),
+                                                      )
                                                     ],
                                                   ),
                                                 ),
@@ -2451,7 +2374,10 @@ class _MainScreenState extends State<MainScreen> {
                                                                               6),
                                                                     ),
                                                                     child: Text(
-                                                                      '第${record.sessionNumber}次',
+                                                                      record.sessionNumber !=
+                                                                              null
+                                                                          ? '第${record.sessionNumber}次'
+                                                                          : '-',
                                                                       style: TextStyle(
                                                                           fontSize:
                                                                               12,
@@ -3016,11 +2942,17 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               controller: sessionController,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                  hintText: '输入次数',
+                                  hintText: '输入数字（可选）',
                                   border: OutlineInputBorder()),
                               onChanged: (value) {
-                                final num = int.tryParse(value) ?? 1;
-                                setState(() => record.sessionNumber = num);
+                                if (value.isEmpty) {
+                                  setState(() => record.sessionNumber = null);
+                                } else {
+                                  final num = int.tryParse(value);
+                                  if (num != null) {
+                                    setState(() => record.sessionNumber = num);
+                                  }
+                                }
                               },
                             ),
                           ],
@@ -3285,10 +3217,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               }
                               if (!_collapsedColumns.contains(1)) {
                                 cells.add(DataCell(Text(
-                                    '第${record.sessionNumber}次',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w500))));
+                                  record.sessionNumber != null
+                                      ? '第${record.sessionNumber}次'
+                                      : '-',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.w500),
+                                )));
                               }
                               if (!_collapsedColumns.contains(2)) {
                                 cells.add(DataCell(Container(
@@ -3412,6 +3347,208 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
         );
       },
+    );
+  }
+}
+
+class _ProjectCard extends StatefulWidget {
+  final int index;
+  final ValueNotifier<String> partNotifier;
+  final TextEditingController nameController;
+  final TextEditingController weightController;
+  final TextEditingController setsController;
+  final TextEditingController repsController;
+  final TextEditingController feelingController;
+  final TextEditingController supplementController;
+
+  const _ProjectCard({
+    super.key,
+    required this.index,
+    required this.partNotifier,
+    required this.nameController,
+    required this.weightController,
+    required this.setsController,
+    required this.repsController,
+    required this.feelingController,
+    required this.supplementController,
+  });
+
+  @override
+  State<_ProjectCard> createState() => _ProjectCardState();
+}
+
+class _ProjectCardState extends State<_ProjectCard> {
+  double _weight = 0;
+  int _sets = 0;
+  int _reps = 0;
+  String _part = '胸';
+
+  @override
+  void initState() {
+    super.initState();
+    _weight = double.tryParse(widget.weightController.text) ?? 0;
+    _sets = int.tryParse(widget.setsController.text) ?? 0;
+    _reps = int.tryParse(widget.repsController.text) ?? 0;
+    _part = widget.partNotifier.value;
+
+    widget.weightController.addListener(_onWeightChanged);
+    widget.setsController.addListener(_onSetsChanged);
+    widget.repsController.addListener(_onRepsChanged);
+    widget.partNotifier.addListener(_onPartChanged);
+  }
+
+  void _onWeightChanged() {
+    setState(() {
+      _weight = double.tryParse(widget.weightController.text) ?? 0;
+    });
+  }
+
+  void _onSetsChanged() {
+    setState(() {
+      _sets = int.tryParse(widget.setsController.text) ?? 0;
+    });
+  }
+
+  void _onRepsChanged() {
+    setState(() {
+      _reps = int.tryParse(widget.repsController.text) ?? 0;
+    });
+  }
+
+  void _onPartChanged() {
+    setState(() {
+      _part = widget.partNotifier.value;
+    });
+  }
+
+  @override
+  void dispose() {
+    widget.weightController.removeListener(_onWeightChanged);
+    widget.setsController.removeListener(_onSetsChanged);
+    widget.repsController.removeListener(_onRepsChanged);
+    widget.partNotifier.removeListener(_onPartChanged);
+    super.dispose();
+  }
+
+  double _calculateWork() {
+    const travelDistances = {
+      '肩': 0.6,
+      '背': 0.6,
+      '腿': 0.7,
+      '胸': 0.6,
+      '腹': 0,
+    };
+    if (_part == '腹') {
+      return (_sets * _reps * 65 * 9.8 * 0.3).toDouble();
+    } else {
+      final distance = travelDistances[_part] ?? 0;
+      return (_weight * 9.8 * distance * _sets * _reps);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final work = _calculateWork();
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Theme.of(context).cardColor,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+            color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+      ),
+      child: Column(
+        children: [
+          Row(children: [
+            Text('项目 ${widget.index + 1}',
+                style:
+                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+          ]),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                  child: TextField(
+                      controller: widget.nameController,
+                      decoration: const InputDecoration(
+                          labelText: '项目名称', border: OutlineInputBorder()))),
+              const SizedBox(width: 16),
+              Expanded(
+                child: DropdownButtonFormField<String>(
+                  initialValue: _part,
+                  decoration: const InputDecoration(
+                      labelText: '锻炼部位', border: OutlineInputBorder()),
+                  items: const ['胸', '背', '腿', '肩', '腹']
+                      .map((part) =>
+                          DropdownMenuItem(value: part, child: Text(part)))
+                      .toList(),
+                  onChanged: (value) {
+                    if (value != null) {
+                      widget.partNotifier.value = value;
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                  child: TextField(
+                      controller: widget.weightController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                          labelText: '重量 (kg)',
+                          border: OutlineInputBorder(),
+                          suffixText: 'kg'))),
+              const SizedBox(width: 16),
+              Expanded(
+                  child: TextField(
+                      controller: widget.setsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                          labelText: '组数', border: OutlineInputBorder()))),
+              const SizedBox(width: 16),
+              Expanded(
+                  child: TextField(
+                      controller: widget.repsController,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(
+                          labelText: '每组数量', border: OutlineInputBorder()))),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              const Icon(Icons.bar_chart, color: Colors.orange),
+              const SizedBox(width: 8),
+              const Text('做功:', style: TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(width: 8),
+              Text('${work.toStringAsFixed(0)} J',
+                  style: const TextStyle(
+                      fontSize: 20, fontWeight: FontWeight.bold)),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                  child: TextField(
+                      controller: widget.feelingController,
+                      decoration: const InputDecoration(
+                          labelText: '感受', border: OutlineInputBorder()))),
+              const SizedBox(width: 16),
+              Expanded(
+                  child: TextField(
+                      controller: widget.supplementController,
+                      decoration: const InputDecoration(
+                          labelText: '补剂', border: OutlineInputBorder()))),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
