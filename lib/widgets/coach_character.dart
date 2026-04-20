@@ -38,10 +38,8 @@ class _CoachCharacterState extends State<CoachCharacter>
   bool _rulesLoaded = false;
   List<Map<String, dynamic>> _exerciseHistory = [];
 
-  // 科学知识条目映射（显示文本 -> {content, url}）
-  Map<String, Map<String, String>> _scienceItemsMap = {};
+  final Map<String, Map<String, String>> _scienceItemsMap = {};
 
-  // 展开视图相关
   bool _showExpandedView = false;
   String _expandedUrl = '';
   String _expandedContent = '';
@@ -51,7 +49,6 @@ class _CoachCharacterState extends State<CoachCharacter>
   bool _isExpandedAtBottom = true;
   bool _showExpandedScrollIndicator = false;
 
-  // WebView 控制器
   late WebviewController _webViewController;
   bool _webViewReady = false;
 
@@ -100,7 +97,7 @@ class _CoachCharacterState extends State<CoachCharacter>
         .toInt()
         .clamp(0, _aiResponse.length);
     setState(() {
-      _displayedResponse = _sanitizeText(_aiResponse.substring(0, len));
+      _displayedResponse = _aiResponse.substring(0, len);
     });
   }
 
@@ -191,10 +188,6 @@ class _CoachCharacterState extends State<CoachCharacter>
       _displayedExpandedContent = '';
       _expandedTypingController?.reset();
     });
-  }
-
-  String _sanitizeText(String text) {
-    return text;
   }
 
   @override
@@ -433,7 +426,6 @@ class _CoachCharacterState extends State<CoachCharacter>
   }
 
   Future<void> _analyzeLocally() async {
-    // 清空之前的科学知识映射
     _scienceItemsMap.clear();
 
     setState(() {
@@ -457,7 +449,7 @@ class _CoachCharacterState extends State<CoachCharacter>
       return;
     }
 
-    // 收集数据（代码较长，保持原样）
+    // 收集数据（省略，与原来相同）
     int totalSessions = records.length;
 
     DateTime now = DateTime.now();
@@ -764,7 +756,6 @@ class _CoachCharacterState extends State<CoachCharacter>
     }
     analysis.writeln();
 
-    // 整体回顾
     final totalWorkKJ = (totalWork / 1000).toInt();
     final calories = (totalWork / 4184).toInt();
 
@@ -879,9 +870,7 @@ class _CoachCharacterState extends State<CoachCharacter>
       analysis.writeln("💡 练后30分钟内补充快碳+蛋白质，有助于肌肉恢复。");
     }
 
-    // 科学知识展示（可点击）
     if (_rulesLoaded) {
-      // 科学快讯
       if (_coachRules.containsKey('scientific_facts')) {
         final facts = _coachRules['scientific_facts'] as List;
         if (facts.isNotEmpty) {
@@ -902,7 +891,6 @@ class _CoachCharacterState extends State<CoachCharacter>
         }
       }
 
-      // 打破迷思
       if (_coachRules.containsKey('myth_busters')) {
         final myths = _coachRules['myth_busters'] as List;
         if (myths.isNotEmpty) {
@@ -913,16 +901,15 @@ class _CoachCharacterState extends State<CoachCharacter>
             final url = selected['url'] ?? '';
             final displayText = '🧠 打破迷思：$text';
             _scienceItemsMap[displayText] = {'content': text, 'url': url};
-            analysis.writeln('$displayText');
+            analysis.writeln(displayText);
           } else {
             final selectedStr = _randomSelect(myths.cast<String>());
             final displayText = '🧠 打破迷思：$selectedStr';
             _scienceItemsMap[displayText] = {'content': selectedStr, 'url': ''};
-            analysis.writeln('$displayText');
+            analysis.writeln(displayText);
           }
         }
       }
-      // 训练方案
       if (_coachRules.containsKey('training_protocols')) {
         final protocols = _coachRules['training_protocols'] as List;
         if (protocols.isNotEmpty) {
@@ -933,16 +920,15 @@ class _CoachCharacterState extends State<CoachCharacter>
             final url = selected['url'] ?? '';
             final displayText = '🏋️ 训练方案：$text';
             _scienceItemsMap[displayText] = {'content': text, 'url': url};
-            analysis.writeln('$displayText');
+            analysis.writeln(displayText);
           } else {
             final selectedStr = _randomSelect(protocols.cast<String>());
             final displayText = '🏋️ 训练方案：$selectedStr';
             _scienceItemsMap[displayText] = {'content': selectedStr, 'url': ''};
-            analysis.writeln('$displayText');
+            analysis.writeln(displayText);
           }
         }
       }
-      // 最新研究
       if (_coachRules.containsKey('research_summaries')) {
         final researches = _coachRules['research_summaries'] as List;
         if (researches.isNotEmpty) {
@@ -953,12 +939,12 @@ class _CoachCharacterState extends State<CoachCharacter>
             final url = selected['url'] ?? '';
             final displayText = '🔬 最新研究：$text';
             _scienceItemsMap[displayText] = {'content': text, 'url': url};
-            analysis.writeln('$displayText');
+            analysis.writeln(displayText);
           } else {
             final selectedStr = _randomSelect(researches.cast<String>());
             final displayText = '🔬 最新研究：$selectedStr';
             _scienceItemsMap[displayText] = {'content': selectedStr, 'url': ''};
-            analysis.writeln('$displayText');
+            analysis.writeln(displayText);
           }
         }
       }
@@ -1006,7 +992,6 @@ class _CoachCharacterState extends State<CoachCharacter>
     for (var line in lines) {
       if (line.trim().isEmpty) continue;
 
-      // 检查是否是可点击的科学知识行
       Map<String, String>? itemData;
       String? displayKey;
       for (var entry in _scienceItemsMap.entries) {
@@ -1018,7 +1003,7 @@ class _CoachCharacterState extends State<CoachCharacter>
       }
 
       if (itemData != null && displayKey != null) {
-        final key = displayKey; // 此时 key 类型为 String
+        final key = displayKey;
         final content = itemData['content'] ?? '';
         final url = itemData['url'] ?? '';
         widgets.add(
@@ -1047,7 +1032,7 @@ class _CoachCharacterState extends State<CoachCharacter>
                       style: TextStyle(
                         fontSize: 14,
                         color: isHovering
-                            ? Theme.of(context).primaryColor // 悬停时变为蓝色
+                            ? Theme.of(context).primaryColor
                             : (isDark ? Colors.white : Colors.black87),
                         height: 1.6,
                       ),
@@ -1188,74 +1173,69 @@ class _CoachCharacterState extends State<CoachCharacter>
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        GestureDetector(
-          onSecondaryTapDown: (details) => _showContextMenu(context, details),
-          onTap: () => _analyzeLocally(),
-          child: Stack(
-            children: [
-              Container(
-                width: 250,
-                height: 250,
-                decoration: BoxDecoration(
-                  image: DecorationImage(
-                    image: _currentImagePath.startsWith('assets/')
-                        ? AssetImage(_currentImagePath) as ImageProvider
-                        : FileImage(File(_currentImagePath)),
-                    fit: BoxFit.contain,
-                  ),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-              if (_isAnalyzing)
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.all(8),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final maxHeight = constraints.maxHeight;
+        final imageSize = maxHeight > 0 ? (maxHeight * 0.4).clamp(100.0, 200.0) : 150.0;
+        return Column(
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            GestureDetector(
+              onSecondaryTapDown: (details) => _showContextMenu(context, details),
+              onTap: () => _analyzeLocally(),
+              child: Stack(
+                children: [
+                  Container(
+                    width: imageSize,
+                    height: imageSize,
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.grey[800] : Colors.white,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
-                          blurRadius: 4,
-                          spreadRadius: 1,
-                        ),
-                      ],
-                    ),
-                    child: SpinKitRing(
-                      color: Theme.of(context).primaryColor,
-                      size: 24,
-                      lineWidth: 2,
+                      image: DecorationImage(
+                        image: _currentImagePath.startsWith('assets/')
+                            ? AssetImage(_currentImagePath) as ImageProvider
+                            : FileImage(File(_currentImagePath)),
+                        fit: BoxFit.contain,
+                      ),
+                      borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 16),
-        if (_displayedResponse.isNotEmpty)
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (_showExpandedView)
-                Expanded(
-                  child: _buildExpandedView(),
-                ),
-              Expanded(
-                child: Stack(
-                  children: [
-                    LayoutBuilder(
-                      builder: (context, constraints) {
-                        // 动态最大高度：父容器可用高度的 70%，且不超过 500
-                        final maxHeight =
-                            (constraints.maxHeight * 0.7).clamp(200.0, 500.0);
-                        return Container(
-                          constraints: BoxConstraints(maxHeight: maxHeight),
+                  // 加载动画在右上角
+                  if (_isAnalyzing)
+                    Positioned(
+                      top: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.grey[800] : Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.1),
+                              blurRadius: 4,
+                              spreadRadius: 1,
+                            ),
+                          ],
+                        ),
+                        child: SpinKitRing(
+                          color: Theme.of(context).primaryColor,
+                          size: 24,
+                          lineWidth: 2,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Expanded(
+              child: _displayedResponse.isNotEmpty
+                  ? Stack(
+                      children: [
+                        if (_showExpandedView)
+                          Positioned.fill(
+                            child: _buildExpandedView(),
+                          ),
+                        Container(
                           decoration: BoxDecoration(
                             color: isDark
                                 ? const Color(0xFF2A2A2A)
@@ -1280,76 +1260,73 @@ class _CoachCharacterState extends State<CoachCharacter>
                             padding: const EdgeInsets.all(16),
                             child: _buildRichResponse(),
                           ),
-                        );
-                      },
-                    ),
-                    if (_showScrollIndicator)
-                      Positioned(
-                        bottom: 8,
-                        right: 8,
-                        child: AnimatedBuilder(
-                          animation: _bounceController!,
-                          builder: (context, child) {
-                            final bounceValue =
-                                1.0 + (_bounceController!.value * 0.15);
-                            return Transform.scale(
-                              scale: bounceValue,
-                              child: GestureDetector(
-                                onTap: () {
-                                  if (_isAtBottom) {
-                                    _scrollToTop();
-                                  } else {
-                                    _scrollToBottom();
-                                  }
-                                },
-                                child: Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: Theme.of(context)
-                                        .primaryColor
-                                        .withValues(alpha: 0.9),
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color:
-                                            Colors.black.withValues(alpha: 0.2),
-                                        blurRadius: 4,
-                                        spreadRadius: 1,
+                        ),
+                        if (_showScrollIndicator)
+                          Positioned(
+                            bottom: 8,
+                            right: 8,
+                            child: AnimatedBuilder(
+                              animation: _bounceController!,
+                              builder: (context, child) {
+                                final bounceValue =
+                                    1.0 + (_bounceController!.value * 0.15);
+                                return Transform.scale(
+                                  scale: bounceValue,
+                                  child: GestureDetector(
+                                    onTap: () {
+                                      if (_isAtBottom) {
+                                        _scrollToTop();
+                                      } else {
+                                        _scrollToBottom();
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context)
+                                            .primaryColor
+                                            .withValues(alpha: 0.9),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black
+                                                .withValues(alpha: 0.2),
+                                            blurRadius: 4,
+                                            spreadRadius: 1,
+                                          ),
+                                        ],
                                       ),
-                                    ],
+                                      child: Icon(
+                                        _isAtBottom
+                                            ? Icons.arrow_upward
+                                            : Icons.arrow_downward,
+                                        color: Colors.white,
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
-                                  child: Icon(
-                                    _isAtBottom
-                                        ? Icons.arrow_upward
-                                        : Icons.arrow_downward,
-                                    color: Colors.white,
-                                    size: 20,
-                                  ),
-                                ),
-                              ),
-                            );
-                          },
+                                );
+                              },
+                            ),
+                          ),
+                      ],
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(
+                        '👆 单击形象获取训练分析\n👇 右键更换陪练形象',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: isDark ? Colors.white60 : Colors.black54,
+                          height: 1.4,
                         ),
                       ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        if (!_isAnalyzing && _displayedResponse.isEmpty)
-          Padding(
-            padding: const EdgeInsets.only(top: 8.0),
-            child: Text(
-              '👆 单击形象获取训练分析\n👇 右键更换陪练形象',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 12,
-                color: isDark ? Colors.white60 : Colors.black54,
-                height: 1.4,
-              ),
+                    ),
             ),
-          ),
-      ],
+          ],
+        );
+      },
     );
   }
 }

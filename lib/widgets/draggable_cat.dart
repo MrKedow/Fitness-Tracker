@@ -55,7 +55,7 @@ class _DraggableCatState extends State<DraggableCat>
       maxLines: 1,
       textDirection: TextDirection.ltr,
     )..layout();
-    _scrollWidth = textPainter.width + 24 + 16;
+    _scrollWidth = textPainter.width + 24 + 16 + 20;
   }
 
   void _setHovering(bool hovering) {

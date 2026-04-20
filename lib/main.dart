@@ -6,11 +6,34 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:fitness_tracker/widgets/roaming_cat.dart';
 import 'package:fitness_tracker/widgets/coach_character.dart';
 // import 'package:excel/excel.dart';
 import 'package:excel/excel.dart' hide Border; // 避免与 Flutter 的 Border 冲突
 import 'package:fitness_tracker/widgets/draggable_cat.dart';
+import 'package:process_run/process_run.dart';
+
+// ==================== Python 脚本服务 ====================
+class PythonUpdateService {
+  static Future<bool> runUpdateScript() async {
+    try {
+      final exePath = Platform.resolvedExecutable;
+      final baseDir = File(exePath).parent;
+      final updateExe = File('${baseDir.path}/update_coach_knowledge.exe');
+
+      if (await updateExe.exists()) {
+        final process =
+            await Process.start(updateExe.path, [], runInShell: false);
+        final exitCode = await process.exitCode; // 关键：等待脚本真正结束
+        return exitCode == 0;
+      }
+      return false;
+    } catch (e) {
+      print("执行更新脚本失败: $e");
+      return false;
+    }
+  }
+}
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = await SharedPreferences.getInstance();
@@ -586,11 +609,11 @@ class ExcelCSVService {
       // 合并相同日期的单元格（日期列，索引0）
       int currentRow = 1; // 从数据第一行开始
       while (currentRow < sheet.rows.length) {
-        final currentDate = sheet.rows[currentRow]?[0]?.value?.toString();
+        final currentDate = sheet.rows[currentRow][0]?.value?.toString();
         if (currentDate == null) break;
         int endRow = currentRow;
         while (endRow + 1 < sheet.rows.length &&
-            sheet.rows[endRow + 1]?[0]?.value?.toString() == currentDate) {
+            sheet.rows[endRow + 1][0]?.value?.toString() == currentDate) {
           endRow++;
         }
         if (endRow > currentRow) {
@@ -646,7 +669,7 @@ class ExcelCSVService {
       // 跳过表头，从第1行开始
       for (int rowIndex = 1; rowIndex < sheet.rows.length; rowIndex++) {
         final row = sheet.rows[rowIndex];
-        if (row == null || row.length < 3) continue;
+        if (row.length < 3) continue;
         final dateStr = row[0]?.value?.toString() ?? '';
         final sessionNum = int.tryParse(row[1]?.value?.toString() ?? '') ?? 0;
         final projectName = row[2]?.value?.toString() ?? '';
@@ -760,8 +783,9 @@ class ExcelCSVService {
           final dateStr = cells[0];
           final sessionNum = int.tryParse(cells[1]) ?? 0;
           final projectName = cells[2];
-          if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty)
+          if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) {
             continue;
+          }
           final date = DateFormat('yyyy-MM-dd').parse(dateStr);
           final key = date.toIso8601String();
           if (!recordMap.containsKey(key)) {
@@ -1045,7 +1069,7 @@ class FitnessApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-          title: '健身数据管理系统 Fitness-Tracker_Win_v3.1.1',
+          title: '健身数据管理系统 Fitness-Tracker_Win_v4.0',
           debugShowCheckedModeBanner: false,
           theme: themeProvider.currentTheme,
           home: const MainScreen(),
@@ -1086,6 +1110,31 @@ class _MainScreenState extends State<MainScreen> {
     _initializeControllers();
     _loadData();
     _loadFirstWorkoutDate();
+    // 后台更新知识库，显示状态提示
+    _runUpdateWithIndicator();
+  }
+
+  Future<void> _runUpdateWithIndicator() async {
+    print('[Flutter] 开始更新知识库...');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+          content: Text('后台正在更新健身知识库...'), duration: Duration(seconds: 2)),
+    );
+
+    final success = await PythonUpdateService.runUpdateScript();
+    print('[Flutter] 更新完成，success=$success');
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(success ? 'AI陪练就绪！' : '知识库更新失败，请检查环境'),
+          backgroundColor: success ? Colors.green : Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } else {
+      print('[Flutter] 界面已销毁，无法显示 SnackBar');
+    }
   }
 
   void _loadData() async {
@@ -1945,503 +1994,548 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-@override
-Widget build(BuildContext context) {
-  final duration = DateTime.now().difference(firstWorkoutDate);
-  final theme = Theme.of(context);
-  final isLight = theme.brightness == Brightness.light;
-  final isGlass = theme.scaffoldBackgroundColor == Colors.transparent;
+  @override
+  Widget build(BuildContext context) {
+    final duration = DateTime.now().difference(firstWorkoutDate);
+    final theme = Theme.of(context);
+    final isLight = theme.brightness == Brightness.light;
+    final isGlass = theme.scaffoldBackgroundColor == Colors.transparent;
 
-  final inputBorder =
-      theme.inputDecorationTheme.border ?? const OutlineInputBorder();
-  final enabledBorder =
-      theme.inputDecorationTheme.enabledBorder ?? inputBorder;
+    final inputBorder =
+        theme.inputDecorationTheme.border ?? const OutlineInputBorder();
+    final enabledBorder =
+        theme.inputDecorationTheme.enabledBorder ?? inputBorder;
 
-  return Scaffold(
-    appBar: AppBar(
-      title: const Row(
-        children: [
-          Icon(Icons.fitness_center),
-          SizedBox(width: 8),
-          Flexible(
-            child: Text(
-              '健身数据管理系统 Win_v3.1.1',
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontFamily: 'SimSun',
-                fontSize: 14,
+    return Scaffold(
+      resizeToAvoidBottomInset: false, // 正确放置，避免键盘溢出
+      appBar: AppBar(
+        title: const Row(
+          children: [
+            Icon(Icons.fitness_center),
+            SizedBox(width: 8),
+            Flexible(
+              child: Text(
+                '健身数据管理系统 Win_v4.0',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'SimSun',
+                  fontSize: 14,
+                ),
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
               ),
-              overflow: TextOverflow.ellipsis,
-              maxLines: 1,
             ),
+          ],
+        ),
+        actions: [
+          Consumer<NutstoreService>(
+            builder: (context, nutstore, child) {
+              if (nutstore.isConnected) {
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(Icons.cloud_done,
+                          color: Colors.green, size: 20),
+                      const SizedBox(width: 4),
+                      Text(
+                        nutstore.username ?? '',
+                        style: const TextStyle(
+                          color: Colors.green,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                );
+              }
+              return const SizedBox.shrink();
+            },
           ),
+          IconButton(
+            icon: const Icon(Icons.history),
+            onPressed: () => _showHistory(context),
+            tooltip: '历史记录',
+          ),
+          IconButton(
+            icon: const Icon(Icons.palette),
+            onPressed: () => _showThemeSelector(context),
+            tooltip: '切换主题',
+          ),
+          Consumer<NutstoreService>(
+            builder: (context, nutstore, child) {
+              return IconButton(
+                icon: const Icon(Icons.cloud),
+                onPressed: () {
+                  if (nutstore.isConnected) {
+                    _showCloudMenu(context);
+                  } else {
+                    _showCloudLoginDialog(context);
+                  }
+                },
+                tooltip: '云服务',
+              );
+            },
+          ),
+          if (_isLoading)
+            const Padding(
+              padding: EdgeInsets.all(8.0),
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
         ],
       ),
-      actions: [
-        Consumer<NutstoreService>(
-          builder: (context, nutstore, child) {
-            if (nutstore.isConnected) {
-              return Padding(
-                padding: const EdgeInsets.only(right: 8.0),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(Icons.cloud_done, color: Colors.green, size: 20),
-                    const SizedBox(width: 4),
-                    Text(
-                      nutstore.username ?? '',
-                      style: const TextStyle(
-                        color: Colors.green,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              );
-            }
-            return const SizedBox.shrink();
-          },
-        ),
-        IconButton(
-          icon: const Icon(Icons.history),
-          onPressed: () => _showHistory(context),
-          tooltip: '历史记录',
-        ),
-        IconButton(
-          icon: const Icon(Icons.palette),
-          onPressed: () => _showThemeSelector(context),
-          tooltip: '切换主题',
-        ),
-        Consumer<NutstoreService>(
-          builder: (context, nutstore, child) {
-            return IconButton(
-              icon: const Icon(Icons.cloud),
-              onPressed: () {
-                if (nutstore.isConnected) {
-                  _showCloudMenu(context);
-                } else {
-                  _showCloudLoginDialog(context);
-                }
-              },
-              tooltip: '云服务',
-            );
-          },
-        ),
-        if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-      ],
-    ),
-    body: LayoutBuilder(
-  builder: (context, constraints) {
-    final parentSize = constraints.biggest;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        _isLoading
-            ? const Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    CircularProgressIndicator(),
-                    SizedBox(height: 20),
-                    Text('处理中...'),
-                  ],
-                ),
-              )
-            : Consumer<WorkoutProvider>(
-                builder: (context, provider, child) {
-                  final recentRecords =
-                      provider.records.reversed.take(5).toList();
-                  return Padding(
-                    padding: const EdgeInsets.all(20),
+      body: LayoutBuilder(builder: (context, constraints) {
+        final parentSize = constraints.biggest;
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            _isLoading
+                ? const Center(
                     child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Card(
-                          child: Padding(
-                            padding: const EdgeInsets.all(20),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
+                        CircularProgressIndicator(),
+                        SizedBox(height: 20),
+                        Text('处理中...'),
+                      ],
+                    ),
+                  )
+                : Consumer<WorkoutProvider>(
+                    builder: (context, provider, child) {
+                      final recentRecords =
+                          provider.records.reversed.take(5).toList();
+                      return Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Column(
+                          children: [
+                            Card(
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    const Text('健身坚持统计',
-                                        style: TextStyle(
-                                            fontSize: 20,
-                                            fontWeight: FontWeight.bold)),
-                                    const SizedBox(height: 8),
-                                    Text('每一次努力都值得记录',
-                                        style: TextStyle(color: Colors.grey[400])),
-                                  ],
-                                ),
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    GestureDetector(
-                                      onTap: _pickFirstWorkoutDate,
-                                      child: Text('${duration.inDays} 天',
-                                          style: TextStyle(
-                                              fontSize: 32,
-                                              fontWeight: FontWeight.bold,
-                                              color: Theme.of(context).primaryColor)),
-                                    ),
-                                    Text(
-                                        '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
-                                        style: TextStyle(color: Colors.grey[400])),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        Expanded(
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Expanded(
-                                flex: 3,
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        const Text('填写训练记录',
+                                        const Text('健身坚持统计',
                                             style: TextStyle(
-                                                fontSize: 18,
+                                                fontSize: 20,
                                                 fontWeight: FontWeight.bold)),
-                                        const SizedBox(height: 20),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text('📅 日期'),
-                                                  const SizedBox(height: 8),
-                                                  GestureDetector(
-                                                    onTap: () =>
-                                                        _selectDate(context),
-                                                    child: Container(
-                                                      padding:
-                                                          const EdgeInsets.all(12),
-                                                      decoration: BoxDecoration(
-                                                        color: Theme.of(context)
-                                                            .cardColor,
-                                                        borderRadius:
-                                                            BorderRadius.circular(12),
-                                                        border: enabledBorder
-                                                                    .borderSide !=
-                                                                BorderSide.none
-                                                            ? Border.all(
-                                                                color: enabledBorder
-                                                                    .borderSide
-                                                                    .color,
-                                                                width: enabledBorder
-                                                                    .borderSide
-                                                                    .width,
-                                                              )
-                                                            : null,
-                                                      ),
-                                                      child: Row(
-                                                        children: [
-                                                          Icon(
-                                                            Icons.calendar_today,
-                                                            size: 20,
-                                                            color: Theme.of(context)
-                                                                .primaryColor,
-                                                          ),
-                                                          const SizedBox(width: 8),
-                                                          Text(dateController.text),
-                                                          const Spacer(),
-                                                          const Icon(Icons.arrow_drop_down),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 20),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  const Text('#️⃣ 第几次训练'),
-                                                  const SizedBox(height: 8),
-                                                  TextField(
-                                                    controller:
-                                                        TextEditingController(
-                                                            text: sessionNumber
-                                                                .toString()),
-                                                    keyboardType:
-                                                        TextInputType.number,
-                                                    decoration:
-                                                        const InputDecoration(
-                                                      hintText: '输入次数',
-                                                      border:
-                                                          OutlineInputBorder(),
-                                                    ),
-                                                    onChanged: (value) {
-                                                      final num =
-                                                          int.tryParse(value) ?? 1;
-                                                      setState(() =>
-                                                          sessionNumber = num);
-                                                    },
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 30),
-                                        const Text('训练项目',
+                                        const SizedBox(height: 8),
+                                        Text('每一次努力都值得记录',
                                             style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.bold)),
-                                        const SizedBox(height: 16),
-                                        Expanded(
-                                          child: ListView.builder(
-                                            shrinkWrap: true,
-                                            itemCount: projects.length,
-                                            itemBuilder: (context, index) =>
-                                                _buildProjectCard(index),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 20),
-                                        Row(
-                                          children: [
-                                            ElevatedButton.icon(
-                                                onPressed: _addProject,
-                                                icon: const Icon(Icons.add),
-                                                label: const Text('添加项目')),
-                                            const SizedBox(width: 12),
-                                            ElevatedButton.icon(
-                                              onPressed: _removeProject,
-                                              icon: const Icon(Icons.remove),
-                                              label: const Text('删除项目'),
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      Theme.of(context).cardColor),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 30),
-                                        ElevatedButton.icon(
-                                          onPressed: () => _saveWorkout(context),
-                                          icon: const Icon(Icons.save),
-                                          label: const Text('保存记录'),
-                                          style: ElevatedButton.styleFrom(
-                                              backgroundColor:
-                                                  const Color(0xFF34C759),
-                                              minimumSize:
-                                                  const Size(double.infinity, 56)),
-                                        ),
+                                                color: Colors.grey[400])),
                                       ],
                                     ),
-                                  ),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.end,
+                                      children: [
+                                        GestureDetector(
+                                          onTap: _pickFirstWorkoutDate,
+                                          child: Text('${duration.inDays} 天',
+                                              style: TextStyle(
+                                                  fontSize: 32,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Theme.of(context)
+                                                      .primaryColor)),
+                                        ),
+                                        Text(
+                                            '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
+                                            style: TextStyle(
+                                                color: Colors.grey[400])),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(width: 24),
-                              Expanded(
-                                flex: 2,
-                                child: Card(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20),
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        const Text('最近记录',
-                                            style: TextStyle(
-                                                fontSize: 18,
-                                                fontWeight: FontWeight.bold)),
-                                        const SizedBox(height: 20),
-                                        Expanded(
-                                          child: recentRecords.isEmpty
-                                              ? const Center(
+                            ),
+                            const SizedBox(height: 24),
+                            Expanded(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Expanded(
+                                    flex: 3,
+                                    child: Card(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('填写训练记录',
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                            const SizedBox(height: 20),
+                                            Row(
+                                              children: [
+                                                Expanded(
                                                   child: Column(
-                                                    mainAxisAlignment:
-                                                        MainAxisAlignment.center,
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
                                                     children: [
-                                                      Icon(Icons.history,
-                                                          size: 60,
-                                                          color: Colors.grey),
-                                                      SizedBox(height: 16),
-                                                      Text('暂无记录'),
-                                                      Text('开始您的第一次训练吧！',
-                                                          style: TextStyle(
-                                                              fontSize: 12)),
+                                                      const Text('📅 日期'),
+                                                      const SizedBox(height: 8),
+                                                      GestureDetector(
+                                                        onTap: () =>
+                                                            _selectDate(
+                                                                context),
+                                                        child: Container(
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(12),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: Theme.of(
+                                                                    context)
+                                                                .cardColor,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                            border: enabledBorder
+                                                                        .borderSide !=
+                                                                    BorderSide
+                                                                        .none
+                                                                ? Border.all(
+                                                                    color: enabledBorder
+                                                                        .borderSide
+                                                                        .color,
+                                                                    width: enabledBorder
+                                                                        .borderSide
+                                                                        .width,
+                                                                  )
+                                                                : null,
+                                                          ),
+                                                          child: Row(
+                                                            children: [
+                                                              Icon(
+                                                                Icons
+                                                                    .calendar_today,
+                                                                size: 20,
+                                                                color: Theme.of(
+                                                                        context)
+                                                                    .primaryColor,
+                                                              ),
+                                                              const SizedBox(
+                                                                  width: 8),
+                                                              Text(
+                                                                  dateController
+                                                                      .text),
+                                                              const Spacer(),
+                                                              const Icon(Icons
+                                                                  .arrow_drop_down),
+                                                            ],
+                                                          ),
+                                                        ),
+                                                      ),
                                                     ],
                                                   ),
-                                                )
-                                              : ListView.builder(
-                                                  shrinkWrap: true,
-                                                  itemCount:
-                                                      recentRecords.length,
-                                                  itemBuilder:
-                                                      (context, index) {
-                                                    final record =
-                                                        recentRecords[index];
-                                                    final dateStr =
-                                                        DateFormat('yyyy-MM-dd')
-                                                            .format(record.date);
-                                                    final projectNames = record
-                                                        .projects
-                                                        .map((p) => p.name)
-                                                        .where((name) =>
-                                                            name.isNotEmpty)
-                                                        .join('、');
-                                                    return Container(
-                                                      margin: const EdgeInsets.only(
-                                                          bottom: 12),
-                                                      padding:
-                                                          const EdgeInsets.all(16),
-                                                      decoration: BoxDecoration(
-                                                        color: isGlass
-                                                            ? Colors.grey.shade800
-                                                                .withValues(
-                                                                    alpha: 0.5)
-                                                            : Theme.of(context)
-                                                                .cardColor,
-                                                        borderRadius:
-                                                            BorderRadius.circular(
-                                                                12),
+                                                ),
+                                                const SizedBox(width: 20),
+                                                Expanded(
+                                                  child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      const Text('#️⃣ 第几次训练'),
+                                                      const SizedBox(height: 8),
+                                                      TextField(
+                                                        controller:
+                                                            TextEditingController(
+                                                                text: sessionNumber
+                                                                    .toString()),
+                                                        keyboardType:
+                                                            TextInputType
+                                                                .number,
+                                                        decoration:
+                                                            const InputDecoration(
+                                                          hintText: '输入次数',
+                                                          border:
+                                                              OutlineInputBorder(),
+                                                        ),
+                                                        onChanged: (value) {
+                                                          final num =
+                                                              int.tryParse(
+                                                                      value) ??
+                                                                  1;
+                                                          setState(() =>
+                                                              sessionNumber =
+                                                                  num);
+                                                        },
                                                       ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 30),
+                                            const Text('训练项目',
+                                                style: TextStyle(
+                                                    fontSize: 16,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                            const SizedBox(height: 16),
+                                            Expanded(
+                                              child: ListView.builder(
+                                                shrinkWrap: true,
+                                                itemCount: projects.length,
+                                                itemBuilder: (context, index) =>
+                                                    _buildProjectCard(index),
+                                              ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            Row(
+                                              children: [
+                                                ElevatedButton.icon(
+                                                    onPressed: _addProject,
+                                                    icon: const Icon(Icons.add),
+                                                    label: const Text('添加项目')),
+                                                const SizedBox(width: 12),
+                                                ElevatedButton.icon(
+                                                  onPressed: _removeProject,
+                                                  icon:
+                                                      const Icon(Icons.remove),
+                                                  label: const Text('删除项目'),
+                                                  style:
+                                                      ElevatedButton.styleFrom(
+                                                          backgroundColor:
+                                                              Theme.of(context)
+                                                                  .cardColor),
+                                                ),
+                                              ],
+                                            ),
+                                            const SizedBox(height: 30),
+                                            ElevatedButton.icon(
+                                              onPressed: () =>
+                                                  _saveWorkout(context),
+                                              icon: const Icon(Icons.save),
+                                              label: const Text('保存记录'),
+                                              style: ElevatedButton.styleFrom(
+                                                  backgroundColor:
+                                                      const Color(0xFF34C759),
+                                                  minimumSize: const Size(
+                                                      double.infinity, 56)),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 24),
+                                  Expanded(
+                                    flex: 2,
+                                    child: Card(
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(20),
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            const Text('最近记录',
+                                                style: TextStyle(
+                                                    fontSize: 18,
+                                                    fontWeight:
+                                                        FontWeight.bold)),
+                                            const SizedBox(height: 20),
+                                            Expanded(
+                                              child: recentRecords.isEmpty
+                                                  ? const Center(
                                                       child: Column(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .start,
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
                                                         children: [
-                                                          Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .spaceBetween,
+                                                          Icon(Icons.history,
+                                                              size: 60,
+                                                              color:
+                                                                  Colors.grey),
+                                                          SizedBox(height: 16),
+                                                          Text('暂无记录'),
+                                                          Text('开始您的第一次训练吧！',
+                                                              style: TextStyle(
+                                                                  fontSize:
+                                                                      12)),
+                                                        ],
+                                                      ),
+                                                    )
+                                                  : ListView.builder(
+                                                      shrinkWrap: true,
+                                                      itemCount:
+                                                          recentRecords.length,
+                                                      itemBuilder:
+                                                          (context, index) {
+                                                        final record =
+                                                            recentRecords[
+                                                                index];
+                                                        final dateStr =
+                                                            DateFormat(
+                                                                    'yyyy-MM-dd')
+                                                                .format(record
+                                                                    .date);
+                                                        final projectNames = record
+                                                            .projects
+                                                            .map((p) => p.name)
+                                                            .where((name) =>
+                                                                name.isNotEmpty)
+                                                            .join('、');
+                                                        return Container(
+                                                          margin:
+                                                              const EdgeInsets
+                                                                  .only(
+                                                                  bottom: 12),
+                                                          padding:
+                                                              const EdgeInsets
+                                                                  .all(16),
+                                                          decoration:
+                                                              BoxDecoration(
+                                                            color: isGlass
+                                                                ? Colors.grey
+                                                                    .shade800
+                                                                    .withValues(
+                                                                        alpha:
+                                                                            0.5)
+                                                                : Theme.of(
+                                                                        context)
+                                                                    .cardColor,
+                                                            borderRadius:
+                                                                BorderRadius
+                                                                    .circular(
+                                                                        12),
+                                                          ),
+                                                          child: Column(
+                                                            crossAxisAlignment:
+                                                                CrossAxisAlignment
+                                                                    .start,
                                                             children: [
-                                                              Text(dateStr,
-                                                                  style:
-                                                                      const TextStyle(
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                                children: [
+                                                                  Text(dateStr,
+                                                                      style: const TextStyle(
                                                                           fontWeight:
                                                                               FontWeight.bold)),
-                                                              Container(
-                                                                padding:
-                                                                    const EdgeInsets
+                                                                  Container(
+                                                                    padding: const EdgeInsets
                                                                         .symmetric(
                                                                         horizontal:
                                                                             8,
                                                                         vertical:
                                                                             4),
-                                                                decoration:
-                                                                    BoxDecoration(
-                                                                  color: isLight
-                                                                      ? Colors
-                                                                          .green
-                                                                          .shade700
-                                                                      : Theme.of(
-                                                                              context)
-                                                                          .primaryColor,
-                                                                  borderRadius:
-                                                                      BorderRadius
-                                                                          .circular(
-                                                                              6),
-                                                                ),
-                                                                child: Text(
-                                                                  '第${record.sessionNumber}次',
-                                                                  style: TextStyle(
-                                                                      fontSize:
-                                                                          12,
-                                                                      fontWeight:
-                                                                          FontWeight
-                                                                              .bold,
+                                                                    decoration:
+                                                                        BoxDecoration(
                                                                       color: isLight
                                                                           ? Colors
-                                                                              .white
-                                                                          : Colors
-                                                                              .black),
-                                                                ),
+                                                                              .green
+                                                                              .shade700
+                                                                          : Theme.of(context)
+                                                                              .primaryColor,
+                                                                      borderRadius:
+                                                                          BorderRadius.circular(
+                                                                              6),
+                                                                    ),
+                                                                    child: Text(
+                                                                      '第${record.sessionNumber}次',
+                                                                      style: TextStyle(
+                                                                          fontSize:
+                                                                              12,
+                                                                          fontWeight: FontWeight
+                                                                              .bold,
+                                                                          color: isLight
+                                                                              ? Colors.white
+                                                                              : Colors.black),
+                                                                    ),
+                                                                  ),
+                                                                ],
                                                               ),
-                                                            ],
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 8),
-                                                          Text(
-                                                            projectNames
-                                                                    .isNotEmpty
-                                                                ? projectNames
-                                                                : '无项目名称',
-                                                            style: TextStyle(
-                                                                color: Colors
-                                                                    .grey[400]),
-                                                          ),
-                                                          const SizedBox(
-                                                              height: 8),
-                                                          Row(
-                                                            mainAxisAlignment:
-                                                                MainAxisAlignment
-                                                                    .spaceBetween,
-                                                            children: [
-                                                              const Text('总做功'),
+                                                              const SizedBox(
+                                                                  height: 8),
                                                               Text(
-                                                                '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
-                                                                style: const TextStyle(
-                                                                    fontWeight:
-                                                                        FontWeight
-                                                                            .bold,
+                                                                projectNames
+                                                                        .isNotEmpty
+                                                                    ? projectNames
+                                                                    : '无项目名称',
+                                                                style: TextStyle(
                                                                     color: Colors
-                                                                        .orange),
+                                                                            .grey[
+                                                                        400]),
+                                                              ),
+                                                              const SizedBox(
+                                                                  height: 8),
+                                                              Row(
+                                                                mainAxisAlignment:
+                                                                    MainAxisAlignment
+                                                                        .spaceBetween,
+                                                                children: [
+                                                                  const Text(
+                                                                      '总做功'),
+                                                                  Text(
+                                                                    '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
+                                                                    style: const TextStyle(
+                                                                        fontWeight:
+                                                                            FontWeight
+                                                                                .bold,
+                                                                        color: Colors
+                                                                            .orange),
+                                                                  ),
+                                                                ],
                                                               ),
                                                             ],
                                                           ),
-                                                        ],
-                                                      ),
-                                                    );
-                                                  },
-                                                ),
+                                                        );
+                                                      },
+                                                    ),
+                                            ),
+                                            const SizedBox(height: 20),
+                                            OutlinedButton.icon(
+                                              onPressed: () =>
+                                                  _showHistory(context),
+                                              icon: const Icon(Icons.list),
+                                              label: const Text('查看全部记录'),
+                                              style: OutlinedButton.styleFrom(
+                                                  minimumSize: const Size(
+                                                      double.infinity, 48)),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(height: 20),
-                                        OutlinedButton.icon(
-                                          onPressed: () => _showHistory(context),
-                                          icon: const Icon(Icons.list),
-                                          label: const Text('查看全部记录'),
-                                          style: OutlinedButton.styleFrom(
-                                              minimumSize:
-                                                  const Size(double.infinity, 48)),
-                                        ),
-                                      ],
+                                      ),
                                     ),
                                   ),
-                                ),
+                                ],
                               ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-        // 可拖拽小猫
-        DraggableCat(
-          catSize: 100.0,
-          githubUrl: 'https://github.com/MrKedow/Fitness-Tracker',
-          parentSize: parentSize,
-        ),
-      ],
+                      );
+                    },
+                  ),
+            // 可拖拽小猫
+            DraggableCat(
+              catSize: 100.0,
+              githubUrl: 'https://github.com/MrKedow/Fitness-Tracker',
+              parentSize: parentSize,
+            ),
+          ],
+        );
+      }),
     );
-    resizeToAvoidBottomInset: false;
-  }));
-}  
+  }
 }
 
 // ==================== 历史记录页面 ====================
@@ -3066,7 +3160,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
       ),
       body: records.isEmpty
           ? Center(
-              child: CoachCharacter(records: records),
+              child: Padding(
+                padding: const EdgeInsets.only(top: 80.0),
+                child: CoachCharacter(records: records),
+              ),
             )
           : Row(
               crossAxisAlignment: CrossAxisAlignment.start,
