@@ -1,4 +1,4 @@
-// ==================== main.dart (完整修复版) ====================
+// ==================== main.dart (JSON存储 + 云同步) ====================
 import 'package:fitness_tracker/services/knowledge_update_service.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,39 +8,10 @@ import 'package:path_provider/path_provider.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import 'package:fitness_tracker/widgets/coach_character.dart';
-<<<<<<< Updated upstream
-// import 'package:excel/excel.dart';
-import 'package:excel/excel.dart' hide Border; // 避免与 Flutter 的 Border 冲突
-import 'package:fitness_tracker/widgets/draggable_cat.dart';
-
-// ==================== Python 脚本服务 ====================
-class PythonUpdateService {
-  static Future<bool> runUpdateScript() async {
-    try {
-      final exePath = Platform.resolvedExecutable;
-      final baseDir = File(exePath).parent;
-      final updateExe = File('${baseDir.path}/update_coach_knowledge.exe');
-
-      if (await updateExe.exists()) {
-        final process =
-            await Process.start(updateExe.path, [], runInShell: false);
-        final exitCode = await process.exitCode; // 关键：等待脚本真正结束
-        return exitCode == 0;
-      }
-      return false;
-    } catch (e) {
-      print("执行更新脚本失败: $e");
-      return false;
-    }
-  }
-}
-=======
 import 'package:excel/excel.dart' hide Border;
 import 'package:fitness_tracker/widgets/draggable_cat.dart';
 import 'package:fitness_tracker/screens/settings_page.dart';
 import 'package:fitness_tracker/screens/coach_analysis_page.dart';
->>>>>>> Stashed changes
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -52,7 +23,7 @@ void main() async {
       providers: [
         ChangeNotifierProvider(create: (_) => WorkoutProvider()),
         ChangeNotifierProvider(create: (_) => ThemeProvider(savedThemeIndex)),
-        Provider(create: (_) => ExcelCSVService()),
+        Provider(create: (_) => JsonStorageService()),
         ChangeNotifierProvider(create: (_) => NutstoreService()),
         ChangeNotifierProvider(create: (_) => SettingsProvider()),
       ],
@@ -134,16 +105,14 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF3AB8C7),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF3A4A5A),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white70),
         hintStyle: const TextStyle(color: Colors.white54),
@@ -178,16 +147,14 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF007AFF),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF2C2C2E),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white60),
         hintStyle: const TextStyle(color: Colors.white38),
@@ -222,8 +189,7 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFF4A6FA5),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -267,16 +233,14 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: const Color(0xFFFF9500),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: const Color(0xFF3A3A3A),
         border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-            borderSide: BorderSide.none),
+            borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         contentPadding: const EdgeInsets.all(16),
         labelStyle: const TextStyle(color: Colors.white60),
         hintStyle: const TextStyle(color: Colors.white38),
@@ -311,8 +275,7 @@ class ThemeProvider extends ChangeNotifier {
           backgroundColor: Colors.white.withValues(alpha: 0.3),
           foregroundColor: Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -348,11 +311,7 @@ class ThemeProvider extends ChangeNotifier {
 class WorkoutRecord {
   final String id;
   DateTime date;
-<<<<<<< Updated upstream
-  int? sessionNumber; // 改为可空
-=======
   int? sessionNumber;
->>>>>>> Stashed changes
   List<WorkoutProject> projects;
   final DateTime timestamp;
 
@@ -430,10 +389,86 @@ class WorkoutProject {
   }
 }
 
+// ==================== JSON 存储服务 ====================
+class JsonStorageService {
+  static const String fileName = 'workout_data.json';
+
+  Future<String?> saveRecords(List<WorkoutRecord> records) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/$fileName');
+      final map = {
+        'version': 1,
+        'lastUpdated': DateTime.now().toIso8601String(),
+        'records': records.map((r) => _recordToJson(r)).toList(),
+      };
+      await file.writeAsString(jsonEncode(map));
+      return file.path;
+    } catch (e) {
+      print('保存 JSON 失败: $e');
+      return null;
+    }
+  }
+
+  Future<List<WorkoutRecord>> loadRecords() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/$fileName');
+      if (!await file.exists()) return [];
+      final content = await file.readAsString();
+      final map = jsonDecode(content);
+      final list = (map['records'] as List?) ?? [];
+      return list.map((item) => _recordFromJson(item)).toList();
+    } catch (e) {
+      print('加载 JSON 失败: $e');
+      return [];
+    }
+  }
+
+  Map<String, dynamic> _recordToJson(WorkoutRecord r) {
+    return {
+      'id': r.id,
+      'date': r.date.toIso8601String(),
+      'sessionNumber': r.sessionNumber,
+      'projects': r.projects.map((p) => {
+        'name': p.name,
+        'part': p.part,
+        'weight': p.weight,
+        'sets': p.sets,
+        'repsPerSet': p.repsPerSet,
+        'feeling': p.feeling,
+        'supplement': p.supplement,
+      }).toList(),
+      'timestamp': r.timestamp.toIso8601String(),
+    };
+  }
+
+  WorkoutRecord _recordFromJson(Map<String, dynamic> json) {
+    return WorkoutRecord(
+      id: json['id'],
+      date: DateTime.parse(json['date']),
+      sessionNumber: json['sessionNumber'],
+      projects: (json['projects'] as List).map((p) => WorkoutProject(
+        name: p['name'],
+        part: p['part'],
+        weight: (p['weight'] as num).toDouble(),
+        sets: p['sets'],
+        repsPerSet: p['repsPerSet'],
+        feeling: p['feeling'] ?? '',
+        supplement: p['supplement'] ?? '',
+      )).toList(),
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
+}
+
 // ==================== 状态管理 ====================
 class WorkoutProvider extends ChangeNotifier {
   List<WorkoutRecord> _records = [];
   String? _lastExportPath;
+  final JsonStorageService? _jsonService;
+
+  WorkoutProvider({JsonStorageService? jsonService}) : _jsonService = jsonService;
 
   List<WorkoutRecord> get records => _records;
   String? get lastExportPath => _lastExportPath;
@@ -535,243 +570,77 @@ class WorkoutProvider extends ChangeNotifier {
   }
 
   Future<void> _saveRecords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final recordsJson = _records.map((record) {
-      return {
-        'id': record.id,
-        'date': record.date.toIso8601String(),
-        'sessionNumber': record.sessionNumber,
-        'projects': record.projects.map((project) {
-          return {
-            'name': project.name,
-            'part': project.part,
-            'weight': project.weight,
-            'sets': project.sets,
-            'repsPerSet': project.repsPerSet,
-            'feeling': project.feeling,
-            'supplement': project.supplement,
-          };
-        }).toList(),
-        'timestamp': record.timestamp.toIso8601String(),
-      };
-    }).toList();
-
-    await prefs.setString('workout_records', json.encode(recordsJson));
+    if (_jsonService != null) {
+      await _jsonService!.saveRecords(_records);
+    } else {
+      // fallback to SharedPreferences (for backward compatibility, but we now rely on JSON)
+      final prefs = await SharedPreferences.getInstance();
+      final recordsJson = _records.map((record) {
+        return {
+          'id': record.id,
+          'date': record.date.toIso8601String(),
+          'sessionNumber': record.sessionNumber,
+          'projects': record.projects.map((project) {
+            return {
+              'name': project.name,
+              'part': project.part,
+              'weight': project.weight,
+              'sets': project.sets,
+              'repsPerSet': project.repsPerSet,
+              'feeling': project.feeling,
+              'supplement': project.supplement,
+            };
+          }).toList(),
+          'timestamp': record.timestamp.toIso8601String(),
+        };
+      }).toList();
+      await prefs.setString('workout_records', json.encode(recordsJson));
+    }
   }
 
   Future<void> loadSavedRecords() async {
-    final prefs = await SharedPreferences.getInstance();
-    final recordsJson = prefs.getString('workout_records');
-
-    if (recordsJson != null) {
-      try {
-        final List<dynamic> data = json.decode(recordsJson);
-        _records = data.map((item) {
-          return WorkoutRecord(
-            id: item['id'],
-            date: DateTime.parse(item['date']),
-            sessionNumber: item['sessionNumber'],
-            projects: (item['projects'] as List).map((project) {
-              return WorkoutProject(
-                name: project['name'],
-                part: project['part'],
-                weight: project['weight']?.toDouble() ?? 0,
-                sets: project['sets']?.toInt() ?? 0,
-                repsPerSet: project['repsPerSet']?.toInt() ?? 0,
-                feeling: project['feeling'] ?? '',
-                supplement: project['supplement'] ?? '',
-              );
-            }).toList(),
-            timestamp: DateTime.parse(item['timestamp']),
-          );
-        }).toList();
-      } catch (e) {
-        debugPrint('加载保存的记录失败: $e');
+    if (_jsonService != null) {
+      final records = await _jsonService!.loadRecords();
+      _records = records;
+    } else {
+      final prefs = await SharedPreferences.getInstance();
+      final recordsJson = prefs.getString('workout_records');
+      if (recordsJson != null) {
+        try {
+          final List<dynamic> data = json.decode(recordsJson);
+          _records = data.map((item) {
+            return WorkoutRecord(
+              id: item['id'],
+              date: DateTime.parse(item['date']),
+              sessionNumber: item['sessionNumber'],
+              projects: (item['projects'] as List).map((project) {
+                return WorkoutProject(
+                  name: project['name'],
+                  part: project['part'],
+                  weight: project['weight']?.toDouble() ?? 0,
+                  sets: project['sets']?.toInt() ?? 0,
+                  repsPerSet: project['repsPerSet']?.toInt() ?? 0,
+                  feeling: project['feeling'] ?? '',
+                  supplement: project['supplement'] ?? '',
+                );
+              }).toList(),
+              timestamp: DateTime.parse(item['timestamp']),
+            );
+          }).toList();
+        } catch (e) {
+          debugPrint('加载保存的记录失败: $e');
+        }
       }
     }
     notifyListeners();
   }
 }
 
-// ==================== Excel/CSV 服务 ====================
-class ExcelCSVService {
+// ==================== Excel 导出服务（仅用于手动导出） ====================
+class ExcelExportService {
   static const String _defaultFilename = '健身数据实时表.xlsx';
 
-<<<<<<< Updated upstream
-  // 导出为 Excel 文件，相同日期合并单元格并居中
   Future<String?> exportToExcel(List<WorkoutRecord> records) async {
-    try {
-      final excel = Excel.createExcel();
-      final sheet = excel['健身记录'];
-
-      // 表头
-      final headers = [
-        '日期',
-        '第几次健身',
-        '项目名称',
-        '锻炼部位',
-        '重量(kg)',
-        '组数',
-        '每组数量',
-        '做功(J)',
-        '感受',
-        '补剂',
-        '记录时间'
-      ];
-      sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
-      // 表头样式（加粗居中）
-      for (int i = 0; i < headers.length; i++) {
-        final cell =
-            sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
-        cell.cellStyle = CellStyle(
-          bold: true,
-          horizontalAlign: HorizontalAlign.Center,
-          verticalAlign: VerticalAlign.Center,
-        );
-      }
-
-      // 按日期排序
-      final sortedRecords = List<WorkoutRecord>.from(records)
-        ..sort((a, b) => a.date.compareTo(b.date));
-
-      // 添加数据行
-      for (var record in sortedRecords) {
-        final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-        for (var project in record.projects) {
-          if (project.name.isEmpty) continue;
-          final row = <CellValue?>[
-            TextCellValue(dateStr),
-            record.sessionNumber != null
-                ? IntCellValue(record.sessionNumber!)
-                : TextCellValue(''),
-            TextCellValue(project.name),
-            TextCellValue(project.part),
-            DoubleCellValue(project.weight),
-            IntCellValue(project.sets),
-            IntCellValue(project.repsPerSet),
-            DoubleCellValue(project.calculateWork()),
-            TextCellValue(project.feeling),
-            TextCellValue(project.supplement),
-            TextCellValue(record.timestamp.toIso8601String()),
-          ];
-          sheet.appendRow(row);
-        }
-      }
-
-      // 合并相同日期的单元格（日期列，索引0）
-      int currentRow = 1; // 从数据第一行开始
-      while (currentRow < sheet.rows.length) {
-        final currentDate = sheet.rows[currentRow][0]?.value?.toString();
-        if (currentDate == null) break;
-        int endRow = currentRow;
-        while (endRow + 1 < sheet.rows.length &&
-            sheet.rows[endRow + 1][0]?.value?.toString() == currentDate) {
-          endRow++;
-        }
-        if (endRow > currentRow) {
-          final startCell =
-              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow);
-          final endCell =
-              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: endRow);
-          sheet.merge(startCell, endCell);
-          for (int r = currentRow; r <= endRow; r++) {
-            final cell = sheet
-                .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: r));
-            cell.cellStyle = CellStyle(
-              horizontalAlign: HorizontalAlign.Center,
-              verticalAlign: VerticalAlign.Center,
-            );
-          }
-        } else {
-          final cell = sheet.cell(
-              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow));
-          cell.cellStyle = CellStyle(
-            horizontalAlign: HorizontalAlign.Center,
-            verticalAlign: VerticalAlign.Center,
-          );
-        }
-        currentRow = endRow + 1;
-      }
-
-      final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/$_defaultFilename';
-      final file = File(filePath);
-      await file.writeAsBytes(excel.encode()!);
-      debugPrint('Excel文件已保存到: $filePath');
-      return filePath;
-    } catch (e) {
-      debugPrint('导出Excel失败: $e');
-      rethrow;
-    }
-  }
-
-  // 从 Excel 文件导入记录
-  Future<List<WorkoutRecord>> importFromExcel(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (!await file.exists()) {
-        throw Exception('文件不存在: $filePath');
-      }
-      final bytes = await file.readAsBytes();
-      final excel = Excel.decodeBytes(bytes);
-      final sheet = excel.tables[excel.tables.keys.first];
-      if (sheet == null) return [];
-
-      final Map<String, WorkoutRecord> recordMap = {};
-      // 跳过表头，从第1行开始
-      for (int rowIndex = 1; rowIndex < sheet.rows.length; rowIndex++) {
-        final row = sheet.rows[rowIndex];
-        if (row.length < 3) continue;
-        final dateStr = row[0]?.value?.toString() ?? '';
-        final sessionNumStr = row[1]?.value?.toString() ?? '';
-        final sessionNum =
-            sessionNumStr.isEmpty ? null : int.tryParse(sessionNumStr);
-        final projectName = row[2]?.value?.toString() ?? '';
-        if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) continue;
-
-        final date = DateFormat('yyyy-MM-dd').parse(dateStr);
-        final key = date.toIso8601String();
-        if (!recordMap.containsKey(key)) {
-          recordMap[key] = WorkoutRecord(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            date: date,
-            sessionNumber: sessionNum,
-            projects: [],
-            timestamp: row.length > 10
-                ? DateTime.tryParse(row[10]?.value?.toString() ?? '') ??
-                    DateTime.now()
-                : DateTime.now(),
-          );
-        }
-        final project = WorkoutProject(
-          name: projectName,
-          part: row.length > 3 ? row[3]?.value?.toString() ?? '胸' : '胸',
-          weight: row.length > 4
-              ? double.tryParse(row[4]?.value?.toString() ?? '') ?? 0
-              : 0,
-          sets: row.length > 5
-              ? int.tryParse(row[5]?.value?.toString() ?? '') ?? 0
-              : 0,
-          repsPerSet: row.length > 6
-              ? int.tryParse(row[6]?.value?.toString() ?? '') ?? 0
-              : 0,
-          feeling: row.length > 8 ? row[8]?.value?.toString() ?? '' : '',
-          supplement: row.length > 9 ? row[9]?.value?.toString() ?? '' : '',
-        );
-        recordMap[key]!.projects.add(project);
-      }
-      return recordMap.values.toList();
-    } catch (e) {
-      debugPrint('导入Excel失败: $e');
-      rethrow;
-    }
-  }
-
-  // 保留 CSV 导出/导入用于兼容
-  Future<String?> exportToCSV(List<WorkoutRecord> records) async {
-=======
-  Future<String?> exportToExcel(List<WorkoutRecord> records) async {
->>>>>>> Stashed changes
     try {
       final excel = Excel.createExcel();
       final sheet = excel['健身记录'];
@@ -791,8 +660,7 @@ class ExcelCSVService {
       ];
       sheet.appendRow(headers.map((h) => TextCellValue(h)).toList());
       for (int i = 0; i < headers.length; i++) {
-        final cell =
-            sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
+        final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: i, rowIndex: 0));
         cell.cellStyle = CellStyle(
           bold: true,
           horizontalAlign: HorizontalAlign.Center,
@@ -836,22 +704,18 @@ class ExcelCSVService {
           endRow++;
         }
         if (endRow > currentRow) {
-          final startCell =
-              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow);
-          final endCell =
-              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: endRow);
+          final startCell = CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow);
+          final endCell = CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: endRow);
           sheet.merge(startCell, endCell);
           for (int r = currentRow; r <= endRow; r++) {
-            final cell = sheet
-                .cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: r));
+            final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: r));
             cell.cellStyle = CellStyle(
               horizontalAlign: HorizontalAlign.Center,
               verticalAlign: VerticalAlign.Center,
             );
           }
         } else {
-          final cell = sheet.cell(
-              CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow));
+          final cell = sheet.cell(CellIndex.indexByColumnRow(columnIndex: 0, rowIndex: currentRow));
           cell.cellStyle = CellStyle(
             horizontalAlign: HorizontalAlign.Center,
             verticalAlign: VerticalAlign.Center,
@@ -861,271 +725,23 @@ class ExcelCSVService {
       }
 
       final directory = await getApplicationDocumentsDirectory();
-      final filePath = '${directory.path}/健身数据实时表.csv';
+      final filePath = '${directory.path}/$_defaultFilename';
       final file = File(filePath);
-<<<<<<< Updated upstream
-      await file.writeAsString(csvContent, encoding: utf8);
-      debugPrint('CSV文件已保存到: $filePath');
-      return filePath;
-    } catch (e) {
-      debugPrint('导出CSV失败: $e');
-=======
       await file.writeAsBytes(excel.encode()!);
       debugPrint('Excel文件已保存到: $filePath');
       return filePath;
     } catch (e) {
       debugPrint('导出Excel失败: $e');
->>>>>>> Stashed changes
       rethrow;
     }
   }
-
-<<<<<<< Updated upstream
-  String _createCSVContent(List<WorkoutRecord> records) {
-    final buffer = StringBuffer();
-    buffer.write('\uFEFF');
-    buffer.writeln('日期,第几次健身,项目名称,锻炼部位,重量(kg),组数,每组数量,做功(J),感受,补剂,记录时间');
-    if (records.isEmpty) return buffer.toString();
-    final sortedRecords = List<WorkoutRecord>.from(records)
-      ..sort((a, b) => a.date.compareTo(b.date));
-    for (final record in sortedRecords) {
-      final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
-      for (final project in record.projects) {
-        if (project.name.isNotEmpty) {
-          buffer.write('$dateStr,');
-          buffer.write('${record.sessionNumber?.toString() ?? ''},');
-          buffer.write('"${_escapeCSV(project.name)}",');
-          buffer.write('${project.part},');
-          buffer.write('${project.weight},');
-          buffer.write('${project.sets},');
-          buffer.write('${project.repsPerSet},');
-          buffer.write('${project.calculateWork()},');
-          buffer.write('"${_escapeCSV(project.feeling)}",');
-          buffer.write('"${_escapeCSV(project.supplement)}",');
-          buffer.write('"${record.timestamp.toIso8601String()}"');
-          buffer.writeln();
-        }
-      }
-    }
-    return buffer.toString();
-  }
-
-  String _escapeCSV(String input) {
-    if (input.contains('"') || input.contains(',') || input.contains('\n')) {
-      return input.replaceAll('"', '""');
-    }
-    return input;
-  }
-
-  Future<List<WorkoutRecord>> importFromCSV(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (!await file.exists()) throw Exception('文件不存在: $filePath');
-      final content = await file.readAsString(encoding: utf8);
-      final lines = LineSplitter.split(content).toList();
-      if (lines.isEmpty) return [];
-      if (lines[0].startsWith('\uFEFF')) lines[0] = lines[0].substring(1);
-      final Map<String, WorkoutRecord> recordMap = {};
-      for (int i = 1; i < lines.length; i++) {
-        final line = lines[i];
-        if (line.trim().isEmpty) continue;
-        final cells = _parseCSVLine(line);
-        if (cells.length < 3) continue;
-        try {
-          final dateStr = cells[0];
-          final sessionNum = int.tryParse(cells[1]) ?? 0;
-          final projectName = cells[2];
-          if (dateStr.isEmpty || sessionNum == 0 || projectName.isEmpty) {
-            continue;
-          }
-          final date = DateFormat('yyyy-MM-dd').parse(dateStr);
-          final key = date.toIso8601String();
-          if (!recordMap.containsKey(key)) {
-            recordMap[key] = WorkoutRecord(
-              id: DateTime.now().microsecondsSinceEpoch.toString(),
-              date: date,
-              sessionNumber: sessionNum,
-              projects: [],
-              timestamp: cells.length > 10
-                  ? DateTime.parse(cells[10])
-                  : DateTime.now(),
-            );
-          }
-          final project = WorkoutProject(
-            name: projectName,
-            part: cells.length > 3 ? cells[3] : '胸',
-            weight: cells.length > 4 ? double.tryParse(cells[4]) ?? 0 : 0,
-            sets: cells.length > 5 ? int.tryParse(cells[5]) ?? 0 : 0,
-            repsPerSet: cells.length > 6 ? int.tryParse(cells[6]) ?? 0 : 0,
-            feeling: cells.length > 8 ? cells[8] : '',
-            supplement: cells.length > 9 ? cells[9] : '',
-          );
-          recordMap[key]!.projects.add(project);
-        } catch (e) {
-          debugPrint('解析CSV行失败: $e, 行内容: $line');
-=======
-  Future<List<WorkoutRecord>> importFromExcel(String filePath) async {
-    try {
-      final file = File(filePath);
-      if (!await file.exists()) {
-        throw Exception('文件不存在: $filePath');
-      }
-      final bytes = await file.readAsBytes();
-      final excel = Excel.decodeBytes(bytes);
-      final sheet = excel.tables[excel.tables.keys.first];
-      if (sheet == null) return [];
-
-      final Map<String, WorkoutRecord> recordMap = {};
-      for (int rowIndex = 1; rowIndex < sheet.rows.length; rowIndex++) {
-        final row = sheet.rows[rowIndex];
-        if (row.length < 3) continue;
-        final dateStr = row[0]?.value?.toString() ?? '';
-        final sessionNumStr = row[1]?.value?.toString() ?? '';
-        final sessionNum =
-            sessionNumStr.isEmpty ? null : int.tryParse(sessionNumStr);
-        final projectName = row[2]?.value?.toString() ?? '';
-        if (dateStr.isEmpty || projectName.isEmpty) continue;
-
-        final date = DateFormat('yyyy-MM-dd').parse(dateStr);
-        final key = date.toIso8601String();
-        if (!recordMap.containsKey(key)) {
-          recordMap[key] = WorkoutRecord(
-            id: DateTime.now().microsecondsSinceEpoch.toString(),
-            date: date,
-            sessionNumber: sessionNum,
-            projects: [],
-            timestamp: row.length > 10
-                ? DateTime.tryParse(row[10]?.value?.toString() ?? '') ??
-                    DateTime.now()
-                : DateTime.now(),
-          );
->>>>>>> Stashed changes
-        }
-        final project = WorkoutProject(
-          name: projectName,
-          part: row.length > 3 ? row[3]?.value?.toString() ?? '胸' : '胸',
-          weight: row.length > 4
-              ? double.tryParse(row[4]?.value?.toString() ?? '') ?? 0
-              : 0,
-          sets: row.length > 5
-              ? int.tryParse(row[5]?.value?.toString() ?? '') ?? 0
-              : 0,
-          repsPerSet: row.length > 6
-              ? int.tryParse(row[6]?.value?.toString() ?? '') ?? 0
-              : 0,
-          feeling: row.length > 8 ? row[8]?.value?.toString() ?? '' : '',
-          supplement: row.length > 9 ? row[9]?.value?.toString() ?? '' : '',
-        );
-        recordMap[key]!.projects.add(project);
-      }
-      return recordMap.values.toList();
-    } catch (e) {
-<<<<<<< Updated upstream
-      debugPrint('导入CSV失败: $e');
-=======
-      debugPrint('导入Excel失败: $e');
->>>>>>> Stashed changes
-      rethrow;
-    }
-  }
-
-<<<<<<< Updated upstream
-  List<String> _parseCSVLine(String line) {
-    final result = <String>[];
-    final chars = line.split('');
-    final buffer = StringBuffer();
-    bool inQuotes = false;
-    for (int i = 0; i < chars.length; i++) {
-      final char = chars[i];
-      if (char == '"') {
-        if (i + 1 < chars.length && chars[i + 1] == '"') {
-          buffer.write('"');
-          i++;
-        } else {
-          inQuotes = !inQuotes;
-        }
-      } else if (char == ',' && !inQuotes) {
-        result.add(buffer.toString());
-        buffer.clear();
-      } else {
-        buffer.write(char);
-      }
-    }
-    result.add(buffer.toString());
-    return result;
-=======
-  List<WorkoutRecord> mergeRecords(
-      List<WorkoutRecord> local, List<WorkoutRecord> cloud) {
-    final Map<String, WorkoutRecord> merged = {};
-    for (var r in local) {
-      final key = DateFormat('yyyy-MM-dd').format(r.date);
-      merged[key] = r;
-    }
-    for (var r in cloud) {
-      final key = DateFormat('yyyy-MM-dd').format(r.date);
-      if (merged.containsKey(key)) {
-        final existing = merged[key]!;
-        final existingNames =
-            existing.projects.map((p) => '${p.name}_${p.part}').toSet();
-        for (var p in r.projects) {
-          if (!existingNames.contains('${p.name}_${p.part}')) {
-            existing.projects.add(p);
-          }
-        }
-        if (r.sessionNumber != null &&
-            (existing.sessionNumber == null ||
-                r.sessionNumber! > existing.sessionNumber!)) {
-          existing.sessionNumber = r.sessionNumber;
-        }
-      } else {
-        merged[key] = r;
-      }
-    }
-    return merged.values.toList();
->>>>>>> Stashed changes
-  }
-
-  // List<WorkoutRecord> mergeRecordsBidirectional(
-  //     List<WorkoutRecord> local, List<WorkoutRecord> cloud) {
-  //   final Map<String, WorkoutRecord> merged = {};
-  //   // 先放入本地记录
-  //   for (var r in local) {
-  //     merged[DateFormat('yyyy-MM-dd').format(r.date)] = r;
-  //   }
-  //   // 合并云端记录
-  //   for (var r in cloud) {
-  //     final key = DateFormat('yyyy-MM-dd').format(r.date);
-  //     if (merged.containsKey(key)) {
-  //       final existing = merged[key]!;
-  //       final existingNames =
-  //           existing.projects.map((p) => '${p.name}_${p.part}').toSet();
-  //       for (var p in r.projects) {
-  //         if (!existingNames.contains('${p.name}_${p.part}')) {
-  //           existing.projects.add(p);
-  //         }
-  //       }
-  //       if (r.sessionNumber != null &&
-  //           (existing.sessionNumber == null ||
-  //               r.sessionNumber! > existing.sessionNumber!)) {
-  //         existing.sessionNumber = r.sessionNumber;
-  //       }
-  //     } else {
-  //       merged[key] = r;
-  //     }
-  //   }
-  //   return merged.values.toList();
-  // }
 }
 
-// ==================== 坚果云服务 ====================
+// ==================== 坚果云服务（支持 JSON） ====================
 class NutstoreService extends ChangeNotifier {
   static const String _baseUrl = 'https://dav.jianguoyun.com/dav/';
   static const String _cloudFolder = '健身数据管理系统';
-<<<<<<< Updated upstream
-  static const String _defaultFilename = '健身数据实时表.xlsx'; // 改为 Excel
-=======
-  static const String _defaultFilename = '健身数据实时表.xlsx';
->>>>>>> Stashed changes
+  static const String _defaultFilename = 'workout_data.json'; // 改为 JSON
 
   String? _username;
   String? _password;
@@ -1143,63 +759,6 @@ class NutstoreService extends ChangeNotifier {
     return 'Basic $encoded';
   }
 
-  /// 下载文件并返回详细信息
-  /// 返回值：{ success: bool, statusCode: int?, bodyBytes: Uint8List?, error: String? }
-  Future<Map<String, dynamic>> downloadFileWithInfo(String savePath) async {
-    try {
-      final remotePath =
-          '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
-      final url = Uri.parse(remotePath);
-      final client = http.Client();
-      final response = await client.get(
-        url,
-        headers: {'Authorization': _getAuthHeader()},
-      );
-      client.close();
-      if (response.statusCode == 200) {
-        final file = File(savePath);
-        await file.writeAsBytes(response.bodyBytes);
-        return {
-          'success': true,
-          'statusCode': 200,
-          'bodyBytes': response.bodyBytes
-        };
-      } else {
-        return {
-          'success': false,
-          'statusCode': response.statusCode,
-          'bodyBytes': null,
-          'error': 'HTTP ${response.statusCode}'
-        };
-      }
-    } catch (e) {
-      return {
-        'success': false,
-        'statusCode': null,
-        'bodyBytes': null,
-        'error': e.toString()
-      };
-    }
-  }
-
-  /// 检查当前认证是否仍然有效（发送 PROPFIND 到根目录）
-  Future<bool> checkConnection() async {
-    try {
-      final client = http.Client();
-      final url = Uri.parse(_baseUrl);
-      final request = http.Request('PROPFIND', url);
-      request.headers['Authorization'] = _getAuthHeader();
-      request.headers['Depth'] = '0';
-      final response =
-          await client.send(request).timeout(const Duration(seconds: 10));
-      final responseBody = await http.Response.fromStream(response);
-      client.close();
-      return responseBody.statusCode == 207;
-    } catch (e) {
-      return false;
-    }
-  }
-
   Future<bool> connect({
     required String username,
     required String password,
@@ -1213,18 +772,10 @@ class NutstoreService extends ChangeNotifier {
       final request = http.Request('PROPFIND', url);
       request.headers['Authorization'] = _getAuthHeader();
       request.headers['Depth'] = '0';
-<<<<<<< Updated upstream
-      final streamedResponse = await client.send(request);
-      final response = await http.Response.fromStream(streamedResponse);
-      client.close();
-      if (response.statusCode == 207) {
-=======
-      final response =
-          await client.send(request).timeout(const Duration(seconds: 15));
+      final response = await client.send(request).timeout(const Duration(seconds: 15));
       final responseBody = await http.Response.fromStream(response);
       client.close();
       if (responseBody.statusCode == 207) {
->>>>>>> Stashed changes
         _isConnected = true;
         await _ensureCloudFolder();
         if (saveCredentials) {
@@ -1235,11 +786,7 @@ class NutstoreService extends ChangeNotifier {
         notifyListeners();
         return true;
       } else {
-<<<<<<< Updated upstream
-        debugPrint('连接坚果云失败: 状态码 ${response.statusCode}');
-=======
         debugPrint('连接坚果云失败: 状态码 ${responseBody.statusCode}');
->>>>>>> Stashed changes
         _isConnected = false;
         notifyListeners();
         return false;
@@ -1258,8 +805,7 @@ class NutstoreService extends ChangeNotifier {
       final username = prefs.getString('nutstore_username');
       final password = prefs.getString('nutstore_password');
       if (username == null || password == null) return false;
-      return await connect(
-          username: username, password: password, saveCredentials: false);
+      return await connect(username: username, password: password, saveCredentials: false);
     } catch (e) {
       debugPrint('加载保存的配置失败: $e');
       return false;
@@ -1268,8 +814,7 @@ class NutstoreService extends ChangeNotifier {
 
   Future<void> _ensureCloudFolder() async {
     try {
-      final folderUrl =
-          Uri.parse('$_baseUrl${Uri.encodeComponent(_cloudFolder)}');
+      final folderUrl = Uri.parse('$_baseUrl${Uri.encodeComponent(_cloudFolder)}');
       final client = http.Client();
       final checkReq = http.Request('PROPFIND', Uri.parse('$folderUrl/'));
       checkReq.headers['Authorization'] = _getAuthHeader();
@@ -1298,8 +843,7 @@ class NutstoreService extends ChangeNotifier {
     try {
       final file = File(localFilePath);
       if (!await file.exists()) return false;
-      final remotePath =
-          '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
+      final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
       final bytes = await file.readAsBytes();
       final url = Uri.parse(remotePath);
       final client = http.Client();
@@ -1307,8 +851,7 @@ class NutstoreService extends ChangeNotifier {
         url,
         headers: {
           'Authorization': _getAuthHeader(),
-          'Content-Type':
-              'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          'Content-Type': 'application/json',
         },
         body: bytes,
       );
@@ -1322,8 +865,7 @@ class NutstoreService extends ChangeNotifier {
 
   Future<bool> downloadFile(String savePath) async {
     try {
-      final remotePath =
-          '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
+      final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
       final url = Uri.parse(remotePath);
       final client = http.Client();
       final response = await client.get(
@@ -1345,22 +887,40 @@ class NutstoreService extends ChangeNotifier {
     }
   }
 
-  Future<bool> checkFileExists() async {
+  Future<Map<String, dynamic>> downloadFileWithInfo(String savePath) async {
     try {
-      final remotePath =
-          '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
+      final remotePath = '$_baseUrl${Uri.encodeComponent(_cloudFolder)}/$_defaultFilename';
       final url = Uri.parse(remotePath);
       final client = http.Client();
-      final response = await client.head(
+      final response = await client.get(
         url,
-        headers: {
-          'Authorization': _getAuthHeader(),
-        },
+        headers: {'Authorization': _getAuthHeader()},
       );
       client.close();
-      return response.statusCode == 200;
+      if (response.statusCode == 200) {
+        final file = File(savePath);
+        await file.writeAsBytes(response.bodyBytes);
+        return {'success': true, 'statusCode': 200, 'bodyBytes': response.bodyBytes};
+      } else {
+        return {'success': false, 'statusCode': response.statusCode, 'bodyBytes': null, 'error': 'HTTP ${response.statusCode}'};
+      }
     } catch (e) {
-      debugPrint('检查文件存在失败: $e');
+      return {'success': false, 'statusCode': null, 'bodyBytes': null, 'error': e.toString()};
+    }
+  }
+
+  Future<bool> checkConnection() async {
+    try {
+      final client = http.Client();
+      final url = Uri.parse(_baseUrl);
+      final request = http.Request('PROPFIND', url);
+      request.headers['Authorization'] = _getAuthHeader();
+      request.headers['Depth'] = '0';
+      final response = await client.send(request).timeout(const Duration(seconds: 10));
+      final responseBody = await http.Response.fromStream(response);
+      client.close();
+      return responseBody.statusCode == 207;
+    } catch (e) {
       return false;
     }
   }
@@ -1413,11 +973,7 @@ class FitnessApp extends StatelessWidget {
     return Consumer<ThemeProvider>(
       builder: (context, themeProvider, child) {
         return MaterialApp(
-<<<<<<< Updated upstream
-          title: '健身数据管理系统 Fitness-Tracker_Win_v4.0.2',
-=======
           title: '健身数据管理系统 Fitness-Tracker_Android',
->>>>>>> Stashed changes
           debugShowCheckedModeBanner: false,
           theme: themeProvider.currentTheme,
           home: const MainScreen(),
@@ -1440,9 +996,9 @@ class _MainScreenState extends State<MainScreen> {
   final List<WorkoutProject> projects = [WorkoutProject.empty()];
   DateTime firstWorkoutDate = DateTime(2025, 6, 9, 18, 29);
 
-  final FocusNode _sessionFocusNode = FocusNode(); // 新增
+  final FocusNode _sessionFocusNode = FocusNode();
   final TextEditingController dateController = TextEditingController();
-  final TextEditingController sessionController = TextEditingController(); // 新增
+  final TextEditingController sessionController = TextEditingController();
   final List<TextEditingController> nameControllers = [];
   final List<TextEditingController> weightControllers = [];
   final List<TextEditingController> setsControllers = [];
@@ -1460,42 +1016,13 @@ class _MainScreenState extends State<MainScreen> {
     _initializeControllers();
     _loadData();
     _loadFirstWorkoutDate();
-<<<<<<< Updated upstream
-    // 后台更新知识库，显示状态提示
-    _runUpdateWithIndicator();
-  }
-
-  Future<void> _runUpdateWithIndicator() async {
-    print('[Flutter] 开始更新知识库...');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-          content: Text('后台正在更新健身知识库...'), duration: Duration(seconds: 2)),
-    );
-
-    final success = await PythonUpdateService.runUpdateScript();
-    print('[Flutter] 更新完成，success=$success');
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(success ? 'AI陪练就绪！' : '知识库更新失败，请检查环境'),
-          backgroundColor: success ? Colors.green : Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
-    } else {
-      print('[Flutter] 界面已销毁，无法显示 SnackBar');
-=======
-    // 改为无等待调用，让它在后台执行
     _runAutoUpdateIfEnabled();
   }
 
   Future<void> _runAutoUpdateIfEnabled() async {
     final settings = Provider.of<SettingsProvider>(context, listen: false);
     if (settings.autoUpdateKnowledge) {
-      // 使用 compute 或简单的异步调用
       await KnowledgeUpdateService.runUpdate();
->>>>>>> Stashed changes
     }
   }
 
@@ -1525,14 +1052,10 @@ class _MainScreenState extends State<MainScreen> {
   void _updateSessionNumberForDate(DateTime date) {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
     final recordsOnDate = provider.records
-        .where((r) =>
-            r.date.year == date.year &&
-            r.date.month == date.month &&
-            r.date.day == date.day)
+        .where((r) => r.date.year == date.year && r.date.month == date.month && r.date.day == date.day)
         .toList();
     if (recordsOnDate.isNotEmpty) {
-      final numbers =
-          recordsOnDate.map((r) => r.sessionNumber).whereType<int>().toList();
+      final numbers = recordsOnDate.map((r) => r.sessionNumber).whereType<int>().toList();
       if (numbers.isNotEmpty) {
         sessionNumber = numbers.reduce((a, b) => a > b ? a : b);
       } else {
@@ -1552,102 +1075,17 @@ class _MainScreenState extends State<MainScreen> {
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
       builder: (context, child) {
-        final isGlass =
-            Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+        final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
         return Theme(
           data: Theme.of(context).copyWith(
             dialogTheme: DialogThemeData(
-<<<<<<< Updated upstream
-                backgroundColor: isGlass
-                    ? Colors.grey.shade800.withValues(alpha: 0.85)
-                    : null),
-=======
-              backgroundColor:
-                  isGlass ? Colors.grey.shade800.withValues(alpha: 0.85) : null,
+              backgroundColor: isGlass ? Colors.grey.shade800.withValues(alpha: 0.85) : null,
             ),
->>>>>>> Stashed changes
           ),
           child: child!,
         );
       },
     );
-<<<<<<< Updated upstream
-    if (pickedDate == null) return;
-    final pickedTime = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(firstWorkoutDate),
-      builder: (context, child) {
-        final isGlass =
-            Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
-        return Theme(
-          data: Theme.of(context).copyWith(
-            dialogTheme: DialogThemeData(
-                backgroundColor: isGlass
-                    ? Colors.grey.shade800.withValues(alpha: 0.85)
-                    : null),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (pickedTime == null) return;
-    final newDateTime = DateTime(
-      pickedDate.year,
-      pickedDate.month,
-      pickedDate.day,
-      pickedTime.hour,
-      pickedTime.minute,
-    );
-    await _saveFirstWorkoutDate(newDateTime);
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('起始日期已更新，坚持天数已重新计算')),
-      );
-    }
-  }
-
-  void _clearControllers() {
-    for (var c in nameControllers) {
-      c.dispose();
-    }
-    for (var c in weightControllers) {
-      c.dispose();
-    }
-    for (var c in setsControllers) {
-      c.dispose();
-    }
-    for (var c in repsControllers) {
-      c.dispose();
-    }
-    for (var c in feelingControllers) {
-      c.dispose();
-    }
-    for (var c in supplementControllers) {
-      c.dispose();
-    }
-    nameControllers.clear();
-    weightControllers.clear();
-    setsControllers.clear();
-    repsControllers.clear();
-    feelingControllers.clear();
-    supplementControllers.clear();
-    partNotifiers.clear();
-  }
-
-  void _initializeControllers() {
-    _clearControllers();
-    for (var project in projects) {
-      nameControllers.add(TextEditingController(text: project.name));
-      weightControllers
-          .add(TextEditingController(text: project.weight.toString()));
-      setsControllers.add(TextEditingController(text: project.sets.toString()));
-      repsControllers
-          .add(TextEditingController(text: project.repsPerSet.toString()));
-      feelingControllers.add(TextEditingController(text: project.feeling));
-      supplementControllers
-          .add(TextEditingController(text: project.supplement));
-      partNotifiers.add(ValueNotifier<String>(project.part));
-=======
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
@@ -1700,15 +1138,15 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void dispose() {
     dateController.dispose();
-    sessionController.dispose(); // 新增
-    _sessionFocusNode.dispose(); // 新增
+    sessionController.dispose();
+    _sessionFocusNode.dispose();
     _clearControllers();
     super.dispose();
   }
 
   Future<void> _exportToExcel(BuildContext context) async {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
-    final excelService = Provider.of<ExcelCSVService>(context, listen: false);
+    final excelService = ExcelExportService();
     setState(() => _isLoading = true);
     try {
       final filePath = await excelService.exportToExcel(provider.records);
@@ -1727,90 +1165,10 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  // Future<void> _uploadToCloud(BuildContext context) async {
-  //   final provider = Provider.of<WorkoutProvider>(context, listen: false);
-  //   final nutstore = Provider.of<NutstoreService>(context, listen: false);
-  //   final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-  //   if (!nutstore.isConnected) {
-  //     _showCloudLoginDialog(context);
-  //     return;
-  //   }
-  //   if (provider.records.isEmpty) {
-  //     final shouldProceed = await _showEmptyUploadConfirmDialog(context);
-  //     if (shouldProceed != true) return;
-  //   }
-
-  //   setState(() => _isLoading = true);
-  //   try {
-  //     List<WorkoutRecord> cloudRecords = [];
-  //     if (await nutstore.checkFileExists()) {
-  //       String tempPath =
-  //           '${(await getApplicationDocumentsDirectory()).path}/temp_cloud.xlsx';
-  //       await nutstore.downloadFile(tempPath);
-  //       cloudRecords = await excelService.importFromExcel(tempPath);
-  //     }
-  //     final merged = excelService.mergeRecords(provider.records, cloudRecords);
-  //     final filePath = await excelService.exportToExcel(merged);
-  //     if (filePath == null) throw Exception('导出数据失败');
-  //     provider.setLastExportPath(filePath);
-  //     await nutstore.uploadFile(filePath);
-  //     provider.loadRecords(merged);
-  //     _showToast('数据已成功合并并上传到坚果云！');
-  //   } catch (e) {
-  //     _showToast('上传失败: $e', isError: true);
-  //   } finally {
-  //     setState(() => _isLoading = false);
-  //   }
-  // }
-
-  // Future<void> _downloadFromCloud(BuildContext context) async {
-  //   final provider = Provider.of<WorkoutProvider>(context, listen: false);
-  //   final nutstore = Provider.of<NutstoreService>(context, listen: false);
-  //   final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-  //   if (!nutstore.isConnected) {
-  //     _showCloudLoginDialog(context);
-  //     return;
-  //   }
-  //   final fileExists = await nutstore.checkFileExists();
-  //   if (!fileExists) {
-  //     _showToast('云文件中不存在，请先上传', isError: true);
-  //     return;
-  //   }
-  //   setState(() => _isLoading = true);
-  //   try {
-  //     String savePath;
-  //     if (provider.lastExportPath == null) {
-  //       final directory = await getApplicationDocumentsDirectory();
-  //       savePath = '${directory.path}/健身数据实时表.xlsx';
-  //       provider.setLastExportPath(savePath);
-  //     } else {
-  //       savePath = provider.lastExportPath!;
-  //     }
-  //     await nutstore.downloadFile(savePath);
-  //     final cloudRecords = await excelService.importFromExcel(savePath);
-  //     if (cloudRecords.isNotEmpty) {
-  //       final merged =
-  //           excelService.mergeRecords(provider.records, cloudRecords);
-  //       provider.loadRecords(merged);
-  //       if (mounted) {
-  //         _showDownloadSuccessDialog(context, savePath);
-  //       }
-  //     } else {
-  //       if (mounted) {
-  //         _showToast('下载成功但文件中无有效记录', isError: true);
-  //       }
-  //     }
-  //   } catch (e) {
-  //     _showToast('下载失败: $e', isError: true);
-  //   } finally {
-  //     setState(() => _isLoading = false);
-  //   }
-  // }
-
   Future<void> _syncWithCloud(BuildContext context) async {
     final provider = Provider.of<WorkoutProvider>(context, listen: false);
     final nutstore = Provider.of<NutstoreService>(context, listen: false);
-    final excelService = Provider.of<ExcelCSVService>(context, listen: false);
+    final jsonService = Provider.of<JsonStorageService>(context, listen: false);
 
     if (!nutstore.isConnected) {
       _showCloudLoginDialog(context);
@@ -1819,7 +1177,7 @@ class _MainScreenState extends State<MainScreen> {
 
     setState(() => _isLoading = true);
     try {
-      // 0. 先检查连接是否真正有效（避免认证过期）
+      // 0. 检查连接有效性
       final isStillConnected = await nutstore.checkConnection();
       if (!isStillConnected) {
         _showToast('云服务认证已过期，请重新登录', isError: true);
@@ -1828,32 +1186,33 @@ class _MainScreenState extends State<MainScreen> {
         return;
       }
 
-      // 1. 尝试下载云端文件
+      // 1. 下载云端 JSON 文件
       List<WorkoutRecord> cloudRecords = [];
       bool cloudFileExists = false;
-      String tempPath =
-          '${(await getApplicationDocumentsDirectory()).path}/temp_cloud.xlsx';
+      String tempPath = '${(await getApplicationDocumentsDirectory()).path}/temp_cloud.json';
       final downloadResult = await nutstore.downloadFileWithInfo(tempPath);
 
       if (downloadResult['success'] == true) {
         cloudFileExists = true;
         try {
-          cloudRecords = await excelService.importFromExcel(tempPath);
-          print('云端文件下载成功，解析出 ${cloudRecords.length} 条记录');
+          final content = await File(tempPath).readAsString();
+          final map = jsonDecode(content);
+          final list = (map['records'] as List?) ?? [];
+          cloudRecords = list.map((item) => _recordFromJson(item)).toList();
+          print('云端 JSON 下载成功，解析出 ${cloudRecords.length} 条记录');
         } catch (parseError) {
-          print('解析云端 Excel 失败: $parseError');
-          _showToast('云端文件损坏或格式不兼容，请手动删除云端文件后重试', isError: true);
-          return; // 中止同步，避免覆盖
+          print('解析云端 JSON 失败: $parseError');
+          _showToast('云端文件损坏，请手动处理', isError: true);
+          return;
         }
       } else {
         final statusCode = downloadResult['statusCode'];
         if (statusCode == 404) {
           print('云端文件不存在 (404)');
         } else {
-          // 其他错误（如 401, 500, 网络错误）
           print('下载云端文件失败: ${downloadResult['error']}');
           _showToast('读取云端数据失败: ${downloadResult['error']}', isError: true);
-          return; // 中止同步，避免错误覆盖
+          return;
         }
       }
 
@@ -1861,21 +1220,41 @@ class _MainScreenState extends State<MainScreen> {
       List<WorkoutRecord> localRecords = List.from(provider.records);
       print('本地记录数: ${localRecords.length}');
 
-      // 3. 如果云端文件不存在，直接上传本地记录（完全覆盖）
-      if (!cloudFileExists) {
-        final filePath = await excelService.exportToExcel(localRecords);
-        if (filePath == null) throw Exception('导出数据失败');
-        provider.setLastExportPath(filePath);
-        await nutstore.uploadFile(filePath);
-        _showToast('云端无数据，已上传本地记录');
+      // 3. 处理云端文件不存在或解析为空的情况
+      if (!cloudFileExists || (cloudFileExists && cloudRecords.isEmpty)) {
+        if (localRecords.isNotEmpty) {
+          final shouldOverwrite = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('云端数据为空'),
+              content: Text(
+                cloudFileExists
+                    ? '云端文件存在但无有效记录。\n是否用本地 ${localRecords.length} 条记录覆盖云端？'
+                    : '云端无文件。\n是否用本地 ${localRecords.length} 条记录上传到云端？',
+              ),
+              actions: [
+                TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text('取消')),
+                ElevatedButton(onPressed: () => Navigator.pop(ctx, true), child: const Text('覆盖')),
+              ],
+            ),
+          );
+          if (shouldOverwrite != true) {
+            _showToast('已取消同步');
+            return;
+          }
+        }
+        // 执行上传
+        final savePath = await jsonService.saveRecords(localRecords);
+        if (savePath == null) throw Exception('保存本地 JSON 失败');
+        await nutstore.uploadFile(savePath);
+        _showToast('已${cloudFileExists ? '覆盖' : '上传'}云端数据');
         return;
       }
 
-      // 4. 双向同步核心逻辑（云端存在且有数据）
+      // 4. 双向同步核心逻辑（云端有有效记录）
       List<WorkoutRecord> finalRecords = [];
       Set<String> processedCloudDates = {};
 
-      // 遍历本地记录
       for (var local in localRecords) {
         final localDateKey = DateFormat('yyyy-MM-dd').format(local.date);
         WorkoutRecord? matchedCloud;
@@ -1902,7 +1281,6 @@ class _MainScreenState extends State<MainScreen> {
         }
       }
 
-      // 添加云端独有的记录
       for (var cloud in cloudRecords) {
         final cloudDateKey = DateFormat('yyyy-MM-dd').format(cloud.date);
         if (!processedCloudDates.contains(cloudDateKey)) {
@@ -1911,16 +1289,12 @@ class _MainScreenState extends State<MainScreen> {
         }
       }
 
-      // 5. 保存到本地
       provider.loadRecords(finalRecords);
       print('最终本地记录数: ${finalRecords.length}');
 
-      // 6. 导出并上传到云端
-      final filePath = await excelService.exportToExcel(finalRecords);
-      if (filePath == null) throw Exception('导出数据失败');
-      provider.setLastExportPath(filePath);
-      final uploadSuccess = await nutstore.uploadFile(filePath);
-      if (!uploadSuccess) throw Exception('上传到云端失败');
+      final savePath = await jsonService.saveRecords(finalRecords);
+      if (savePath == null) throw Exception('保存本地 JSON 失败');
+      await nutstore.uploadFile(savePath);
 
       _showToast('云同步完成！');
     } catch (e) {
@@ -1931,21 +1305,34 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  /// 判断两条 WorkoutRecord 是否完全相同（忽略 id、timestamp）
+  // 辅助方法：从 JSON Map 创建 WorkoutRecord
+  WorkoutRecord _recordFromJson(Map<String, dynamic> json) {
+    return WorkoutRecord(
+      id: json['id'],
+      date: DateTime.parse(json['date']),
+      sessionNumber: json['sessionNumber'],
+      projects: (json['projects'] as List).map((p) => WorkoutProject(
+        name: p['name'],
+        part: p['part'],
+        weight: (p['weight'] as num).toDouble(),
+        sets: p['sets'],
+        repsPerSet: p['repsPerSet'],
+        feeling: p['feeling'] ?? '',
+        supplement: p['supplement'] ?? '',
+      )).toList(),
+      timestamp: DateTime.parse(json['timestamp']),
+    );
+  }
+
   bool _areRecordsEqual(WorkoutRecord a, WorkoutRecord b) {
     if (a.sessionNumber != b.sessionNumber) return false;
     if (a.projects.length != b.projects.length) return false;
-
-    // 将项目列表排序后逐项比较（避免顺序影响）
     List<WorkoutProject> sortProjects(List<WorkoutProject> list) {
       return List.from(list)
-        ..sort(
-            (x, y) => '${x.name}|${x.part}'.compareTo('${y.name}|${y.part}'));
+        ..sort((x, y) => '${x.name}|${x.part}'.compareTo('${y.name}|${y.part}'));
     }
-
     final aSorted = sortProjects(a.projects);
     final bSorted = sortProjects(b.projects);
-
     for (int i = 0; i < aSorted.length; i++) {
       final p1 = aSorted[i];
       final p2 = bSorted[i];
@@ -1960,9 +1347,7 @@ class _MainScreenState extends State<MainScreen> {
     return true;
   }
 
-  /// 合并两条日期相同的记录（项目去重 + sessionNumber 取最大值）
   WorkoutRecord _mergeRecords(WorkoutRecord local, WorkoutRecord cloud) {
-    // 合并项目：基于 名称|部位 去重，本地项目优先（可改为云端优先）
     final Map<String, WorkoutProject> projectMap = {};
     for (var p in cloud.projects) {
       final key = '${p.name}|${p.part}';
@@ -1970,22 +1355,17 @@ class _MainScreenState extends State<MainScreen> {
     }
     for (var p in local.projects) {
       final key = '${p.name}|${p.part}';
-      projectMap[key] = p; // 本地项目覆盖云端项目（保留最新修改）
+      projectMap[key] = p;
     }
-
-    // 合并 sessionNumber（取较大值）
     int? mergedSession;
     if (local.sessionNumber != null && cloud.sessionNumber != null) {
-      mergedSession = local.sessionNumber! > cloud.sessionNumber!
-          ? local.sessionNumber
-          : cloud.sessionNumber;
+      mergedSession = local.sessionNumber! > cloud.sessionNumber! ? local.sessionNumber : cloud.sessionNumber;
     } else {
       mergedSession = local.sessionNumber ?? cloud.sessionNumber;
     }
-
     return WorkoutRecord(
       id: DateTime.now().microsecondsSinceEpoch.toString(),
-      date: local.date, // 日期相同，任取一个
+      date: local.date,
       sessionNumber: mergedSession,
       projects: projectMap.values.toList(),
       timestamp: DateTime.now(),
@@ -1994,10 +1374,8 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<bool?> _showEmptyUploadConfirmDialog(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    final dontShowAgain =
-        prefs.getBool('dont_show_empty_upload_warning') ?? false;
+    final dontShowAgain = prefs.getBool('dont_show_empty_upload_warning') ?? false;
     if (dontShowAgain) return true;
-
     bool? result;
     bool dontShow = false;
     await showDialog<bool>(
@@ -2023,10 +1401,7 @@ class _MainScreenState extends State<MainScreen> {
             ],
           ),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消'),
-            ),
+            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
             ElevatedButton(
               onPressed: () async {
                 if (dontShow) {
@@ -2054,45 +1429,34 @@ class _MainScreenState extends State<MainScreen> {
           bool isConnecting = false;
           return AlertDialog(
             title: const Row(
-              children: [
-                Icon(Icons.cloud, color: Colors.blue),
-                SizedBox(width: 10),
-                Text('连接坚果云服务')
-              ],
+              children: [Icon(Icons.cloud, color: Colors.blue), SizedBox(width: 10), Text('连接坚果云服务')],
             ),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('服务器地址：',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('服务器地址：', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
-                  const Text('https://dav.jianguoyun.com/dav',
-                      style: TextStyle(color: Colors.blue)),
+                  const Text('https://dav.jianguoyun.com/dav', style: TextStyle(color: Colors.blue)),
                   const SizedBox(height: 15),
-                  const Text('账户邮箱：',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('账户邮箱：', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   TextField(
                       controller: usernameController,
-                      decoration: const InputDecoration(
-                          hintText: '您的坚果云邮箱', border: OutlineInputBorder())),
+                      decoration: const InputDecoration(hintText: '您的坚果云邮箱', border: OutlineInputBorder())),
                   const SizedBox(height: 15),
-                  const Text('应用密码：',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                  const Text('应用密码：', style: TextStyle(fontWeight: FontWeight.bold)),
                   const SizedBox(height: 5),
                   TextField(
                       controller: passwordController,
                       obscureText: true,
-                      decoration: const InputDecoration(
-                          hintText: '坚果云应用密码', border: OutlineInputBorder())),
+                      decoration: const InputDecoration(hintText: '坚果云应用密码', border: OutlineInputBorder())),
                   const SizedBox(height: 15),
                   Row(children: [
                     Checkbox(
                         value: rememberPassword,
-                        onChanged: (v) =>
-                            setState(() => rememberPassword = v ?? true)),
+                        onChanged: (v) => setState(() => rememberPassword = v ?? true)),
                     const Text('记住密码')
                   ]),
                   const SizedBox(height: 10),
@@ -2100,16 +1464,12 @@ class _MainScreenState extends State<MainScreen> {
                     onPressed: () {
                       showDialog(
                           context: context,
-                          builder: (_) =>
-                              AlertDialog(
-                                  title: const Text('坚果云配置帮助'),
-                                  content:
-                                      Text(NutstoreService.getHelpMessage()),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('关闭'))
-                                  ]));
+                          builder: (_) => AlertDialog(
+                              title: const Text('坚果云配置帮助'),
+                              content: Text(NutstoreService.getHelpMessage()),
+                              actions: [
+                                TextButton(onPressed: () => Navigator.pop(context), child: const Text('关闭'))
+                              ]));
                     },
                     child: const Text('查看配置说明'),
                   ),
@@ -2117,16 +1477,13 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
             actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('取消')),
+              TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
               ElevatedButton(
                 onPressed: isConnecting
                     ? null
                     : () async {
                         setState(() => isConnecting = true);
-                        final nutstore = Provider.of<NutstoreService>(context,
-                            listen: false);
+                        final nutstore = Provider.of<NutstoreService>(context, listen: false);
                         final connected = await nutstore.connect(
                             username: usernameController.text,
                             password: passwordController.text,
@@ -2142,10 +1499,7 @@ class _MainScreenState extends State<MainScreen> {
                         setState(() => isConnecting = false);
                       },
                 child: isConnecting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
+                    ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
                     : const Text('连接'),
               ),
             ],
@@ -2157,13 +1511,11 @@ class _MainScreenState extends State<MainScreen> {
 
   void _showCloudMenu(BuildContext context) {
     final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
           button.localToGlobal(Offset.zero, ancestor: overlay),
-          button.localToGlobal(button.size.bottomRight(Offset.zero),
-              ancestor: overlay)),
+          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay)),
       Offset.zero & overlay.size,
     );
     showMenu(
@@ -2192,12 +1544,10 @@ class _MainScreenState extends State<MainScreen> {
     await _logoutCloud();
     if (mounted) {
       _showCloudLoginDialog(context);
->>>>>>> Stashed changes
     }
   }
 
-  void _showExportSuccessDialog(
-      BuildContext context, String filePath, bool isEmpty) {
+  void _showExportSuccessDialog(BuildContext context, String filePath, bool isEmpty) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -2213,8 +1563,7 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             Text(isEmpty ? '空模板已成功导出到：' : '数据已成功导出到：'),
             const SizedBox(height: 10),
-            Text(filePath,
-                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(filePath, style: const TextStyle(fontSize: 12, color: Colors.grey)),
             const SizedBox(height: 15),
             Text(isEmpty ? '这是一个空模板，您可以填写数据后导入使用。' : '文件已记录，可点击"上云"按钮上传到坚果云。'),
             if (!isEmpty) const SizedBox(height: 10),
@@ -2224,8 +1573,7 @@ class _MainScreenState extends State<MainScreen> {
           ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('确定')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定')),
           if (!isEmpty)
             ElevatedButton(
                 onPressed: () {
@@ -2253,13 +1601,11 @@ class _MainScreenState extends State<MainScreen> {
           children: [
             const Text('数据已从坚果云下载并与本地合并：'),
             const SizedBox(height: 10),
-            Text(filePath,
-                style: const TextStyle(fontSize: 12, color: Colors.grey)),
+            Text(filePath, style: const TextStyle(fontSize: 12, color: Colors.grey)),
           ],
         ),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('确定'))
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('确定'))
         ],
       ),
     );
@@ -2281,8 +1627,7 @@ class _MainScreenState extends State<MainScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) => Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
           final themeNames = ['远山青', '萤石黑', '珠玉白', '活力橙', '全透明'];
@@ -2327,8 +1672,7 @@ class _MainScreenState extends State<MainScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text('选择主题',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 8),
                   const Text('不同主题会改变整体配色方案',
                       style: TextStyle(fontSize: 12, color: Colors.grey)),
@@ -2338,14 +1682,11 @@ class _MainScreenState extends State<MainScreen> {
                     physics: const NeverScrollableScrollPhysics(),
                     itemCount: themeNames.length,
                     itemBuilder: (context, index) {
-                      final isSelected =
-                          themeProvider.selectedThemeIndex == index;
+                      final isSelected = themeProvider.selectedThemeIndex == index;
                       final bool isJadeWhite = index == 2;
                       final bool isGlass = index == 4;
-                      final bool isLightTheme =
-                          Theme.of(context).brightness == Brightness.light;
-                      final Color textColor =
-                          isLightTheme ? Colors.black87 : Colors.white;
+                      final bool isLightTheme = Theme.of(context).brightness == Brightness.light;
+                      final Color textColor = isLightTheme ? Colors.black87 : Colors.white;
                       return GestureDetector(
                         onTap: () {
                           themeProvider.setTheme(index);
@@ -2356,29 +1697,23 @@ class _MainScreenState extends State<MainScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             gradient: isGlass ? null : gradients[index],
-                            color: isGlass
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : null,
+                            color: isGlass ? Colors.white.withValues(alpha: 0.2) : null,
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isSelected
                                   ? (isJadeWhite ? Colors.blue : Colors.white)
-                                  : (isGlass
-                                      ? Colors.black
-                                      : Colors.transparent),
+                                  : (isGlass ? Colors.black : Colors.transparent),
                               width: isGlass && !isSelected ? 1 : 3,
                             ),
                             boxShadow: isSelected
                                 ? [
                                     BoxShadow(
-                                        color: themeColors[index]
-                                            .withValues(alpha: 0.3),
+                                        color: themeColors[index].withValues(alpha: 0.3),
                                         blurRadius: 8,
                                         spreadRadius: 2)
                                   ]
                                 : null,
-                            backgroundBlendMode:
-                                isGlass ? BlendMode.srcOver : null,
+                            backgroundBlendMode: isGlass ? BlendMode.srcOver : null,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -2387,18 +1722,13 @@ class _MainScreenState extends State<MainScreen> {
                                 children: [
                                   Text(themeNames[index],
                                       style: TextStyle(
-                                          color: isJadeWhite
-                                              ? Colors.black87
-                                              : textColor,
+                                          color: isJadeWhite ? Colors.black87 : textColor,
                                           fontSize: 16,
                                           fontWeight: FontWeight.bold)),
                                   const SizedBox(width: 8),
                                   if (isSelected)
                                     Icon(Icons.check_circle,
-                                        color: isJadeWhite
-                                            ? Colors.blue
-                                            : Colors.white,
-                                        size: 20),
+                                        color: isJadeWhite ? Colors.blue : Colors.white, size: 20),
                                 ],
                               ),
                               const SizedBox(height: 4),
@@ -2415,9 +1745,7 @@ class _MainScreenState extends State<MainScreen> {
                     },
                   ),
                   const SizedBox(height: 10),
-                  OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('关闭')),
+                  OutlinedButton(onPressed: () => Navigator.pop(context), child: const Text('关闭')),
                 ],
               ),
             ),
@@ -2431,8 +1759,7 @@ class _MainScreenState extends State<MainScreen> {
     if (message.trim().isEmpty) message = '操作完成';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message,
-            style: const TextStyle(color: Colors.white, fontSize: 14)),
+        content: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
         backgroundColor: isError ? Colors.red : Colors.green,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
@@ -2442,7 +1769,7 @@ class _MainScreenState extends State<MainScreen> {
 
   Widget _buildProjectCard(int index) {
     return _ProjectCard(
-      key: ValueKey('project_$index'), // 使用稳定 key
+      key: ValueKey('project_$index'),
       index: index,
       partNotifier: partNotifiers[index],
       nameController: nameControllers[index],
@@ -2482,593 +1809,6 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-<<<<<<< Updated upstream
-  void _updateSessionNumberForDate(DateTime date) {
-    final provider = Provider.of<WorkoutProvider>(context, listen: false);
-    final recordsOnDate = provider.records
-        .where((r) =>
-            r.date.year == date.year &&
-            r.date.month == date.month &&
-            r.date.day == date.day)
-        .toList();
-    if (recordsOnDate.isNotEmpty) {
-      // 过滤掉 null，只保留非空值
-      final numbers =
-          recordsOnDate.map((r) => r.sessionNumber).whereType<int>().toList();
-      if (numbers.isNotEmpty) {
-        sessionNumber = numbers.reduce((a, b) => a > b ? a : b);
-      } else {
-        sessionNumber = null;
-      }
-    } else {
-      sessionNumber = null;
-    }
-    setState(() {});
-  }
-
-  Future<void> _selectDate(BuildContext context) async {
-    final DateTime? picked = await showDatePicker(
-      context: context,
-      initialDate: selectedDate,
-      firstDate: DateTime(2020),
-      lastDate: DateTime.now(),
-      builder: (context, child) {
-        final isGlass =
-            Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
-        return Theme(
-          data: Theme.of(context).copyWith(
-            dialogTheme: DialogThemeData(
-                backgroundColor: isGlass
-                    ? Colors.grey.shade800.withValues(alpha: 0.85)
-                    : null),
-          ),
-          child: child!,
-        );
-      },
-    );
-    if (picked != null && picked != selectedDate) {
-      setState(() {
-        selectedDate = picked;
-        dateController.text = DateFormat('yyyy-MM-dd').format(picked);
-      });
-      _updateSessionNumberForDate(picked);
-    }
-  }
-
-  void _saveWorkout(BuildContext context) {
-    final List<WorkoutProject> validProjects = [];
-    for (int i = 0; i < projects.length; i++) {
-      if (nameControllers[i].text.trim().isNotEmpty) {
-        validProjects.add(WorkoutProject(
-          name: nameControllers[i].text,
-          part: partNotifiers[i].value,
-          weight: double.tryParse(weightControllers[i].text) ?? 0,
-          sets: int.tryParse(setsControllers[i].text) ?? 0,
-          repsPerSet: int.tryParse(repsControllers[i].text) ?? 0,
-          feeling: feelingControllers[i].text,
-          supplement: supplementControllers[i].text,
-        ));
-      }
-    }
-    if (validProjects.isEmpty) {
-      _showToast('请至少填写一个完整的训练项目', isError: true);
-      return;
-    }
-
-    final record = WorkoutRecord(
-      id: DateTime.now().microsecondsSinceEpoch.toString(),
-      date: selectedDate,
-      sessionNumber: sessionNumber, // 直接使用，允许为 null
-      projects: validProjects,
-      timestamp: DateTime.now(),
-    );
-
-    Provider.of<WorkoutProvider>(context, listen: false).addRecord(record);
-
-    setState(() {
-      projects.clear();
-      projects.add(WorkoutProject.empty());
-      _initializeControllers();
-    });
-    _updateSessionNumberForDate(selectedDate);
-    _showToast('训练记录保存成功！');
-  }
-
-  // 导出为 Excel
-  Future<void> _exportToExcel(BuildContext context) async {
-    final provider = Provider.of<WorkoutProvider>(context, listen: false);
-    final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-    setState(() => _isLoading = true);
-    try {
-      final filePath = await excelService.exportToExcel(provider.records);
-      if (filePath != null) {
-        provider.setLastExportPath(filePath);
-        if (mounted) {
-          _showExportSuccessDialog(context, filePath, provider.records.isEmpty);
-        }
-      } else {
-        if (mounted) _showToast('导出失败', isError: true);
-      }
-    } catch (e) {
-      if (mounted) _showToast('导出失败: $e', isError: true);
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _uploadToCloud(BuildContext context) async {
-    final provider = Provider.of<WorkoutProvider>(context, listen: false);
-    final nutstore = Provider.of<NutstoreService>(context, listen: false);
-    final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-    if (!nutstore.isConnected) {
-      _showCloudLoginDialog(context);
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      final filePath = await excelService.exportToExcel(provider.records);
-      if (filePath == null) throw Exception('导出数据失败');
-      provider.setLastExportPath(filePath);
-      await nutstore.uploadFile(filePath);
-      _showToast('数据已成功上传到坚果云！');
-    } catch (e) {
-      _showToast('上传失败: $e', isError: true);
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  Future<void> _downloadFromCloud(BuildContext context) async {
-    final provider = Provider.of<WorkoutProvider>(context, listen: false);
-    final nutstore = Provider.of<NutstoreService>(context, listen: false);
-    final excelService = Provider.of<ExcelCSVService>(context, listen: false);
-    if (!nutstore.isConnected) {
-      _showCloudLoginDialog(context);
-      return;
-    }
-    final fileExists = await nutstore.checkFileExists();
-    if (!fileExists) {
-      _showToast('云文件中不存在，请先上传', isError: true);
-      return;
-    }
-    setState(() => _isLoading = true);
-    try {
-      String savePath;
-      if (provider.lastExportPath == null) {
-        final directory = await getApplicationDocumentsDirectory();
-        savePath = '${directory.path}/健身数据实时表.xlsx';
-        provider.setLastExportPath(savePath);
-      } else {
-        savePath = provider.lastExportPath!;
-      }
-      await nutstore.downloadFile(savePath);
-      final records = await excelService.importFromExcel(savePath);
-      if (records.isNotEmpty) {
-        if (mounted) {
-          _showDownloadSuccessDialog(context, savePath);
-        }
-      } else {
-        if (mounted) {
-          _showToast('下载成功但导入失败，文件可能为空或格式错误', isError: true);
-        }
-      }
-    } catch (e) {
-      _showToast('下载失败: $e', isError: true);
-    } finally {
-      setState(() => _isLoading = false);
-    }
-  }
-
-  void _showCloudLoginDialog(BuildContext context) {
-    final usernameController = TextEditingController();
-    final passwordController = TextEditingController();
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) {
-          bool rememberPassword = true;
-          bool isConnecting = false;
-          return AlertDialog(
-            title: const Row(
-              children: [
-                Icon(Icons.cloud, color: Colors.blue),
-                SizedBox(width: 10),
-                Text('连接坚果云服务')
-              ],
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text('服务器地址：',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  const Text('https://dav.jianguoyun.com/dav',
-                      style: TextStyle(color: Colors.blue)),
-                  const SizedBox(height: 15),
-                  const Text('账户邮箱：',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  TextField(
-                      controller: usernameController,
-                      decoration: const InputDecoration(
-                          hintText: '您的坚果云邮箱', border: OutlineInputBorder())),
-                  const SizedBox(height: 15),
-                  const Text('应用密码：',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 5),
-                  TextField(
-                      controller: passwordController,
-                      obscureText: true,
-                      decoration: const InputDecoration(
-                          hintText: '坚果云应用密码', border: OutlineInputBorder())),
-                  const SizedBox(height: 15),
-                  Row(children: [
-                    Checkbox(
-                        value: rememberPassword,
-                        onChanged: (v) =>
-                            setState(() => rememberPassword = v ?? true)),
-                    const Text('记住密码')
-                  ]),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: () {
-                      showDialog(
-                          context: context,
-                          builder: (_) =>
-                              AlertDialog(
-                                  title: const Text('坚果云配置帮助'),
-                                  content:
-                                      Text(NutstoreService.getHelpMessage()),
-                                  actions: [
-                                    TextButton(
-                                        onPressed: () => Navigator.pop(context),
-                                        child: const Text('关闭'))
-                                  ]));
-                    },
-                    child: const Text('查看配置说明'),
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('取消')),
-              ElevatedButton(
-                onPressed: isConnecting
-                    ? null
-                    : () async {
-                        setState(() => isConnecting = true);
-                        final nutstore = Provider.of<NutstoreService>(context,
-                            listen: false);
-                        final connected = await nutstore.connect(
-                            username: usernameController.text,
-                            password: passwordController.text,
-                            saveCredentials: rememberPassword);
-                        if (connected && mounted) {
-                          Navigator.pop(context);
-                          _showToast('坚果云连接成功！');
-                        } else {
-                          if (mounted) {
-                            _showToast('连接失败，请检查配置', isError: true);
-                          }
-                        }
-                        setState(() => isConnecting = false);
-                      },
-                child: isConnecting
-                    ? const SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2))
-                    : const Text('连接'),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  void _showCloudMenu(BuildContext context) {
-    final RenderBox button = context.findRenderObject() as RenderBox;
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
-    final RelativeRect position = RelativeRect.fromRect(
-      Rect.fromPoints(
-          button.localToGlobal(Offset.zero, ancestor: overlay),
-          button.localToGlobal(button.size.bottomRight(Offset.zero),
-              ancestor: overlay)),
-      Offset.zero & overlay.size,
-    );
-    showMenu(
-      context: context,
-      position: position,
-      items: const [
-        PopupMenuItem(value: 'logout', child: Text('退出云服务')),
-        PopupMenuItem(value: 'switch', child: Text('切换云账号')),
-      ],
-    ).then((value) {
-      if (value == 'logout') {
-        _logoutCloud();
-      } else if (value == 'switch') {
-        _switchCloudAccount();
-      }
-    });
-  }
-
-  Future<void> _logoutCloud() async {
-    final nutstore = Provider.of<NutstoreService>(context, listen: false);
-    await nutstore.clearCredentials();
-    _showToast('已退出云服务');
-  }
-
-  Future<void> _switchCloudAccount() async {
-    await _logoutCloud();
-    if (mounted) {
-      _showCloudLoginDialog(context);
-    }
-  }
-
-  void _showExportSuccessDialog(
-      BuildContext context, String filePath, bool isEmpty) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(children: [
-          Icon(isEmpty ? Icons.info_outline : Icons.check_circle,
-              color: isEmpty ? Colors.orange : Colors.green),
-          const SizedBox(width: 10),
-          Text(isEmpty ? '导出空模板成功' : '导出成功')
-        ]),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(isEmpty ? '空模板已成功导出到：' : '数据已成功导出到：'),
-            const SizedBox(height: 10),
-            Text(filePath,
-                style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 15),
-            Text(isEmpty ? '这是一个空模板，您可以填写数据后导入使用。' : '文件已记录，可点击"上云"按钮上传到坚果云。'),
-            if (!isEmpty) const SizedBox(height: 10),
-            if (!isEmpty)
-              const Text('注意：同一天的训练项目在Excel中可以手动合并单元格，日期只在第一行显示。',
-                  style: TextStyle(fontSize: 12, color: Colors.orange)),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('确定')),
-          if (!isEmpty)
-            ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  _uploadToCloud(context);
-                },
-                child: const Text('立即上云')),
-        ],
-      ),
-    );
-  }
-
-  void _showDownloadSuccessDialog(BuildContext context, String filePath) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Row(children: [
-          Icon(Icons.check_circle, color: Colors.green),
-          SizedBox(width: 10),
-          Text('下载成功')
-        ]),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text('数据已从坚果云下载到：'),
-            const SizedBox(height: 10),
-            Text(filePath,
-                style: const TextStyle(fontSize: 12, color: Colors.grey)),
-            const SizedBox(height: 15),
-            const Text('云数据已成功替换本地数据。'),
-          ],
-        ),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('确定'))
-        ],
-      ),
-    );
-  }
-
-  void _showHistory(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-          builder: (context) => HistoryScreen(
-              onExport: () => _exportToExcel(context),
-              onUpload: () => _uploadToCloud(context),
-              onDownload: () => _downloadFromCloud(context))),
-    );
-  }
-
-  void _showThemeSelector(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) => Consumer<ThemeProvider>(
-        builder: (context, themeProvider, child) {
-          final themeNames = ['远山青', '萤石黑', '珠玉白', '活力橙', '全透明'];
-          final List<Color> themeColors = [
-            const Color(0xFF3AB8C7),
-            const Color(0xFF007AFF),
-            const Color(0xFF4A6FA5),
-            const Color(0xFFFF9500),
-            Colors.white,
-          ];
-          final List<LinearGradient?> gradients = [
-            const LinearGradient(
-                colors: [Color(0xFF3AB8C7), Color(0xFF2E8B9E)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight),
-            const LinearGradient(
-                colors: [Color(0xFF1C1C1E), Color(0xFF2C2C2E)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight),
-            const LinearGradient(
-                colors: [Color(0xFFFDFBF7), Color(0xFFF0EDE5)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight),
-            const LinearGradient(
-                colors: [Color(0xFFFF9500), Color(0xFFFF6B00)],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight),
-            null,
-          ];
-          final themeDescriptions = [
-            '青绿渐变 · 清新自然',
-            '玻璃光泽 · 深邃纯黑',
-            '汉白玉渐变 · 温润护眼',
-            '活力渐变 · 热情奔放',
-            '晶莹剔透 · 仿真玻璃',
-          ];
-
-          return SafeArea(
-            child: Container(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text('选择主题',
-                      style:
-                          TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 8),
-                  const Text('不同主题会改变整体配色方案',
-                      style: TextStyle(fontSize: 12, color: Colors.grey)),
-                  const SizedBox(height: 20),
-                  ListView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: themeNames.length,
-                    itemBuilder: (context, index) {
-                      final isSelected =
-                          themeProvider.selectedThemeIndex == index;
-                      final bool isJadeWhite = index == 2;
-                      final bool isGlass = index == 4;
-                      final bool isLightTheme =
-                          Theme.of(context).brightness == Brightness.light;
-                      final Color textColor =
-                          isLightTheme ? Colors.black87 : Colors.white;
-                      return GestureDetector(
-                        onTap: () {
-                          themeProvider.setTheme(index);
-                          Navigator.pop(context);
-                        },
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: isGlass ? null : gradients[index],
-                            color: isGlass
-                                ? Colors.white.withValues(alpha: 0.2)
-                                : null,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: isSelected
-                                  ? (isJadeWhite ? Colors.blue : Colors.white)
-                                  : (isGlass
-                                      ? Colors.black
-                                      : Colors.transparent),
-                              width: isGlass && !isSelected ? 1 : 3,
-                            ),
-                            boxShadow: isSelected
-                                ? [
-                                    BoxShadow(
-                                        color: themeColors[index]
-                                            .withValues(alpha: 0.3),
-                                        blurRadius: 8,
-                                        spreadRadius: 2)
-                                  ]
-                                : null,
-                            backgroundBlendMode:
-                                isGlass ? BlendMode.srcOver : null,
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(themeNames[index],
-                                      style: TextStyle(
-                                          color: isJadeWhite
-                                              ? Colors.black87
-                                              : textColor,
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold)),
-                                  const SizedBox(width: 8),
-                                  if (isSelected)
-                                    Icon(Icons.check_circle,
-                                        color: isJadeWhite
-                                            ? Colors.blue
-                                            : Colors.white,
-                                        size: 20),
-                                ],
-                              ),
-                              const SizedBox(height: 4),
-                              Text(themeDescriptions[index],
-                                  style: TextStyle(
-                                      color: isJadeWhite
-                                          ? Colors.black54
-                                          : textColor.withValues(alpha: 0.7),
-                                      fontSize: 12)),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 10),
-                  OutlinedButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text('关闭')),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-
-  void _showToast(String message, {bool isError = false}) {
-    if (message.trim().isEmpty) message = '操作完成';
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message,
-            style: const TextStyle(color: Colors.white, fontSize: 14)),
-        backgroundColor: isError ? Colors.red : Colors.green,
-        duration: const Duration(seconds: 2),
-        behavior: SnackBarBehavior.floating,
-      ),
-    );
-  }
-
-  Widget _buildProjectCard(int index) {
-    return _ProjectCard(
-      key: UniqueKey(), // 强制每次重建时创建新 State，避免复用
-      index: index,
-      partNotifier: partNotifiers[index],
-      nameController: nameControllers[index],
-      weightController: weightControllers[index],
-      setsController: setsControllers[index],
-      repsController: repsControllers[index],
-      feelingController: feelingControllers[index],
-      supplementController: supplementControllers[index],
-    );
-=======
   void _initializeControllers() {
     _clearControllers();
     for (var project in projects) {
@@ -3080,8 +1820,7 @@ class _MainScreenState extends State<MainScreen> {
       repsControllers.add(TextEditingController(
           text: project.repsPerSet == 0 ? '' : project.repsPerSet.toString()));
       feelingControllers.add(TextEditingController(text: project.feeling));
-      supplementControllers
-          .add(TextEditingController(text: project.supplement));
+      supplementControllers.add(TextEditingController(text: project.supplement));
       partNotifiers.add(ValueNotifier<String>(project.part));
     }
   }
@@ -3112,31 +1851,6 @@ class _MainScreenState extends State<MainScreen> {
     feelingControllers.clear();
     supplementControllers.clear();
     partNotifiers.clear();
->>>>>>> Stashed changes
-  }
-
-  @override
-  void dispose() {
-    dateController.dispose();
-    for (var c in nameControllers) {
-      c.dispose();
-    }
-    for (var c in weightControllers) {
-      c.dispose();
-    }
-    for (var c in setsControllers) {
-      c.dispose();
-    }
-    for (var c in repsControllers) {
-      c.dispose();
-    }
-    for (var c in feelingControllers) {
-      c.dispose();
-    }
-    for (var c in supplementControllers) {
-      c.dispose();
-    }
-    super.dispose();
   }
 
   @override
@@ -3145,64 +1859,20 @@ class _MainScreenState extends State<MainScreen> {
     final theme = Theme.of(context);
     final isLight = theme.brightness == Brightness.light;
     final isGlass = theme.scaffoldBackgroundColor == Colors.transparent;
-<<<<<<< Updated upstream
-
-=======
->>>>>>> Stashed changes
-    final inputBorder =
-        theme.inputDecorationTheme.border ?? const OutlineInputBorder();
-    final enabledBorder =
-        theme.inputDecorationTheme.enabledBorder ?? inputBorder;
+    final inputBorder = theme.inputDecorationTheme.border ?? const OutlineInputBorder();
+    final enabledBorder = theme.inputDecorationTheme.enabledBorder ?? inputBorder;
 
     return Scaffold(
-<<<<<<< Updated upstream
-      resizeToAvoidBottomInset: false, // 正确放置，避免键盘溢出
+      resizeToAvoidBottomInset: true,
       appBar: AppBar(
-        title: const Row(
-          children: [
-            Icon(Icons.fitness_center),
-            SizedBox(width: 8),
-            Flexible(
-              child: Text(
-                '健身数据管理系统 Win_v4.0.2',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontFamily: 'SimSun',
-                  fontSize: 14,
-                ),
-                overflow: TextOverflow.ellipsis,
-                maxLines: 1,
-              ),
-            ),
-          ],
-        ),
+        title: null,
         actions: [
-          Consumer<NutstoreService>(
-            builder: (context, nutstore, child) {
-              if (nutstore.isConnected) {
-                return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.cloud_done,
-                          color: Colors.green, size: 20),
-                      const SizedBox(width: 4),
-                      Text(
-                        nutstore.username ?? '',
-                        style: const TextStyle(
-                          color: Colors.green,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                );
-              }
-              return const SizedBox.shrink();
+          IconButton(
+            icon: const Icon(Icons.analytics),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const CoachAnalysisPage()));
             },
+            tooltip: 'AI分析',
           ),
           IconButton(
             icon: const Icon(Icons.history),
@@ -3214,10 +1884,20 @@ class _MainScreenState extends State<MainScreen> {
             onPressed: () => _showThemeSelector(context),
             tooltip: '切换主题',
           ),
+          IconButton(
+            icon: const Icon(Icons.settings),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
+            },
+            tooltip: '设置',
+          ),
           Consumer<NutstoreService>(
             builder: (context, nutstore, child) {
               return IconButton(
-                icon: const Icon(Icons.cloud),
+                icon: Icon(
+                  nutstore.isConnected ? Icons.cloud_done : Icons.cloud,
+                  color: nutstore.isConnected ? Colors.green : null,
+                ),
                 onPressed: () {
                   if (nutstore.isConnected) {
                     _showCloudMenu(context);
@@ -3232,318 +1912,10 @@ class _MainScreenState extends State<MainScreen> {
           if (_isLoading)
             const Padding(
               padding: EdgeInsets.all(8.0),
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              ),
+              child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2)),
             ),
         ],
       ),
-      body: LayoutBuilder(builder: (context, constraints) {
-        final parentSize = constraints.biggest;
-        return Stack(
-          fit: StackFit.expand,
-          children: [
-            _isLoading
-                ? const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircularProgressIndicator(),
-                        SizedBox(height: 20),
-                        Text('处理中...'),
-                      ],
-                    ),
-                  )
-                : Consumer<WorkoutProvider>(
-                    builder: (context, provider, child) {
-                      final recentRecords =
-                          provider.records.reversed.take(5).toList();
-                      return Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Column(
-                          children: [
-                            Card(
-                              child: Padding(
-                                padding: const EdgeInsets.all(20),
-                                child: Row(
-                                  mainAxisAlignment:
-                                      MainAxisAlignment.spaceBetween,
-                                  children: [
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        const Text('健身坚持统计',
-                                            style: TextStyle(
-                                                fontSize: 20,
-                                                fontWeight: FontWeight.bold)),
-                                        const SizedBox(height: 8),
-                                        Text('每一次努力都值得记录',
-                                            style: TextStyle(
-                                                color: Colors.grey[400])),
-                                      ],
-                                    ),
-                                    Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.end,
-                                      children: [
-                                        GestureDetector(
-                                          onTap: _pickFirstWorkoutDate,
-                                          child: Text('${duration.inDays} 天',
-                                              style: TextStyle(
-                                                  fontSize: 32,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: Theme.of(context)
-                                                      .primaryColor)),
-                                        ),
-                                        Text(
-                                            '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
-                                            style: TextStyle(
-                                                color: Colors.grey[400])),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Expanded(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Expanded(
-                                    flex: 3,
-                                    child: Card(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(20),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text('填写训练记录',
-                                                style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            const SizedBox(height: 20),
-                                            Row(
-                                              children: [
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      const Text('📅 日期'),
-                                                      const SizedBox(height: 8),
-                                                      GestureDetector(
-                                                        onTap: () =>
-                                                            _selectDate(
-                                                                context),
-                                                        child: Container(
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(12),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: Theme.of(
-                                                                    context)
-                                                                .cardColor,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                            border: enabledBorder
-                                                                        .borderSide !=
-                                                                    BorderSide
-                                                                        .none
-                                                                ? Border.all(
-                                                                    color: enabledBorder
-                                                                        .borderSide
-                                                                        .color,
-                                                                    width: enabledBorder
-                                                                        .borderSide
-                                                                        .width,
-                                                                  )
-                                                                : null,
-                                                          ),
-                                                          child: Row(
-                                                            children: [
-                                                              Icon(
-                                                                Icons
-                                                                    .calendar_today,
-                                                                size: 20,
-                                                                color: Theme.of(
-                                                                        context)
-                                                                    .primaryColor,
-                                                              ),
-                                                              const SizedBox(
-                                                                  width: 8),
-                                                              Text(
-                                                                  dateController
-                                                                      .text),
-                                                              const Spacer(),
-                                                              const Icon(Icons
-                                                                  .arrow_drop_down),
-                                                            ],
-                                                          ),
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
-                                                ),
-                                                const SizedBox(width: 20),
-                                                Expanded(
-                                                  child: Column(
-                                                    crossAxisAlignment:
-                                                        CrossAxisAlignment
-                                                            .start,
-                                                    children: [
-                                                      const Text('#️⃣ 第几次训练'),
-                                                      const SizedBox(height: 8),
-                                                      TextField(
-                                                        controller:
-                                                            TextEditingController(
-                                                                text: sessionNumber
-                                                                        ?.toString() ??
-                                                                    ''),
-                                                        keyboardType:
-                                                            TextInputType
-                                                                .number,
-                                                        decoration:
-                                                            const InputDecoration(
-                                                          hintText: '输入数字',
-                                                          border:
-                                                              OutlineInputBorder(),
-                                                        ),
-                                                        onChanged: (value) {
-                                                          if (value.isEmpty) {
-                                                            setState(() =>
-                                                                sessionNumber =
-                                                                    null);
-                                                          } else {
-                                                            final num =
-                                                                int.tryParse(
-                                                                    value);
-                                                            if (num != null) {
-                                                              setState(() =>
-                                                                  sessionNumber =
-                                                                      num);
-                                                            }
-                                                          }
-                                                        },
-                                                      )
-                                                    ],
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 30),
-                                            const Text('训练项目',
-                                                style: TextStyle(
-                                                    fontSize: 16,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            const SizedBox(height: 16),
-                                            Expanded(
-                                              child: ListView.builder(
-                                                shrinkWrap: true,
-                                                itemCount: projects.length,
-                                                itemBuilder: (context, index) =>
-                                                    _buildProjectCard(index),
-                                              ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            Row(
-                                              children: [
-                                                ElevatedButton.icon(
-                                                    onPressed: _addProject,
-                                                    icon: const Icon(Icons.add),
-                                                    label: const Text('添加项目')),
-                                                const SizedBox(width: 12),
-                                                ElevatedButton.icon(
-                                                  onPressed: _removeProject,
-                                                  icon:
-                                                      const Icon(Icons.remove),
-                                                  label: const Text('删除项目'),
-                                                  style:
-                                                      ElevatedButton.styleFrom(
-                                                          backgroundColor:
-                                                              Theme.of(context)
-                                                                  .cardColor),
-                                                ),
-                                              ],
-                                            ),
-                                            const SizedBox(height: 30),
-                                            ElevatedButton.icon(
-                                              onPressed: () =>
-                                                  _saveWorkout(context),
-                                              icon: const Icon(Icons.save),
-                                              label: const Text('保存记录'),
-                                              style: ElevatedButton.styleFrom(
-                                                  backgroundColor:
-                                                      const Color(0xFF34C759),
-                                                  minimumSize: const Size(
-                                                      double.infinity, 56)),
-                                            ),
-=======
-      resizeToAvoidBottomInset: true,
-      appBar: AppBar(title: null, actions: [
-        IconButton(
-          icon: const Icon(Icons.analytics),
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const CoachAnalysisPage()));
-          },
-          tooltip: 'AI分析',
-        ),
-        IconButton(
-          icon: const Icon(Icons.history),
-          onPressed: () => _showHistory(context),
-          tooltip: '历史记录',
-        ),
-        IconButton(
-          icon: const Icon(Icons.palette),
-          onPressed: () => _showThemeSelector(context),
-          tooltip: '切换主题',
-        ),
-        IconButton(
-          icon: const Icon(Icons.settings),
-          onPressed: () {
-            Navigator.push(context,
-                MaterialPageRoute(builder: (_) => const SettingsPage()));
-          },
-          tooltip: '设置',
-        ),
-        Consumer<NutstoreService>(
-          builder: (context, nutstore, child) {
-            return IconButton(
-              icon: Icon(
-                nutstore.isConnected ? Icons.cloud_done : Icons.cloud,
-                color: nutstore.isConnected ? Colors.green : null,
-              ),
-              onPressed: () {
-                if (nutstore.isConnected) {
-                  _showCloudMenu(context);
-                } else {
-                  _showCloudLoginDialog(context);
-                }
-              },
-              tooltip: '云服务',
-            );
-          },
-        ),
-        if (_isLoading)
-          const Padding(
-            padding: EdgeInsets.all(8.0),
-            child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2)),
-          ),
-      ]),
       body: LayoutBuilder(
         builder: (context, constraints) {
           final parentSize = constraints.biggest;
@@ -3554,11 +1926,7 @@ class _MainScreenState extends State<MainScreen> {
                   ? const Center(
                       child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                          CircularProgressIndicator(),
-                          SizedBox(height: 20),
-                          Text('处理中...'),
-                        ]))
+                          children: [CircularProgressIndicator(), SizedBox(height: 20), Text('处理中...')]))
                   : Consumer<WorkoutProvider>(
                       builder: (context, provider, child) {
                         return SingleChildScrollView(
@@ -3569,12 +1937,10 @@ class _MainScreenState extends State<MainScreen> {
                                 child: Padding(
                                   padding: const EdgeInsets.all(12),
                                   child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
                                       Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
+                                        crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text('健身坚持统计',
                                               style: const TextStyle(
@@ -3583,50 +1949,33 @@ class _MainScreenState extends State<MainScreen> {
                                                   fontWeight: FontWeight.bold)),
                                           const SizedBox(height: 4),
                                           Text('每一次努力都值得记录',
-                                              style: TextStyle(
-                                                  fontFamily: 'SimSun',
-                                                  color: Colors.grey[600])),
+                                              style: TextStyle(fontFamily: 'SimSun', color: Colors.grey[600])),
                                         ],
                                       ),
                                       Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.end,
+                                        crossAxisAlignment: CrossAxisAlignment.end,
                                         children: [
                                           GestureDetector(
                                             onTap: () async {
-                                              final picked =
-                                                  await showDatePicker(
+                                              final picked = await showDatePicker(
                                                 context: context,
                                                 initialDate: firstWorkoutDate,
                                                 firstDate: DateTime(2020),
                                                 lastDate: DateTime.now(),
                                               );
                                               if (picked != null) {
-                                                final time =
-                                                    await showTimePicker(
+                                                final time = await showTimePicker(
                                                   context: context,
-                                                  initialTime:
-                                                      TimeOfDay.fromDateTime(
-                                                          firstWorkoutDate),
+                                                  initialTime: TimeOfDay.fromDateTime(firstWorkoutDate),
                                                 );
                                                 if (time != null) {
                                                   final newDate = DateTime(
-                                                      picked.year,
-                                                      picked.month,
-                                                      picked.day,
-                                                      time.hour,
-                                                      time.minute);
-                                                  final prefs =
-                                                      await SharedPreferences
-                                                          .getInstance();
-                                                  await prefs.setString(
-                                                      'first_workout_date',
-                                                      newDate
-                                                          .toIso8601String());
+                                                      picked.year, picked.month, picked.day, time.hour, time.minute);
+                                                  final prefs = await SharedPreferences.getInstance();
+                                                  await prefs.setString('first_workout_date', newDate.toIso8601String());
                                                   firstWorkoutDate = newDate;
                                                   setState(() {});
-                                                  _showToast(
-                                                      '起始日期已更新，坚持天数已重新计算');
+                                                  _showToast('起始日期已更新，坚持天数已重新计算');
                                                 }
                                               }
                                             },
@@ -3634,15 +1983,11 @@ class _MainScreenState extends State<MainScreen> {
                                                 style: TextStyle(
                                                     fontSize: 32,
                                                     fontWeight: FontWeight.bold,
-                                                    color: Theme.of(context)
-                                                        .primaryColor)),
+                                                    color: Theme.of(context).primaryColor)),
                                           ),
                                           const SizedBox(height: 4),
-                                          Text(
-                                              '${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
-                                              style: TextStyle(
-                                                  fontFamily: 'SimSun',
-                                                  color: Colors.grey[600])),
+                                          Text('${duration.inHours % 24}小时 ${duration.inMinutes % 60}分钟',
+                                              style: TextStyle(fontFamily: 'SimSun', color: Colors.grey[600])),
                                         ],
                                       ),
                                     ],
@@ -3650,7 +1995,6 @@ class _MainScreenState extends State<MainScreen> {
                                 ),
                               ),
                               const SizedBox(height: 16),
-                              // 日期和次数输入框（已删除标题）
                               Row(
                                 children: [
                                   Expanded(
@@ -3660,24 +2004,18 @@ class _MainScreenState extends State<MainScreen> {
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
                                           color: Theme.of(context).cardColor,
-                                          borderRadius:
-                                              BorderRadius.circular(12),
-                                          border: enabledBorder.borderSide !=
-                                                  BorderSide.none
+                                          borderRadius: BorderRadius.circular(12),
+                                          border: enabledBorder.borderSide != BorderSide.none
                                               ? Border.all(
-                                                  color: enabledBorder
-                                                      .borderSide.color,
-                                                  width: enabledBorder
-                                                      .borderSide.width)
+                                                  color: enabledBorder.borderSide.color,
+                                                  width: enabledBorder.borderSide.width)
                                               : null,
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Icon(Icons.calendar_today,
-                                                size: 20,
-                                                color: Theme.of(context)
-                                                    .primaryColor),
+                                                size: 20, color: Theme.of(context).primaryColor),
                                             const SizedBox(width: 8),
                                             Flexible(
                                               child: Text(
@@ -3687,201 +2025,16 @@ class _MainScreenState extends State<MainScreen> {
                                             ),
                                             const SizedBox(width: 8),
                                             const Icon(Icons.arrow_drop_down),
->>>>>>> Stashed changes
                                           ],
                                         ),
                                       ),
                                     ),
                                   ),
-<<<<<<< Updated upstream
-                                  const SizedBox(width: 24),
-                                  Expanded(
-                                    flex: 2,
-                                    child: Card(
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(20),
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            const Text('最近记录',
-                                                style: TextStyle(
-                                                    fontSize: 18,
-                                                    fontWeight:
-                                                        FontWeight.bold)),
-                                            const SizedBox(height: 20),
-                                            Expanded(
-                                              child: recentRecords.isEmpty
-                                                  ? const Center(
-                                                      child: Column(
-                                                        mainAxisAlignment:
-                                                            MainAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          Icon(Icons.history,
-                                                              size: 60,
-                                                              color:
-                                                                  Colors.grey),
-                                                          SizedBox(height: 16),
-                                                          Text('暂无记录'),
-                                                          Text('开始您的第一次训练吧！',
-                                                              style: TextStyle(
-                                                                  fontSize:
-                                                                      12)),
-                                                        ],
-                                                      ),
-                                                    )
-                                                  : ListView.builder(
-                                                      shrinkWrap: true,
-                                                      itemCount:
-                                                          recentRecords.length,
-                                                      itemBuilder:
-                                                          (context, index) {
-                                                        final record =
-                                                            recentRecords[
-                                                                index];
-                                                        final dateStr =
-                                                            DateFormat(
-                                                                    'yyyy-MM-dd')
-                                                                .format(record
-                                                                    .date);
-                                                        final projectNames = record
-                                                            .projects
-                                                            .map((p) => p.name)
-                                                            .where((name) =>
-                                                                name.isNotEmpty)
-                                                            .join('、');
-                                                        return Container(
-                                                          margin:
-                                                              const EdgeInsets
-                                                                  .only(
-                                                                  bottom: 12),
-                                                          padding:
-                                                              const EdgeInsets
-                                                                  .all(16),
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            color: isGlass
-                                                                ? Colors.grey
-                                                                    .shade800
-                                                                    .withValues(
-                                                                        alpha:
-                                                                            0.5)
-                                                                : Theme.of(
-                                                                        context)
-                                                                    .cardColor,
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        12),
-                                                          ),
-                                                          child: Column(
-                                                            crossAxisAlignment:
-                                                                CrossAxisAlignment
-                                                                    .start,
-                                                            children: [
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceBetween,
-                                                                children: [
-                                                                  Text(dateStr,
-                                                                      style: const TextStyle(
-                                                                          fontWeight:
-                                                                              FontWeight.bold)),
-                                                                  Container(
-                                                                    padding: const EdgeInsets
-                                                                        .symmetric(
-                                                                        horizontal:
-                                                                            8,
-                                                                        vertical:
-                                                                            4),
-                                                                    decoration:
-                                                                        BoxDecoration(
-                                                                      color: isLight
-                                                                          ? Colors
-                                                                              .green
-                                                                              .shade700
-                                                                          : Theme.of(context)
-                                                                              .primaryColor,
-                                                                      borderRadius:
-                                                                          BorderRadius.circular(
-                                                                              6),
-                                                                    ),
-                                                                    child: Text(
-                                                                      record.sessionNumber !=
-                                                                              null
-                                                                          ? '第${record.sessionNumber}次'
-                                                                          : '-',
-                                                                      style: TextStyle(
-                                                                          fontSize:
-                                                                              12,
-                                                                          fontWeight: FontWeight
-                                                                              .bold,
-                                                                          color: isLight
-                                                                              ? Colors.white
-                                                                              : Colors.black),
-                                                                    ),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                              const SizedBox(
-                                                                  height: 8),
-                                                              Text(
-                                                                projectNames
-                                                                        .isNotEmpty
-                                                                    ? projectNames
-                                                                    : '无项目名称',
-                                                                style: TextStyle(
-                                                                    color: Colors
-                                                                            .grey[
-                                                                        400]),
-                                                              ),
-                                                              const SizedBox(
-                                                                  height: 8),
-                                                              Row(
-                                                                mainAxisAlignment:
-                                                                    MainAxisAlignment
-                                                                        .spaceBetween,
-                                                                children: [
-                                                                  const Text(
-                                                                      '总做功'),
-                                                                  Text(
-                                                                    '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
-                                                                    style: const TextStyle(
-                                                                        fontWeight:
-                                                                            FontWeight
-                                                                                .bold,
-                                                                        color: Colors
-                                                                            .orange),
-                                                                  ),
-                                                                ],
-                                                              ),
-                                                            ],
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                            ),
-                                            const SizedBox(height: 20),
-                                            OutlinedButton.icon(
-                                              onPressed: () =>
-                                                  _showHistory(context),
-                                              icon: const Icon(Icons.list),
-                                              label: const Text('查看全部记录'),
-                                              style: OutlinedButton.styleFrom(
-                                                  minimumSize: const Size(
-                                                      double.infinity, 48)),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-=======
                                   const SizedBox(width: 20),
                                   Expanded(
                                     child: TextField(
-                                      controller: sessionController, // 使用成员变量
-                                      focusNode: _sessionFocusNode, // 新增
+                                      controller: sessionController,
+                                      focusNode: _sessionFocusNode,
                                       keyboardType: TextInputType.number,
                                       decoration: const InputDecoration(
                                         hintText: '第几次训练',
@@ -3894,43 +2047,21 @@ class _MainScreenState extends State<MainScreen> {
                                           sessionNumber = int.tryParse(value);
                                         }
                                       },
->>>>>>> Stashed changes
                                     ),
                                   ),
                                 ],
                               ),
-<<<<<<< Updated upstream
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-            // 可拖拽小猫
-            DraggableCat(
-              catSize: 100.0,
-              githubUrl: 'https://github.com/MrKedow/Fitness-Tracker',
-              parentSize: parentSize,
-            ),
-          ],
-        );
-      }),
-=======
                               const SizedBox(height: 16),
-                              // 训练项目区域（修复：使用固定最小高度，避免无限约束）
                               ConstrainedBox(
-                                constraints:
-                                    const BoxConstraints(minHeight: 200),
+                                constraints: const BoxConstraints(minHeight: 200),
                                 child: ListView.builder(
                                   shrinkWrap: true,
                                   physics: const NeverScrollableScrollPhysics(),
                                   itemCount: projects.length,
-                                  itemBuilder: (context, index) =>
-                                      _buildProjectCard(index),
+                                  itemBuilder: (context, index) => _buildProjectCard(index),
                                 ),
                               ),
                               const SizedBox(height: 12),
-                              // 按钮居中
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
@@ -3944,10 +2075,8 @@ class _MainScreenState extends State<MainScreen> {
                                     icon: const Icon(Icons.remove),
                                     label: const Text('删除项目'),
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor:
-                                          Theme.of(context).cardColor,
-                                      foregroundColor:
-                                          isLight ? Colors.black87 : null,
+                                      backgroundColor: Theme.of(context).cardColor,
+                                      foregroundColor: isLight ? Colors.black87 : null,
                                     ),
                                   ),
                                 ],
@@ -3977,30 +2106,19 @@ class _MainScreenState extends State<MainScreen> {
           );
         },
       ),
->>>>>>> Stashed changes
     );
   }
 }
 
-// ==================== 历史记录页面 ====================
+// ==================== 历史记录页面（与原版相同，无变化） ====================
 class HistoryScreen extends StatefulWidget {
   final VoidCallback onExport;
-<<<<<<< Updated upstream
-  final VoidCallback onUpload;
-  final VoidCallback onDownload;
-  const HistoryScreen(
-      {super.key,
-      required this.onExport,
-      required this.onUpload,
-      required this.onDownload});
-=======
-  final VoidCallback onSync; // 替换 onUpload 和 onDownload
+  final VoidCallback onSync;
   const HistoryScreen({
     super.key,
     required this.onExport,
     required this.onSync,
   });
->>>>>>> Stashed changes
   @override
   State<HistoryScreen> createState() => _HistoryScreenState();
 }
@@ -4053,8 +2171,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showContextMenuForColumn(TapDownDetails details, int columnIndex) {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final position = RelativeRect.fromRect(
       details.globalPosition & const Size(40, 40),
       Offset.zero & overlay.size,
@@ -4083,12 +2200,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
         title: const Text('整合同一天记录'),
         content: const Text('将同一天的多条记录合并为一条（项目合并，次数取最大值）。是否继续？'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context, false),
-              child: const Text('取消')),
-          ElevatedButton(
-              onPressed: () => Navigator.pop(context, true),
-              child: const Text('整合')),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('取消')),
+          ElevatedButton(onPressed: () => Navigator.pop(context, true), child: const Text('整合')),
         ],
       ),
     );
@@ -4102,8 +2215,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (message.trim().isEmpty) message = '操作完成';
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message,
-            style: const TextStyle(color: Colors.white, fontSize: 14)),
+        content: Text(message, style: const TextStyle(color: Colors.white, fontSize: 14)),
         backgroundColor: isError ? Colors.red : Colors.green,
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
@@ -4112,14 +2224,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   void _showContextMenu(BuildContext context, WorkoutRecord record) {
-    final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
     final RenderBox button = context.findRenderObject() as RenderBox;
     final RelativeRect position = RelativeRect.fromRect(
       Rect.fromPoints(
           button.localToGlobal(Offset.zero, ancestor: overlay),
-          button.localToGlobal(button.size.bottomRight(Offset.zero),
-              ancestor: overlay)),
+          button.localToGlobal(button.size.bottomRight(Offset.zero), ancestor: overlay)),
       Offset.zero & overlay.size,
     );
     showMenu(
@@ -4128,11 +2238,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
       items: [
         PopupMenuItem(
           value: 'edit',
-          child: const Row(children: [
-            Icon(Icons.edit, size: 20),
-            SizedBox(width: 8),
-            Text('编辑')
-          ]),
+          child: const Row(children: [Icon(Icons.edit, size: 20), SizedBox(width: 8), Text('编辑')]),
           onTap: () {
             Future.delayed(Duration.zero, () {
               if (mounted) {
@@ -4175,10 +2281,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void _showEditDialog() {
     if (_recordToEdit == null) return;
     final record = _recordToEdit!;
-    final dateController = TextEditingController(
-        text: DateFormat('yyyy-MM-dd').format(record.date));
-    final sessionController =
-        TextEditingController(text: record.sessionNumber.toString());
+    final dateController = TextEditingController(text: DateFormat('yyyy-MM-dd').format(record.date));
+    final sessionController = TextEditingController(text: record.sessionNumber.toString());
     final List<TextEditingController> nameControllers = [];
     final List<TextEditingController> weightControllers = [];
     final List<TextEditingController> setsControllers = [];
@@ -4188,14 +2292,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final List<ValueNotifier<String>> partNotifiers = [];
     for (var project in record.projects) {
       nameControllers.add(TextEditingController(text: project.name));
-      weightControllers
-          .add(TextEditingController(text: project.weight.toString()));
+      weightControllers.add(TextEditingController(text: project.weight.toString()));
       setsControllers.add(TextEditingController(text: project.sets.toString()));
-      repsControllers
-          .add(TextEditingController(text: project.repsPerSet.toString()));
+      repsControllers.add(TextEditingController(text: project.repsPerSet.toString()));
       feelingControllers.add(TextEditingController(text: project.feeling));
-      supplementControllers
-          .add(TextEditingController(text: project.supplement));
+      supplementControllers.add(TextEditingController(text: project.supplement));
       partNotifiers.add(ValueNotifier<String>(project.part));
     }
     showDialog(
@@ -4237,14 +2338,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
               firstDate: DateTime(2020),
               lastDate: DateTime.now(),
               builder: (context, child) {
-                final isGlass = Theme.of(context).scaffoldBackgroundColor ==
-                    Colors.transparent;
+                final isGlass = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
                 return Theme(
                   data: Theme.of(context).copyWith(
                     dialogTheme: DialogThemeData(
-                        backgroundColor: isGlass
-                            ? Colors.grey.shade800.withValues(alpha: 0.85)
-                            : null),
+                        backgroundColor: isGlass ? Colors.grey.shade800.withValues(alpha: 0.85) : null),
                   ),
                   child: child!,
                 );
@@ -4262,8 +2360,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
             return ValueListenableBuilder<String>(
               valueListenable: partNotifiers[index],
               builder: (context, part, child) {
-                final weight =
-                    double.tryParse(weightControllers[index].text) ?? 0;
+                final weight = double.tryParse(weightControllers[index].text) ?? 0;
                 final sets = int.tryParse(setsControllers[index].text) ?? 0;
                 final reps = int.tryParse(repsControllers[index].text) ?? 0;
                 final work = WorkoutProject(
@@ -4281,17 +2378,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                        color: Theme.of(context)
-                            .primaryColor
-                            .withValues(alpha: 0.3)),
+                    border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
                   ),
                   child: Column(
                     children: [
                       Row(children: [
                         Text('项目 ${index + 1}',
-                            style: const TextStyle(
-                                fontSize: 16, fontWeight: FontWeight.bold)),
+                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                         const Spacer(),
                         if (record.projects.length > 1)
                           IconButton(
@@ -4317,21 +2410,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Expanded(
                               child: TextField(
                                   controller: nameControllers[index],
-                                  decoration: const InputDecoration(
-                                      labelText: '项目名称',
-                                      border: OutlineInputBorder()),
-                                  onChanged: (value) =>
-                                      record.projects[index].name = value)),
+                                  decoration:
+                                      const InputDecoration(labelText: '项目名称', border: OutlineInputBorder()),
+                                  onChanged: (value) => record.projects[index].name = value)),
                           const SizedBox(width: 16),
                           Expanded(
                             child: DropdownButtonFormField<String>(
                               initialValue: part,
-                              decoration: const InputDecoration(
-                                  labelText: '锻炼部位',
-                                  border: OutlineInputBorder()),
+                              decoration: const InputDecoration(labelText: '锻炼部位', border: OutlineInputBorder()),
                               items: const ['胸', '背', '腿', '肩', '腹']
-                                  .map((part) => DropdownMenuItem(
-                                      value: part, child: Text(part)))
+                                  .map((part) => DropdownMenuItem(value: part, child: Text(part)))
                                   .toList(),
                               onChanged: (value) {
                                 if (value != null) {
@@ -4351,43 +2439,35 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   controller: weightControllers[index],
                                   keyboardType: TextInputType.number,
                                   decoration: const InputDecoration(
-                                      labelText: '重量 (kg)',
-                                      border: OutlineInputBorder(),
-                                      suffixText: 'kg'),
-                                  onChanged: (value) => record.projects[index]
-                                      .weight = double.tryParse(value) ?? 0)),
+                                      labelText: '重量 (kg)', border: OutlineInputBorder(), suffixText: 'kg'),
+                                  onChanged: (value) =>
+                                      record.projects[index].weight = double.tryParse(value) ?? 0)),
                           const SizedBox(width: 16),
                           Expanded(
                               child: TextField(
                                   controller: setsControllers[index],
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
-                                      labelText: '组数',
-                                      border: OutlineInputBorder()),
-                                  onChanged: (value) => record.projects[index]
-                                      .sets = int.tryParse(value) ?? 0)),
+                                  decoration: const InputDecoration(labelText: '组数', border: OutlineInputBorder()),
+                                  onChanged: (value) =>
+                                      record.projects[index].sets = int.tryParse(value) ?? 0)),
                           const SizedBox(width: 16),
                           Expanded(
                               child: TextField(
                                   controller: repsControllers[index],
                                   keyboardType: TextInputType.number,
-                                  decoration: const InputDecoration(
-                                      labelText: '每组数量',
-                                      border: OutlineInputBorder()),
-                                  onChanged: (value) => record.projects[index]
-                                      .repsPerSet = int.tryParse(value) ?? 0)),
+                                  decoration: const InputDecoration(labelText: '每组数量', border: OutlineInputBorder()),
+                                  onChanged: (value) =>
+                                      record.projects[index].repsPerSet = int.tryParse(value) ?? 0)),
                         ],
                       ),
                       const SizedBox(height: 16),
                       Row(children: [
                         const Icon(Icons.bar_chart, color: Colors.orange),
                         const SizedBox(width: 8),
-                        const Text('做功:',
-                            style: TextStyle(fontWeight: FontWeight.bold)),
+                        const Text('做功:', style: TextStyle(fontWeight: FontWeight.bold)),
                         const SizedBox(width: 8),
                         Text('${work.toStringAsFixed(0)} J',
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold))
+                            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
                       ]),
                       const SizedBox(height: 16),
                       Row(
@@ -4395,20 +2475,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           Expanded(
                               child: TextField(
                                   controller: feelingControllers[index],
-                                  decoration: const InputDecoration(
-                                      labelText: '感受',
-                                      border: OutlineInputBorder()),
-                                  onChanged: (value) =>
-                                      record.projects[index].feeling = value)),
+                                  decoration: const InputDecoration(labelText: '感受', border: OutlineInputBorder()),
+                                  onChanged: (value) => record.projects[index].feeling = value)),
                           const SizedBox(width: 16),
                           Expanded(
                               child: TextField(
                                   controller: supplementControllers[index],
-                                  decoration: const InputDecoration(
-                                      labelText: '补剂',
-                                      border: OutlineInputBorder()),
-                                  onChanged: (value) => record
-                                      .projects[index].supplement = value)),
+                                  decoration: const InputDecoration(labelText: '补剂', border: OutlineInputBorder()),
+                                  onChanged: (value) => record.projects[index].supplement = value)),
                         ],
                       ),
                     ],
@@ -4419,11 +2493,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           }
 
           return AlertDialog(
-            title: const Row(children: [
-              Icon(Icons.edit, color: Colors.blue),
-              SizedBox(width: 10),
-              Text('编辑记录')
-            ]),
+            title: const Row(children: [Icon(Icons.edit, color: Colors.blue), SizedBox(width: 10), Text('编辑记录')]),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -4442,12 +2512,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                    color: Theme.of(context).cardColor,
-                                    borderRadius: BorderRadius.circular(12)),
+                                    color: Theme.of(context).cardColor, borderRadius: BorderRadius.circular(12)),
                                 child: Row(children: [
-                                  Icon(Icons.calendar_today,
-                                      size: 20,
-                                      color: Theme.of(context).primaryColor),
+                                  Icon(Icons.calendar_today, size: 20, color: Theme.of(context).primaryColor),
                                   const SizedBox(width: 8),
                                   Text(dateController.text),
                                   const Spacer(),
@@ -4469,8 +2536,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               controller: sessionController,
                               keyboardType: TextInputType.number,
                               decoration: const InputDecoration(
-                                  hintText: '输入数字（可选）',
-                                  border: OutlineInputBorder()),
+                                  hintText: '输入数字（可选）', border: OutlineInputBorder()),
                               onChanged: (value) {
                                 if (value.isEmpty) {
                                   setState(() => record.sessionNumber = null);
@@ -4488,22 +2554,18 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     ],
                   ),
                   const SizedBox(height: 20),
-                  ...List.generate(record.projects.length,
-                      (index) => buildProjectCard(index)),
+                  ...List.generate(record.projects.length, (index) => buildProjectCard(index)),
                   const SizedBox(height: 16),
                   Row(
                     children: [
                       ElevatedButton.icon(
-                          onPressed: addProject,
-                          icon: const Icon(Icons.add),
-                          label: const Text('添加项目')),
+                          onPressed: addProject, icon: const Icon(Icons.add), label: const Text('添加项目')),
                       const SizedBox(width: 12),
                       ElevatedButton.icon(
                           onPressed: removeProject,
                           icon: const Icon(Icons.remove),
                           label: const Text('删除项目'),
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context).cardColor)),
+                          style: ElevatedButton.styleFrom(backgroundColor: Theme.of(context).cardColor)),
                     ],
                   ),
                 ],
@@ -4520,8 +2582,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   child: const Text('取消')),
               ElevatedButton(
                 onPressed: () {
-                  final provider =
-                      Provider.of<WorkoutProvider>(context, listen: false);
+                  final provider = Provider.of<WorkoutProvider>(context, listen: false);
                   provider.updateRecord(record.id, record);
                   setState(() {
                     _recordToEdit = null;
@@ -4542,19 +2603,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Row(children: [
-          Icon(Icons.warning, color: Colors.orange),
-          SizedBox(width: 10),
-          Text('确认删除')
-        ]),
+        title: const Row(children: [Icon(Icons.warning, color: Colors.orange), SizedBox(width: 10), Text('确认删除')]),
         content: const Text('确定要删除这条记录吗？此操作不可撤销。'),
         actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: const Text('取消')),
+          TextButton(onPressed: () => Navigator.pop(context), child: const Text('取消')),
           ElevatedButton(
             onPressed: () {
-              final provider =
-                  Provider.of<WorkoutProvider>(context, listen: false);
+              final provider = Provider.of<WorkoutProvider>(context, listen: false);
               provider.deleteRecord(record.id);
               Navigator.pop(context);
               _showToast('记录已删除');
@@ -4567,27 +2622,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-<<<<<<< Updated upstream
-  Future<void> _exportEmptyTemplate() async {
-    final excelService = ExcelCSVService();
-    try {
-      final filePath = await excelService.exportToExcel([]);
-      if (filePath != null) {
-        _showToast('空模板已导出到: $filePath');
-      } else {
-        _showToast('导出失败', isError: true);
-      }
-    } catch (e) {
-      _showToast('导出失败: ${e.toString()}', isError: true);
-    }
-  }
-
-=======
->>>>>>> Stashed changes
   @override
   Widget build(BuildContext context) {
-    final isGlassTheme =
-        Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
+    final isGlassTheme = Theme.of(context).scaffoldBackgroundColor == Colors.transparent;
     final records = Provider.of<WorkoutProvider>(context).records;
 
     if (_collapsedColumns.length == _columnNames.length) {
@@ -4604,293 +2641,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
             tooltip: '导出数据',
           ),
           IconButton(
-<<<<<<< Updated upstream
-            icon: const Icon(Icons.insert_drive_file),
-            onPressed: _exportEmptyTemplate,
-            tooltip: '导出空模板',
-          ),
-          IconButton(
-            icon: const Icon(Icons.cloud_upload),
-            onPressed: widget.onUpload,
-            tooltip: '上云',
-          ),
-          IconButton(
-            icon: const Icon(Icons.cloud_download),
-            onPressed: widget.onDownload,
-            tooltip: '读云',
-=======
             icon: const Icon(Icons.cloud_sync),
             onPressed: widget.onSync,
             tooltip: '云同步',
->>>>>>> Stashed changes
           ),
         ],
       ),
       body: records.isEmpty
           ? Center(
-<<<<<<< Updated upstream
-              child: Padding(
-                padding: const EdgeInsets.only(top: 80.0),
-                child: CoachCharacter(records: records),
-              ),
-            )
-          : Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: MouseRegion(
-                    onEnter: (_) =>
-                        setState(() => _showHorizontalScrollbar = true),
-                    onExit: (_) =>
-                        setState(() => _showHorizontalScrollbar = false),
-                    child: Scrollbar(
-                      controller: _horizontalScrollController,
-                      thumbVisibility: _showHorizontalScrollbar,
-                      child: SingleChildScrollView(
-                        controller: _horizontalScrollController,
-                        scrollDirection: Axis.horizontal,
-                        child: Theme(
-                          data: Theme.of(context).copyWith(
-                            cardColor: isGlassTheme
-                                ? Colors.grey.shade800.withValues(alpha: 0.5)
-                                : null,
-                            dividerColor: Colors.grey.withValues(alpha: 0.2),
-                          ),
-                          child: DataTable(
-                            columnSpacing: 24,
-                            headingRowHeight: 56,
-                            dataRowMinHeight: 60,
-                            dataRowMaxHeight: double.infinity, // 允许自适应高度
-
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  Theme.of(context)
-                                      .primaryColor
-                                      .withValues(alpha: 0.05),
-                                  Theme.of(context)
-                                      .primaryColor
-                                      .withValues(alpha: 0.0),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            columns: _columnNames
-                                .asMap()
-                                .entries
-                                .where((entry) =>
-                                    !_collapsedColumns.contains(entry.key))
-                                .map((entry) {
-                              final index = entry.key;
-                              final title = entry.value;
-                              return DataColumn(
-                                label: MouseRegion(
-                                  child: GestureDetector(
-                                    onTapDown: (details) =>
-                                        _showContextMenuForColumn(
-                                            details, index),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 8, horizontal: 12),
-                                      decoration: BoxDecoration(
-                                        gradient: LinearGradient(
-                                          colors: [
-                                            Theme.of(context)
-                                                .primaryColor
-                                                .withValues(alpha: 0.3),
-                                            Theme.of(context)
-                                                .primaryColor
-                                                .withValues(alpha: 0.1)
-                                          ],
-                                          begin: Alignment.topLeft,
-                                          end: Alignment.bottomRight,
-                                        ),
-                                        borderRadius: BorderRadius.circular(12),
-                                        boxShadow: [
-                                          BoxShadow(
-                                              color: Colors.black
-                                                  .withValues(alpha: 0.15),
-                                              blurRadius: 4,
-                                              offset: const Offset(0, 2)),
-                                        ],
-                                      ),
-                                      child: Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Text(title,
-                                              style: const TextStyle(
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 15)),
-                                          const SizedBox(width: 8),
-                                          _buildCollapseIcon(
-                                              index,
-                                              _collapsedColumns
-                                                  .contains(index)),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              );
-                            }).toList(),
-                            rows: records.reversed.map((record) {
-                              final dateStr =
-                                  DateFormat('yyyy-MM-dd').format(record.date);
-                              final details = record.projects
-                                  .map((p) => p.name.isNotEmpty
-                                      ? '${p.name} (${p.part}): ${p.sets}组×${p.repsPerSet}个, ${p.weight}kg'
-                                      : '')
-                                  .where((d) => d.isNotEmpty)
-                                  .join('\n');
-                              final cells = <DataCell>[];
-                              if (!_collapsedColumns.contains(0)) {
-                                cells.add(DataCell(Text(dateStr,
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w500))));
-                              }
-                              if (!_collapsedColumns.contains(1)) {
-                                cells.add(DataCell(Text(
-                                  record.sessionNumber != null
-                                      ? '第${record.sessionNumber}次'
-                                      : '-',
-                                  textAlign: TextAlign.center,
-                                  style: const TextStyle(
-                                      fontWeight: FontWeight.w500),
-                                )));
-                              }
-                              if (!_collapsedColumns.contains(2)) {
-                                cells.add(DataCell(Container(
-                                  constraints:
-                                      const BoxConstraints(maxWidth: 350),
-                                  child: Tooltip(
-                                    message: details,
-                                    child: Text(details,
-                                        softWrap: true,
-                                        overflow: TextOverflow.visible,
-                                        style: const TextStyle(fontSize: 13)),
-                                  ),
-                                )));
-                              }
-                              if (!_collapsedColumns.contains(3)) {
-                                cells.add(DataCell(Text(
-                                    '${(record.totalWork / 1000).toStringAsFixed(1)}千焦',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(
-                                        fontWeight: FontWeight.w500))));
-                              }
-                              if (!_collapsedColumns.contains(4)) {
-                                cells.add(DataCell(Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    IconButton(
-                                        icon: const Icon(Icons.edit,
-                                            size: 20, color: Colors.blue),
-                                        onPressed: () => _editRecord(record),
-                                        tooltip: '编辑'),
-                                    IconButton(
-                                        icon: const Icon(Icons.delete,
-                                            size: 20, color: Colors.red),
-                                        onPressed: () =>
-                                            _deleteRecord(context, record),
-                                        tooltip: '删除'),
-                                    IconButton(
-                                        icon: const Icon(Icons.merge_type,
-                                            size: 20),
-                                        onPressed: _mergeSameDayRecords,
-                                        tooltip: '整合同一天记录'),
-                                  ],
-                                )));
-                              }
-                              return DataRow(
-                                onLongPress: () =>
-                                    _showContextMenu(context, record),
-                                cells: cells,
-                                selected: false,
-                                color: WidgetStateProperty.resolveWith<Color?>(
-                                    (states) {
-                                  if (states.contains(WidgetState.selected)) {
-                                    return null;
-                                  }
-                                  return Colors.transparent;
-                                }),
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: ClipRect(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      constraints: const BoxConstraints(minHeight: 300),
-                      child: CoachCharacter(records: records),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-    );
-  }
-
-  Widget _buildCollapseIcon(int columnIndex, bool isCollapsed) {
-    bool isHovering = false;
-    bool isHoveringIcon = false;
-    return StatefulBuilder(
-      builder: (context, setState) {
-        return MouseRegion(
-          onEnter: (_) => setState(() {
-            isHovering = true;
-          }),
-          onExit: (_) => setState(() {
-            isHovering = false;
-          }),
-          child: GestureDetector(
-            onTap: () => _toggleColumn(columnIndex),
-            child: Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: isHoveringIcon
-                    ? Colors.grey.shade300.withValues(alpha: 0.5)
-                    : Colors.transparent,
-              ),
-              child: MouseRegion(
-                onEnter: (_) => setState(() {
-                  isHoveringIcon = true;
-                }),
-                onExit: (_) => setState(() {
-                  isHoveringIcon = false;
-                }),
-                child: Text(
-                  '↩',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: isHovering
-                        ? Theme.of(context).primaryColor
-                        : Colors.grey,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-=======
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(Icons.history, size: 80, color: Colors.grey[400]),
                   const SizedBox(height: 16),
-                  Text('暂无历史记录',
-                      style: TextStyle(fontSize: 18, color: Colors.grey[600])),
+                  Text('暂无历史记录', style: TextStyle(fontSize: 18, color: Colors.grey[600])),
                   const SizedBox(height: 8),
-                  Text('开始您的第一次训练吧！',
-                      style: TextStyle(fontSize: 14, color: Colors.grey[500])),
+                  Text('开始您的第一次训练吧！', style: TextStyle(fontSize: 14, color: Colors.grey[500])),
                 ],
               ),
             )
@@ -4900,10 +2666,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 Expanded(
                   flex: 2,
                   child: MouseRegion(
-                    onEnter: (_) =>
-                        setState(() => _showHorizontalScrollbar = true),
-                    onExit: (_) =>
-                        setState(() => _showHorizontalScrollbar = false),
+                    onEnter: (_) => setState(() => _showHorizontalScrollbar = true),
+                    onExit: (_) => setState(() => _showHorizontalScrollbar = false),
                     child: Scrollbar(
                       controller: _horizontalScrollController,
                       thumbVisibility: _showHorizontalScrollbar,
@@ -4912,16 +2676,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         scrollDirection: Axis.horizontal,
                         child: Theme(
                           data: Theme.of(context).copyWith(
-                            cardColor: isGlassTheme
-                                ? Colors.grey.shade800.withValues(alpha: 0.5)
-                                : null,
+                            cardColor: isGlassTheme ? Colors.grey.shade800.withValues(alpha: 0.5) : null,
                             dividerColor: Colors.grey.withValues(alpha: 0.2),
                           ),
                           child: Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                  color: Colors.grey.withValues(alpha: 0.2)),
+                              border: Border.all(color: Colors.grey.withValues(alpha: 0.2)),
                             ),
                             child: DataTable(
                               columnSpacing: 16,
@@ -4929,40 +2690,25 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               dataRowMinHeight: 56,
                               dataRowMaxHeight: double.infinity,
                               headingRowColor: WidgetStateProperty.all(
-                                Theme.of(context)
-                                    .primaryColor
-                                    .withValues(alpha: 0.1),
+                                Theme.of(context).primaryColor.withValues(alpha: 0.1),
                               ),
-                              dataRowColor:
-                                  WidgetStateProperty.resolveWith<Color?>(
-                                      (states) {
-                                // 交替行颜色
-                                final index = (states as Set)
-                                    .cast<WidgetState>()
-                                    .firstOrNull;
-                                return null; // 使用默认，或自定义
-                              }),
                               columns: _columnNames
                                   .asMap()
                                   .entries
-                                  .where((entry) =>
-                                      !_collapsedColumns.contains(entry.key))
+                                  .where((entry) => !_collapsedColumns.contains(entry.key))
                                   .map((entry) {
                                 final title = entry.value;
                                 return DataColumn(
                                   label: Center(
                                     child: Text(
                                       title,
-                                      style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14),
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
                                     ),
                                   ),
                                 );
                               }).toList(),
                               rows: records.reversed.map((record) {
-                                final dateStr = DateFormat('yyyy-MM-dd')
-                                    .format(record.date);
+                                final dateStr = DateFormat('yyyy-MM-dd').format(record.date);
                                 final details = record.projects
                                     .map((p) => p.name.isNotEmpty
                                         ? '${p.name} (${p.part}): ${p.sets}组×${p.repsPerSet}个, ${p.weight}kg'
@@ -4971,30 +2717,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     .join('\n');
                                 final cells = <DataCell>[];
                                 if (!_collapsedColumns.contains(0)) {
-                                  cells.add(DataCell(Center(
-                                      child: Text(dateStr,
-                                          textAlign: TextAlign.center))));
+                                  cells.add(DataCell(Center(child: Text(dateStr, textAlign: TextAlign.center))));
                                 }
                                 if (!_collapsedColumns.contains(1)) {
                                   cells.add(DataCell(Center(
                                       child: Text(
-                                    record.sessionNumber != null
-                                        ? '第${record.sessionNumber}次'
-                                        : '-',
+                                    record.sessionNumber != null ? '第${record.sessionNumber}次' : '-',
                                     textAlign: TextAlign.center,
                                   ))));
                                 }
                                 if (!_collapsedColumns.contains(2)) {
                                   cells.add(DataCell(Center(
                                       child: Container(
-                                    constraints:
-                                        const BoxConstraints(maxWidth: 250),
+                                    constraints: const BoxConstraints(maxWidth: 250),
                                     child: Tooltip(
                                       message: details,
                                       child: Text(details,
-                                          softWrap: true,
-                                          overflow: TextOverflow.visible,
-                                          textAlign: TextAlign.center),
+                                          softWrap: true, overflow: TextOverflow.visible, textAlign: TextAlign.center),
                                     ),
                                   ))));
                                 }
@@ -5011,27 +2750,22 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(
-                                          icon: const Icon(Icons.edit,
-                                              size: 20, color: Colors.blue),
+                                          icon: const Icon(Icons.edit, size: 20, color: Colors.blue),
                                           onPressed: () => _editRecord(record),
                                           tooltip: '编辑'),
                                       IconButton(
-                                          icon: const Icon(Icons.delete,
-                                              size: 20, color: Colors.red),
-                                          onPressed: () =>
-                                              _deleteRecord(context, record),
+                                          icon: const Icon(Icons.delete, size: 20, color: Colors.red),
+                                          onPressed: () => _deleteRecord(context, record),
                                           tooltip: '删除'),
                                       IconButton(
-                                          icon: const Icon(Icons.merge_type,
-                                              size: 20),
+                                          icon: const Icon(Icons.merge_type, size: 20),
                                           onPressed: _mergeSameDayRecords,
                                           tooltip: '整合同一天记录'),
                                     ],
                                   ))));
                                 }
                                 return DataRow(
-                                  onLongPress: () =>
-                                      _showContextMenu(context, record),
+                                  onLongPress: () => _showContextMenu(context, record),
                                   cells: cells,
                                 );
                               }).toList(),
@@ -5061,21 +2795,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
               padding: const EdgeInsets.all(4),
               decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: isHoveringIcon
-                      ? Colors.grey.shade300.withValues(alpha: 0.5)
-                      : Colors.transparent),
+                  color: isHoveringIcon ? Colors.grey.shade300.withValues(alpha: 0.5) : Colors.transparent),
               child: MouseRegion(
                 onEnter: (_) => setState(() => isHoveringIcon = true),
                 onExit: (_) => setState(() => isHoveringIcon = false),
                 child: Text('↩',
                     style: TextStyle(
                         fontSize: 14,
-                        color: isHovering
-                            ? Theme.of(context).primaryColor
-                            : Colors.grey,
+                        color: isHovering ? Theme.of(context).primaryColor : Colors.grey,
                         fontWeight: FontWeight.bold)),
               ),
->>>>>>> Stashed changes
             ),
           ),
         );
@@ -5084,10 +2813,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 }
 
-<<<<<<< Updated upstream
-=======
 // ==================== 项目卡片组件 ====================
->>>>>>> Stashed changes
 class _ProjectCard extends StatefulWidget {
   final int index;
   final ValueNotifier<String> partNotifier;
@@ -5097,21 +2823,6 @@ class _ProjectCard extends StatefulWidget {
   final TextEditingController repsController;
   final TextEditingController feelingController;
   final TextEditingController supplementController;
-<<<<<<< Updated upstream
-
-  const _ProjectCard({
-    super.key,
-    required this.index,
-    required this.partNotifier,
-    required this.nameController,
-    required this.weightController,
-    required this.setsController,
-    required this.repsController,
-    required this.feelingController,
-    required this.supplementController,
-  });
-
-=======
   const _ProjectCard(
       {super.key,
       required this.index,
@@ -5122,89 +2833,19 @@ class _ProjectCard extends StatefulWidget {
       required this.repsController,
       required this.feelingController,
       required this.supplementController});
->>>>>>> Stashed changes
   @override
   State<_ProjectCard> createState() => _ProjectCardState();
 }
 
 class _ProjectCardState extends State<_ProjectCard> {
-<<<<<<< Updated upstream
-  double _weight = 0;
-  int _sets = 0;
-  int _reps = 0;
-=======
-  // double _weight = 0;
-  // int _sets = 0;
-  // int _reps = 0;
->>>>>>> Stashed changes
   String _part = '胸';
 
   @override
   void initState() {
     super.initState();
-<<<<<<< Updated upstream
-    _weight = double.tryParse(widget.weightController.text) ?? 0;
-    _sets = int.tryParse(widget.setsController.text) ?? 0;
-    _reps = int.tryParse(widget.repsController.text) ?? 0;
     _part = widget.partNotifier.value;
-
-    widget.weightController.addListener(_onWeightChanged);
-    widget.setsController.addListener(_onSetsChanged);
-    widget.repsController.addListener(_onRepsChanged);
     widget.partNotifier.addListener(_onPartChanged);
   }
-
-  void _onWeightChanged() {
-    setState(() {
-      _weight = double.tryParse(widget.weightController.text) ?? 0;
-    });
-  }
-
-  void _onSetsChanged() {
-    setState(() {
-      _sets = int.tryParse(widget.setsController.text) ?? 0;
-    });
-  }
-
-  void _onRepsChanged() {
-    setState(() {
-      _reps = int.tryParse(widget.repsController.text) ?? 0;
-    });
-  }
-
-  void _onPartChanged() {
-    setState(() {
-      _part = widget.partNotifier.value;
-    });
-=======
-    _part = widget.partNotifier.value;
-    // _weight = double.tryParse(widget.weightController.text) ?? 0;
-    // _sets = int.tryParse(widget.setsController.text) ?? 0;
-    // _reps = int.tryParse(widget.repsController.text) ?? 0;
-    // _part = widget.partNotifier.value;
-    // widget.weightController.addListener(_onWeightChanged);
-    // widget.setsController.addListener(_onSetsChanged);
-    // widget.repsController.addListener(_onRepsChanged);
-    widget.partNotifier.addListener(_onPartChanged);
-  }
-
-  //void _onWeightChanged() {
-  //setState(() {
-  //_weight = double.tryParse(widget.weightController.text) ?? 0;
-  //});
-  //}
-
-  //void _onSetsChanged() {
-  //setState(() {
-  //_sets = int.tryParse(widget.setsController.text) ?? 0;
-  //});
-  //}
-
-  //void _onRepsChanged() {
-  //setState(() {
-  //_reps = int.tryParse(widget.repsController.text) ?? 0;
-  //});
-  //}
 
   void _onPartChanged() {
     if (mounted) {
@@ -5212,40 +2853,15 @@ class _ProjectCardState extends State<_ProjectCard> {
         _part = widget.partNotifier.value;
       });
     }
->>>>>>> Stashed changes
   }
 
   @override
   void dispose() {
-<<<<<<< Updated upstream
-    widget.weightController.removeListener(_onWeightChanged);
-    widget.setsController.removeListener(_onSetsChanged);
-    widget.repsController.removeListener(_onRepsChanged);
-=======
-    // widget.weightController.removeListener(_onWeightChanged);
-    // widget.setsController.removeListener(_onSetsChanged);
-    // widget.repsController.removeListener(_onRepsChanged);
->>>>>>> Stashed changes
     widget.partNotifier.removeListener(_onPartChanged);
     super.dispose();
   }
 
   double _calculateWork() {
-<<<<<<< Updated upstream
-    const travelDistances = {
-      '肩': 0.6,
-      '背': 0.6,
-      '腿': 0.7,
-      '胸': 0.6,
-      '腹': 0,
-    };
-    if (_part == '腹') {
-      return (_sets * _reps * 65 * 9.8 * 0.3).toDouble();
-    } else {
-      final distance = travelDistances[_part] ?? 0;
-      return (_weight * 9.8 * distance * _sets * _reps);
-    }
-=======
     final weight = double.tryParse(widget.weightController.text) ?? 0;
     final sets = int.tryParse(widget.setsController.text) ?? 0;
     final reps = int.tryParse(widget.repsController.text) ?? 0;
@@ -5253,7 +2869,6 @@ class _ProjectCardState extends State<_ProjectCard> {
     if (_part == '腹') return (sets * reps * 65 * 9.8 * 0.3).toDouble();
     final distance = travelDistances[_part] ?? 0;
     return (weight * 9.8 * distance * sets * reps);
->>>>>>> Stashed changes
   }
 
   @override
@@ -5265,15 +2880,13 @@ class _ProjectCardState extends State<_ProjectCard> {
       decoration: BoxDecoration(
         color: Theme.of(context).cardColor,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-            color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
+        border: Border.all(color: Theme.of(context).primaryColor.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [
           Row(children: [
             Text('项目 ${widget.index + 1}',
-                style:
-                    const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
+                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold))
           ]),
           const SizedBox(height: 12),
           Row(
@@ -5281,26 +2894,17 @@ class _ProjectCardState extends State<_ProjectCard> {
               Expanded(
                   child: TextField(
                       controller: widget.nameController,
-                      decoration: const InputDecoration(
-                          labelText: '项目名称', border: OutlineInputBorder()))),
+                      decoration: const InputDecoration(labelText: '项目名称', border: OutlineInputBorder()))),
               const SizedBox(width: 16),
               Expanded(
                 child: DropdownButtonFormField<String>(
                   initialValue: _part,
-                  decoration: const InputDecoration(
-                      labelText: '锻炼部位', border: OutlineInputBorder()),
+                  decoration: const InputDecoration(labelText: '锻炼部位', border: OutlineInputBorder()),
                   items: const ['胸', '背', '腿', '肩', '腹']
-                      .map((part) =>
-                          DropdownMenuItem(value: part, child: Text(part)))
+                      .map((part) => DropdownMenuItem(value: part, child: Text(part)))
                       .toList(),
                   onChanged: (value) {
-<<<<<<< Updated upstream
-                    if (value != null) {
-                      widget.partNotifier.value = value;
-                    }
-=======
                     if (value != null) widget.partNotifier.value = value;
->>>>>>> Stashed changes
                   },
                 ),
               ),
@@ -5314,23 +2918,19 @@ class _ProjectCardState extends State<_ProjectCard> {
                       controller: widget.weightController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
-                          labelText: '重量 (kg)',
-                          border: OutlineInputBorder(),
-                          suffixText: 'kg'))),
+                          labelText: '重量 (kg)', border: OutlineInputBorder(), suffixText: 'kg'))),
               const SizedBox(width: 16),
               Expanded(
                   child: TextField(
                       controller: widget.setsController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                          labelText: '组数', border: OutlineInputBorder()))),
+                      decoration: const InputDecoration(labelText: '组数', border: OutlineInputBorder()))),
               const SizedBox(width: 16),
               Expanded(
                   child: TextField(
                       controller: widget.repsController,
                       keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                          labelText: '每组数量', border: OutlineInputBorder()))),
+                      decoration: const InputDecoration(labelText: '每组数量', border: OutlineInputBorder()))),
             ],
           ),
           const SizedBox(height: 16),
@@ -5341,8 +2941,7 @@ class _ProjectCardState extends State<_ProjectCard> {
               const Text('做功:', style: TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(width: 8),
               Text('${work.toStringAsFixed(0)} J',
-                  style: const TextStyle(
-                      fontSize: 20, fontWeight: FontWeight.bold)),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
             ],
           ),
           const SizedBox(height: 16),
@@ -5351,14 +2950,12 @@ class _ProjectCardState extends State<_ProjectCard> {
               Expanded(
                   child: TextField(
                       controller: widget.feelingController,
-                      decoration: const InputDecoration(
-                          labelText: '感受', border: OutlineInputBorder()))),
+                      decoration: const InputDecoration(labelText: '感受', border: OutlineInputBorder()))),
               const SizedBox(width: 16),
               Expanded(
                   child: TextField(
                       controller: widget.supplementController,
-                      decoration: const InputDecoration(
-                          labelText: '补剂', border: OutlineInputBorder()))),
+                      decoration: const InputDecoration(labelText: '补剂', border: OutlineInputBorder()))),
             ],
           ),
         ],

@@ -1,13 +1,7 @@
 name: fitness_tracker
-<<<<<<< Updated upstream
-description: 适用于Windows平台，是一个专为Windows平台设计的现代化个人健身数据管理系统。
-publish_to: "none"
-version: 3.1.1+1
-=======
 description: 适用于Android平台的现代化个人健身数据管理系统。
 publish_to: "none"
 version: 4.0.0+1
->>>>>>> Stashed changes
 
 environment:
   sdk: ">=3.0.0 <4.0.0"
@@ -25,17 +19,11 @@ dependencies:
   http: ^1.1.0
   fluttertoast: ^9.0.0
   url_launcher: ^6.2.5
-<<<<<<< Updated upstream
-  webview_windows: ^0.4.0
-  excel: ^4.0.0
-  process_run: ^1.1.0
-=======
   webview_flutter: ^4.4.0   # 替换 webview_windows
   excel: ^4.0.0
   process_run: ^1.1.0
   html: ^0.15.4   # 用于解析 HTML
   xml: ^6.3.0    # 用于解析 XML
->>>>>>> Stashed changes
 
 dev_dependencies:
   flutter_test:
@@ -57,8 +45,4 @@ flutter:
     - assets/无奈社畜.gif
     - assets/熊猫头.gif
     - assets/一起跳舞.gif
-<<<<<<< Updated upstream
     - assets/coach_rules.json
-=======
-    - assets/coach_rules.json
->>>>>>> Stashed changes

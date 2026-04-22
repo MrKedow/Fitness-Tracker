@@ -139,12 +139,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                 else
                                   TextButton.icon(
                                     onPressed: () async {
-                                      if (!mounted) return; // 检查对话框是否还存在
+                                      if (!mounted) return;
                                       setState(() => isUpdating = true);
                                       final success =
                                           await KnowledgeUpdateService
                                               .runUpdate();
-                                      if (!mounted) return; // 异步后再次检查
+                                      if (!mounted) return;
                                       if (success) {
                                         final newStats =
                                             await KnowledgeUpdateService

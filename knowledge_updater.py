@@ -15,9 +15,8 @@ from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
 
 # ========== 配置区域（请根据实际情况修改） ==========
-# 本地 JSON 文件保存路径（建议放在 Flutter 项目的 assets 目录下）
 LOCAL_JSON_PATH = Path(r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Android-Dev\Fitness-Tracker\assets\coach_rules.json")
-# Git 仓库本地路径（需要先 clone 到本地）
+# Git 仓库本地路径
 GIT_REPO_PATH = Path(r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Android-Dev\Fitness-Tracker")
 # 远程仓库 URL（使用 HTTPS + Personal Access Token 或 SSH）
 GIT_REMOTE_URL = "https://github.com/MrKedow/Fitness-Tracker.git"
@@ -202,7 +201,12 @@ BLACKLIST = [
     "教育", "视频", "直播", "讲座", "研讨会", "会议", "论坛", "社区", "贴吧", "群",
     "微信群", "QQ群", "公众号", "小红书", "快手", "B站", "哔哩哔哩", "微博", "微信",
     "Instagram", "Facebook", "Twitter", "LinkedIn", "YouTube", "TikTok", "Snapchat",
-    "Reddit", "Pinterest",
+    "Reddit", "Pinterest", "高启强", "张雪峰", "李佳琦", "薇娅", "罗永浩", "papi酱", "办公室小野", "李子柒",
+    "高启盛", "高启胜", "高启航", "高启明", "高启东", "高启华", "高启文", "高启国", "高启强的父亲", "高三",
+    "瑞文", "测试", "百度知道", "360问答", "搜狗问问", "新浪爱问", "腾讯问问", "网易知道", "问答",
+    "武器装备", "武器", "军事", "战争", "国防", "军工", "军队", "战斗", "作战", "战略", "战术", "兵器",
+    "坦克", "飞机", "舰船", "导弹", "核武器", "无人机", "特种部队", "情报", "间谍", "反恐",
+    "批判", "政治", "时政", "国际关系", "外交", "内政", "经济政策", "社会问题", "文化评论",
 ]
 
 # ========== 预设内容（与原 Dart 保持一致，作为保底） ==========
@@ -662,6 +666,41 @@ def fetch_all_facts():
     arxiv = fetch_arxiv_research()
     return bing + baidu + pubmed + arxiv + PRESET_FACTS
 
+# ========== 新增清理函数 ==========
+def clean_data(data):
+    """根据 BLACKLIST 清理所有类别中的违规条目"""
+    cleaned = {}
+    total_removed = 0
+    for cat in ["scientific_facts", "research_summaries", "myth_busters",
+                "training_protocols", "tips", "encouragements"]:
+        original = data.get(cat, [])
+        new_list = []
+        for item in original:
+            if not contains_blacklisted(item):
+                new_list.append(item)
+        removed = len(original) - len(new_list)
+        total_removed += removed
+        cleaned[cat] = new_list
+        if removed > 0:
+            print(f"   🧹 {cat}: 清理了 {removed} 条违规内容")
+    print(f"总共清理了 {total_removed} 条违规条目")
+    return cleaned
+
+def ensure_preset_fallback(data):
+    """确保每个类别至少有一定数量的预设内容（如果为空）"""
+    for cat, preset in [
+        ("scientific_facts", PRESET_FACTS),
+        ("research_summaries", PRESET_RESEARCH),
+        ("myth_busters", PRESET_MYTHS),
+        ("training_protocols", PRESET_PROTOCOLS),
+        ("tips", PRESET_TIPS),
+        ("encouragements", PRESET_ENCOURAGEMENTS),
+    ]:
+        if not data.get(cat):
+            data[cat] = preset
+            print(f"📦 {cat} 为空，已填充预设 {len(preset)} 条")
+    return data
+
 # ========== 主抓取入口 ==========
 def fetch_all():
     print("开始抓取所有类别...")
@@ -683,11 +722,36 @@ def fetch_all():
 
 # ========== 增量更新逻辑 ==========
 def load_existing_data():
-    if LOCAL_JSON_PATH.exists():
+    """加载现有 JSON，如果文件损坏则返回空字典"""
+    if not LOCAL_JSON_PATH.exists():
+        print("本地 JSON 文件不存在，将创建新文件")
+        return {}
+    try:
         with open(LOCAL_JSON_PATH, 'r', encoding='utf-8') as f:
             return json.load(f)
-    return {}
+    except json.JSONDecodeError as e:
+        print(f"⚠️ JSON 解析失败: {e}")
+        print("将重置为空数据，后续会用预设内容填充")
+        backup_path = LOCAL_JSON_PATH.with_suffix('.json.broken')
+        try:
+            LOCAL_JSON_PATH.rename(backup_path)
+            print(f"已备份损坏文件到 {backup_path}")
+        except:
+            pass
+        return {}
 
+def save_json(data):
+    LOCAL_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(LOCAL_JSON_PATH, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"[{datetime.now()}] JSON saved to {LOCAL_JSON_PATH}")
+  
+    SECONDARY_JSON_PATH = Path(r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\assets\coach_rules.json")
+    SECONDARY_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
+    with open(SECONDARY_JSON_PATH, 'w', encoding='utf-8') as f:
+        json.dump(data, f, ensure_ascii=False, indent=2)
+    print(f"[{datetime.now()}] JSON also saved to {SECONDARY_JSON_PATH}")  
+    
 def merge_data(existing, new):
     merged = {}
     for cat in ["scientific_facts", "research_summaries", "myth_busters",
@@ -696,12 +760,6 @@ def merge_data(existing, new):
         new_set = set(new.get(cat, []))
         merged[cat] = list(existing_set | new_set)
     return merged
-
-def save_json(data):
-    LOCAL_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(LOCAL_JSON_PATH, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"[{datetime.now()}] JSON saved to {LOCAL_JSON_PATH}")
 
 # ========== Git 推送逻辑 ==========
 def git_commit_and_push():
@@ -734,14 +792,37 @@ def main_loop():
     last_push_time = time.time()
     last_scrape_time = 0
 
+    # 启动时先清理一次现有数据
+    print("正在清理现有知识库...")
+    existing = load_existing_data()
+    if existing:
+        cleaned = clean_data(existing)
+        cleaned = ensure_preset_fallback(cleaned)
+        save_json(cleaned)
+        existing = cleaned
+    else:
+        fresh = {
+            "scientific_facts": PRESET_FACTS,
+            "research_summaries": PRESET_RESEARCH,
+            "myth_busters": PRESET_MYTHS,
+            "training_protocols": PRESET_PROTOCOLS,
+            "tips": PRESET_TIPS,
+            "encouragements": PRESET_ENCOURAGEMENTS,
+        }
+        save_json(fresh)
+        existing = fresh
+        print("已使用预设内容初始化知识库")
+
     while True:
         now = time.time()
         if now - last_scrape_time >= SCRAPE_INTERVAL:
             print(f"[{datetime.now()}] Scraping...")
             new_data = fetch_all()
-            existing_data = load_existing_data()
-            merged_data = merge_data(existing_data, new_data)
-            save_json(merged_data)
+            merged = merge_data(existing, new_data)
+            merged = clean_data(merged)
+            merged = ensure_preset_fallback(merged)
+            save_json(merged)
+            existing = merged
             last_scrape_time = now
 
         if now - last_push_time >= PUSH_INTERVAL:
@@ -749,7 +830,8 @@ def main_loop():
             push_with_retry()
             last_push_time = now
 
-        time.sleep(60)
+        time.sleep(60)        
+
 
 if __name__ == "__main__":
     main_loop()

@@ -8,11 +8,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:intl/intl.dart';
-<<<<<<< Updated upstream
-import 'package:webview_windows/webview_windows.dart';
-=======
 import 'package:webview_flutter/webview_flutter.dart';
->>>>>>> Stashed changes
 import '../main.dart';
 
 class CoachCharacter extends StatefulWidget {
@@ -53,11 +49,7 @@ class _CoachCharacterState extends State<CoachCharacter>
   bool _isExpandedAtBottom = true;
   bool _showExpandedScrollIndicator = false;
 
-<<<<<<< Updated upstream
-  late WebviewController _webViewController;
-=======
   late WebViewController _webViewController;
->>>>>>> Stashed changes
   bool _webViewReady = false;
 
   @override
@@ -87,15 +79,10 @@ class _CoachCharacterState extends State<CoachCharacter>
 
   Future<void> _initWebView() async {
     try {
-<<<<<<< Updated upstream
-      _webViewController = WebviewController();
-      await _webViewController.initialize();
-=======
       _webViewController = WebViewController()
         ..setJavaScriptMode(JavaScriptMode.unrestricted)
         ..setNavigationDelegate(NavigationDelegate(
           onPageFinished: (String url) {
-            // 页面加载完成后注入 CSS 移除广告等元素
             _webViewController.runJavaScript('''
               (function() {
                 var style = document.createElement('style');
@@ -105,7 +92,6 @@ class _CoachCharacterState extends State<CoachCharacter>
             ''');
           },
         ));
->>>>>>> Stashed changes
       if (mounted) {
         setState(() {
           _webViewReady = true;
@@ -223,10 +209,6 @@ class _CoachCharacterState extends State<CoachCharacter>
     _scrollController.removeListener(_onScroll);
     _scrollController.dispose();
     _expandedScrollController.dispose();
-<<<<<<< Updated upstream
-    _webViewController.dispose();
-=======
->>>>>>> Stashed changes
     super.dispose();
   }
 
@@ -418,7 +400,6 @@ class _CoachCharacterState extends State<CoachCharacter>
     );
   }
 
-<<<<<<< Updated upstream
   void _showContextMenu(BuildContext context, TapDownDetails details) {
     final RenderObject? overlay =
         Overlay.of(context).context.findRenderObject();
@@ -437,22 +418,10 @@ class _CoachCharacterState extends State<CoachCharacter>
         _showChangeImageMenu();
       } else if (value == 'analyze') {
         _analyzeLocally();
-=======
-  double? _getPreviousWeight(List<WorkoutRecord> records, String name,
-      String part, DateTime currentDate) {
-    for (var record in records) {
-      if (record.date.isAfter(currentDate)) continue;
-      for (var p in record.projects) {
-        if (p.name == name && p.part == part) {
-          return p.weight;
-        }
->>>>>>> Stashed changes
       }
-    }
-    return null;
+    });
   }
 
-<<<<<<< Updated upstream
   double? _getPreviousWeight(List<WorkoutRecord> records, String name,
       String part, DateTime currentDate) {
     for (var record in records) {
@@ -466,8 +435,6 @@ class _CoachCharacterState extends State<CoachCharacter>
     return null;
   }
 
-=======
->>>>>>> Stashed changes
   Future<void> _analyzeLocally() async {
     _scienceItemsMap.clear();
 
@@ -492,11 +459,7 @@ class _CoachCharacterState extends State<CoachCharacter>
       return;
     }
 
-<<<<<<< Updated upstream
-    // 收集数据（省略，与原来相同）
-=======
-    // 收集数据（代码较长，保持原样）
->>>>>>> Stashed changes
+    // 收集数据
     int totalSessions = records.length;
 
     DateTime now = DateTime.now();
@@ -1013,22 +976,7 @@ class _CoachCharacterState extends State<CoachCharacter>
       _expandedTypingController?.stop();
       _expandedTypingController?.reset();
       if (url.isNotEmpty && _webViewReady) {
-<<<<<<< Updated upstream
-        _webViewController.loadUrl(url);
-        _webViewController.setUserAgent(
-            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-        Future.delayed(const Duration(milliseconds: 500), () {
-          _webViewController.executeScript('''
-            (function() {
-              var style = document.createElement('style');
-              style.textContent = 'header, nav, footer, .ad, .advertisement, .sidebar, .comments, .share-buttons, .related-posts, .cookie-consent { display: none !important; } body { padding: 20px; } img { max-width: 100%; height: auto; }';
-              document.head.appendChild(style);
-            })();
-          ''');
-        });
-=======
         _webViewController.loadRequest(Uri.parse(url));
->>>>>>> Stashed changes
       } else {
         _expandedTypingController?.forward(from: 0.0);
       }
@@ -1139,11 +1087,7 @@ class _CoachCharacterState extends State<CoachCharacter>
             Positioned.fill(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-<<<<<<< Updated upstream
-                child: Webview(_webViewController),
-=======
                 child: WebViewWidget(controller: _webViewController),
->>>>>>> Stashed changes
               ),
             )
           else
@@ -1236,10 +1180,7 @@ class _CoachCharacterState extends State<CoachCharacter>
           mainAxisSize: MainAxisSize.max,
           children: [
             GestureDetector(
-<<<<<<< Updated upstream
               onSecondaryTapDown: (details) => _showContextMenu(context, details),
-=======
->>>>>>> Stashed changes
               onTap: () => _analyzeLocally(),
               child: Stack(
                 children: [
@@ -1256,10 +1197,6 @@ class _CoachCharacterState extends State<CoachCharacter>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-<<<<<<< Updated upstream
-                  // 加载动画在右上角
-=======
->>>>>>> Stashed changes
                   if (_isAnalyzing)
                     Positioned(
                       top: 0,
@@ -1375,11 +1312,7 @@ class _CoachCharacterState extends State<CoachCharacter>
                   : Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-<<<<<<< Updated upstream
                         '👆 单击形象获取训练分析\n👇 右键更换陪练形象',
-=======
-                        '👆 单击形象获取训练分析',
->>>>>>> Stashed changes
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,

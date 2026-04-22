@@ -1,17 +1,10 @@
 import 'package:flutter/material.dart';
-<<<<<<< Updated upstream
 import 'package:url_launcher/url_launcher.dart';
-=======
->>>>>>> Stashed changes
 
 class DraggableCat extends StatefulWidget {
   final double catSize;
   final String githubUrl;
-<<<<<<< Updated upstream
-  final Size parentSize; // 父容器尺寸，用于边界限制
-=======
   final Size parentSize;
->>>>>>> Stashed changes
 
   const DraggableCat({
     super.key,
@@ -24,41 +17,30 @@ class DraggableCat extends StatefulWidget {
   State<DraggableCat> createState() => _DraggableCatState();
 }
 
-<<<<<<< Updated upstream
 class _DraggableCatState extends State<DraggableCat>
     with SingleTickerProviderStateMixin {
   Offset _position = Offset.zero;
   bool _isHovering = false;
   double _scrollWidth = 0.0;
   late AnimationController _scrollController;
-=======
-class _DraggableCatState extends State<DraggableCat> {
-  Offset _position = Offset.zero;
->>>>>>> Stashed changes
 
   @override
   void initState() {
     super.initState();
-<<<<<<< Updated upstream
     _scrollController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
     _calculateTextWidth();
-    // 初始位置右下角
-=======
->>>>>>> Stashed changes
     _position = Offset(
       widget.parentSize.width - widget.catSize - 20,
       widget.parentSize.height - widget.catSize - 20,
     );
   }
 
-<<<<<<< Updated upstream
   @override
   void didUpdateWidget(DraggableCat oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // 如果父容器尺寸变化，重新调整位置确保在边界内
     if (widget.parentSize != oldWidget.parentSize) {
       _updatePosition(_position);
     }
@@ -86,8 +68,6 @@ class _DraggableCatState extends State<DraggableCat> {
     });
   }
 
-=======
->>>>>>> Stashed changes
   void _updatePosition(Offset newPosition) {
     final width = widget.parentSize.width;
     final height = widget.parentSize.height;
@@ -100,7 +80,6 @@ class _DraggableCatState extends State<DraggableCat> {
     }
   }
 
-<<<<<<< Updated upstream
   double _calculateScrollLeft() {
     double catLeft = _position.dx;
     double catRight = _position.dx + widget.catSize;
@@ -123,14 +102,11 @@ class _DraggableCatState extends State<DraggableCat> {
     super.dispose();
   }
 
-=======
->>>>>>> Stashed changes
   @override
   Widget build(BuildContext context) {
     return Positioned(
       left: _position.dx,
       top: _position.dy,
-<<<<<<< Updated upstream
       child: MouseRegion(
         cursor: SystemMouseCursors.grab,
         onEnter: (_) => _setHovering(true),
@@ -224,20 +200,6 @@ class _DraggableCatState extends State<DraggableCat> {
                   ),
                 ),
             ],
-=======
-      child: GestureDetector(
-        onPanUpdate: (details) {
-          final newPosition = _position + details.delta;
-          _updatePosition(newPosition);
-        },
-        child: SizedBox(
-          width: widget.catSize,
-          height: widget.catSize,
-          child: Image.asset(
-            'assets/吉祥物奔奔猫.gif',
-            fit: BoxFit.contain,
-            errorBuilder: (context, error, stackTrace) => const Text('🐱', style: TextStyle(fontSize: 50)),
->>>>>>> Stashed changes
           ),
         ),
       ),
