@@ -1,39 +1,31 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
+import 'package:http/http.dart' as http;
+import 'package:html/parser.dart' as html_parser;
+import 'package:xml/xml.dart' as xml;
+import 'package:path_provider/path_provider.dart';
+import 'package:flutter/services.dart' show rootBundle;
 
-import os
-import sys
-import json
-import time
-import random
-import subprocess
-from datetime import datetime
-from pathlib import Path
-from typing import List, Dict, Set
-import requests
-from bs4 import BeautifulSoup
-import xml.etree.ElementTree as ET
+class KnowledgeUpdateService {
+  static const String jsonFileName = 'coach_rules.json';
+  static const String entrezEmail = 'Ethocas@outlook.com';
 
-# ========== 配置区域（请根据实际情况修改） ==========
-# 本地 JSON 文件保存路径（建议放在 Flutter 项目的 assets 目录下）
-LOCAL_JSON_PATH = Path(r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Android-Dev\Fitness-Tracker\assets\coach_rules.json")
-# Git 仓库本地路径（需要先 clone 到本地）
-GIT_REPO_PATH = Path(r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Android-Dev\Fitness-Tracker")
-# 远程仓库 URL（使用 HTTPS + Personal Access Token 或 SSH）
-GIT_REMOTE_URL = "https://github.com/MrKedow/Fitness-Tracker.git"
-# 抓取间隔（秒）—— 1 小时
-SCRAPE_INTERVAL = 3600
-# Git 推送间隔（秒）—— 10 小时
-PUSH_INTERVAL = 36000
-# 推送失败最大重试次数
-MAX_RETRIES = 50
-# 重试间隔（秒）
-RETRY_DELAY = 30
-# 坚果云 WebDAV 配置（可选，用于抓取 PubMed/arXiv 时可能用到）
-ENTREZ_EMAIL = "Ethocas@outlook.com"
+  static Future<Map<String, int>> getStats() async {
+    final file = await _getJsonFile();
+    final data = await _loadJson(file);
+    return {
+      '科学事实': (data['scientific_facts'] as List?)?.length ?? 0,
+      '最新研究': (data['research_summaries'] as List?)?.length ?? 0,
+      '打破迷思': (data['myth_busters'] as List?)?.length ?? 0,
+      '训练方案': (data['training_protocols'] as List?)?.length ?? 0,
+      '小贴士': (data['tips'] as List?)?.length ?? 0,
+      '鼓励语': (data['encouragements'] as List?)?.length ?? 0,
+    };
+  }
 
-# ========== 抓取源列表（与原 Dart 代码完全一致） ==========
-QUOTE_SOURCES = [
+  // ========== 扩展的抓取源 ==========
+  static const List<String> quoteSources = [
     "https://www.bodybuilding.com/fun/88-motivational-quotes-for-bodybuilders.html",
     "https://www.greatist.com/fitness/fitness-quotes",
     "https://www.muscleandfitness.com/flexpress/fitness-quotes/",
@@ -93,9 +85,8 @@ QUOTE_SOURCES = [
     'https://www.health.com/fitness/best-workout-plans',
     'https://www.thehealthy.com/exercise/best-workout-routines/',
     'https://www.livestrong.com/article/13725599-best-workout-routines/',
-]
-
-CHINESE_KEYWORDS = [
+  ];
+  static const List<String> chineseKeywords = [
     '运动营养', '力量训练 研究', '肌肉增长 科学', '高强度间歇训练 效果',
     '健身 误区', '运动恢复 最新', '抗阻训练 进展', '健身 科学研究',
     '增肌 方法', '减脂 科学', '有氧运动 益处', '核心训练 原理',
@@ -106,9 +97,9 @@ CHINESE_KEYWORDS = [
     '游泳 健身', '骑行 锻炼', '登山 体力', '跳绳 燃脂',
     'Tabata 效果', '功能性训练', '平衡训练', '柔韧性 训练',
     '爆发力 训练', '速度 训练', '敏捷性 训练', '耐力 训练',
-]
+  ];
 
-ARXIV_QUERIES = [
+  static const List<String> arxivQueries = [
     'strength training', 'muscle hypertrophy', 'exercise physiology',
     'sports nutrition', 'resistance training', 'endurance exercise',
     'protein metabolism', 'creatine supplementation', 'concurrent training',
@@ -119,9 +110,9 @@ ARXIV_QUERIES = [
     'intermittent fasting exercise', 'ketogenic diet performance', 'vegan athlete',
     'female athlete triad', 'youth resistance training', 'master athlete',
     'tendon adaptation', 'bone density exercise', 'sarcopenia prevention',
-]
+  ];
 
-PUBMED_QUERIES = [
+  static const List<String> pubmedQueries = [
     'resistance training muscle hypertrophy',
     'protein intake muscle protein synthesis',
     'high intensity interval training cardiovascular health',
@@ -154,9 +145,9 @@ PUBMED_QUERIES = [
     'high intensity interval training health',
     'strength training elderly',
     'nutrition recovery exercise',
-]
+  ];
 
-BLACKLIST = [
+  static const List<String> blacklist = [
     "click here", "buy now", "discount", "miracle", "guaranteed", "ad", "sponsored",
     "promotion", "sale", "limited time", "exclusive", "new release", "affiliate",
     "advertisement", "产品", "促销", "代理", "点击", "购买", "优惠", "神奇", "保证",
@@ -203,10 +194,465 @@ BLACKLIST = [
     "微信群", "QQ群", "公众号", "小红书", "快手", "B站", "哔哩哔哩", "微博", "微信",
     "Instagram", "Facebook", "Twitter", "LinkedIn", "YouTube", "TikTok", "Snapchat",
     "Reddit", "Pinterest",
-]
+  ];
+  // ========== 主更新流程（改为顺序执行，避免并发超时） ==========
+  static Future<bool> runUpdate() async {
+    print('📡 开始知识库更新流程...');
+    try {
+      final jsonFile = await _getJsonFile();
+      Map<String, dynamic> data = await _loadJson(jsonFile);
+      final beforeStats = _getStatsFromData(data);
+      print('更新前: $beforeStats');
 
-# ========== 预设内容（与原 Dart 保持一致，作为保底） ==========
-PRESET_RESEARCH = [
+      // 顺序执行抓取，避免并发导致超时
+      final newResearch = await _fetchWithFallback(_fetchAllResearch, _getPresetResearch, '研究');
+      final newEncouragements = await _fetchWithFallback(_fetchAllEncouragements, _getPresetEncouragements, '鼓励语');
+      final newTips = await _fetchWithFallback(_fetchAllTips, _getPresetTips, '小贴士');
+      final newFacts = await _fetchWithFallback(_fetchAllFacts, _getPresetFacts, '科学事实');
+      final newMyths = await _fetchWithFallback(_fetchMyths, _getPresetMyths, '迷思');
+      final newProtocols = await _fetchWithFallback(_fetchProtocols, _getPresetProtocols, '方案');
+
+      print('抓取结果: 研究${newResearch.length} 鼓励${newEncouragements.length} 提示${newTips.length} 事实${newFacts.length} 迷思${newMyths.length} 方案${newProtocols.length}');
+
+      data = _mergeAndLog(data, 'research_summaries', newResearch);
+      data = _mergeAndLog(data, 'encouragements', newEncouragements);
+      data = _mergeAndLog(data, 'tips', newTips);
+      data = _mergeAndLog(data, 'scientific_facts', newFacts);
+      data = _mergeAndLog(data, 'myth_busters', newMyths);
+      data = _mergeAndLog(data, 'training_protocols', newProtocols);
+
+      data = _cleanBlacklisted(data);
+      await _saveJson(jsonFile, data);
+
+      final afterStats = _getStatsFromData(data);
+      print('更新后: $afterStats');
+      print('🎉 知识库更新完成！');
+      return true;
+    } catch (e) {
+      print('❌ 知识库更新失败: $e');
+      return false;
+    }
+  }
+
+  // ========== 聚合抓取方法（增加超时和重试） ==========
+  static Future<List<String>> _fetchAllResearch() async {
+    final arxiv = await _safeFetch(_fetchArxivResearch, 'arXiv', timeoutSec: 35);
+    final pubmed = await _safeFetch(_fetchPubMedSummaries, 'PubMed', timeoutSec: 35);
+    final rss = await _safeFetch(_fetchScienceDailyRss, 'ScienceDaily', timeoutSec: 35);
+    return [...arxiv, ...pubmed, ...rss];
+  }
+
+  static Future<List<String>> _fetchAllEncouragements() async {
+    final fromWeb = await _safeFetch(_fetchEncouragementsFromWeb, '名言网站', timeoutSec: 45);
+    return [...fromWeb, ..._getPresetEncouragements()];
+  }
+
+  static Future<List<String>> _fetchAllTips() async {
+    final quotes = await _safeFetch(_fetchEncouragementsFromWeb, '名言网站(小贴士)', timeoutSec: 45);
+    final tipsFromQuotes = quotes
+        .where((s) => s.length < 80)
+        .map((s) => s.replaceFirst(RegExp(r'^💪'), '💡'))
+        .toList();
+    return [...tipsFromQuotes, ..._getPresetTips()];
+  }
+
+  static Future<List<String>> _fetchAllFacts() async {
+    final bing = await _safeFetch(_fetchBingFacts, '必应', timeoutSec: 45);
+    final baidu = await _safeFetch(_fetchBaiduFacts, '百度', timeoutSec: 45);
+    final pubmed = await _safeFetch(_fetchPubMedSummaries, 'PubMed', timeoutSec: 35);
+    final arxiv = await _safeFetch(_fetchArxivResearch, 'arXiv', timeoutSec: 35);
+    return [...bing, ...baidu, ...pubmed, ...arxiv, ..._getPresetFacts()];
+  }
+
+  // 安全执行抓取，避免单个源崩溃
+  static Future<List<String>> _safeFetch(
+    Future<List<String>> Function() fetcher,
+    String sourceName, {
+    int timeoutSec = 35,
+  }) async {
+    try {
+      return await fetcher().timeout(Duration(seconds: timeoutSec));
+    } catch (e) {
+      print('⚠️ $sourceName 抓取失败: $e');
+      return [];
+    }
+  }
+
+  // ========== 迷思抓取（优化重试和延迟） ==========
+  static Future<List<String>> _fetchMyths() async {
+    final List<String> results = [];
+    final client = _createHttpClient();
+
+    for (final url in quoteSources.take(30)) { // 限制数量，避免超时
+      await Future.delayed(const Duration(milliseconds: 1200));
+      try {
+        final response = await _getWithRetry(client, url, retries: 2)
+            .timeout(const Duration(seconds: 15));
+        if (response == null || response.statusCode != 200) continue;
+
+        final document = html_parser.parse(response.body);
+        List<String> texts = [];
+
+        // 根据网站解析（简化版，保持原逻辑）
+        document.querySelectorAll('p, li, h2, h3').forEach((el) {
+          final text = el.text.trim();
+          if (text.toLowerCase().contains('myth') ||
+              text.contains('误区') ||
+              text.contains('迷思')) {
+            if (text.length > 15 && text.length < 200) texts.add('🧠 $text');
+          }
+        });
+
+        results.addAll(texts);
+        if (results.length >= 80) break;
+      } catch (e) {
+        // 忽略单个URL错误
+      }
+    }
+    client.close();
+
+    final unique = results.toSet().take(60).toList();
+    print('迷思抓取到 ${unique.length} 条');
+    return [...unique, ..._getPresetMyths()];
+  }
+
+  // ========== 训练方案抓取 ==========
+  static Future<List<String>> _fetchProtocols() async {
+    final List<String> results = [];
+    final client = _createHttpClient();
+
+    for (final url in quoteSources.take(30)) {
+      await Future.delayed(const Duration(milliseconds: 1200));
+      try {
+        final response = await _getWithRetry(client, url, retries: 2)
+            .timeout(const Duration(seconds: 15));
+        if (response == null || response.statusCode != 200) continue;
+
+        final document = html_parser.parse(response.body);
+        List<String> texts = [];
+
+        document.querySelectorAll('p, li').forEach((el) {
+          final text = el.text.trim();
+          if (text.length > 30 && text.length < 200) texts.add('🏋️ $text');
+        });
+
+        results.addAll(texts);
+        if (results.length >= 80) break;
+      } catch (e) {
+        // 忽略错误
+      }
+    }
+    client.close();
+
+    final unique = results.toSet().take(60).toList();
+    print('训练方案抓取到 ${unique.length} 条');
+    return [...unique, ..._getPresetProtocols()];
+  }
+
+  // ========== PubMed 抓取 ==========
+  static Future<List<String>> _fetchPubMedSummaries() async {
+    final List<String> results = [];
+    final client = _createHttpClient();
+    try {
+      for (final query in pubmedQueries.take(10)) { // 减少查询数量
+        await Future.delayed(const Duration(seconds: 2));
+        final searchUrl = Uri.https('eutils.ncbi.nlm.nih.gov', '/entrez/eutils/esearch.fcgi', {
+          'db': 'pubmed',
+          'term': query,
+          'retmax': '2',
+          'retmode': 'json',
+          'email': entrezEmail,
+        });
+        final searchResp = await _getWithRetry(client, searchUrl.toString(), isUri: true, uri: searchUrl, retries: 2)
+            .timeout(const Duration(seconds: 25));
+        if (searchResp == null || searchResp.statusCode != 200) continue;
+
+        final searchData = json.decode(searchResp.body);
+        final idList = (searchData['esearchresult']['idlist'] as List?)?.cast<String>() ?? [];
+        if (idList.isEmpty) continue;
+
+        final fetchUrl = Uri.https('eutils.ncbi.nlm.nih.gov', '/entrez/eutils/efetch.fcgi', {
+          'db': 'pubmed',
+          'id': idList.join(','),
+          'retmode': 'xml',
+          'email': entrezEmail,
+        });
+        final fetchResp = await _getWithRetry(client, fetchUrl.toString(), isUri: true, uri: fetchUrl, retries: 2)
+            .timeout(const Duration(seconds: 25));
+        if (fetchResp == null || fetchResp.statusCode != 200) continue;
+
+        final document = xml.XmlDocument.parse(fetchResp.body);
+        final articles = document.findAllElements('PubmedArticle');
+        for (final article in articles) {
+          final title = article.findAllElements('ArticleTitle').firstOrNull?.innerText ?? '';
+          final abstract = article.findAllElements('AbstractText').map((e) => e.innerText).join(' ');
+          if (title.isNotEmpty && abstract.isNotEmpty) {
+            final combined = '$title. $abstract'.replaceAll(RegExp(r'\s+'), ' ').trim();
+            if (combined.length > 50 && combined.length < 600) {
+              results.add('🔬 $combined');
+            }
+          }
+        }
+      }
+    } catch (e) {
+      print('PubMed 抓取异常: $e');
+    } finally {
+      client.close();
+    }
+    print('PubMed 返回 ${results.length} 条');
+    return results.toSet().toList();
+  }
+
+  // ========== arXiv 抓取 ==========
+  static Future<List<String>> _fetchArxivResearch() async {
+    final List<String> results = [];
+    final client = _createHttpClient();
+    try {
+      for (final query in arxivQueries.take(10)) {
+        await Future.delayed(const Duration(seconds: 2));
+        final url = Uri.parse('http://export.arxiv.org/api/query?search_query=all:$query&start=0&max_results=1');
+        final response = await _getWithRetry(client, url.toString(), isUri: true, uri: url, retries: 2)
+            .timeout(const Duration(seconds: 20));
+        if (response == null || response.statusCode != 200) continue;
+
+        final document = xml.XmlDocument.parse(response.body);
+        final entries = document.findAllElements('entry');
+        for (final entry in entries) {
+          final title = entry.findElements('title').firstOrNull?.innerText?.replaceAll('\n', ' ')?.trim() ?? '';
+          final summary = entry.findElements('summary').firstOrNull?.innerText?.replaceAll('\n', ' ')?.trim() ?? '';
+          if (title.isEmpty || summary.isEmpty) continue;
+          String cleanSummary = summary.length > 200 ? '${summary.substring(0, 200)}...' : summary;
+          results.add('🔬 $title: $cleanSummary');
+        }
+      }
+    } catch (e) {
+      print('arXiv 抓取异常: $e');
+    } finally {
+      client.close();
+    }
+    return results.toSet().toList();
+  }
+
+  // ========== ScienceDaily RSS ==========
+  static Future<List<String>> _fetchScienceDailyRss() async {
+    final List<String> results = [];
+    try {
+      final url = Uri.parse('https://www.sciencedaily.com/rss/health_medicine/fitness.xml');
+      final response = await _getWithRetry(_createHttpClient(), url.toString(), isUri: true, uri: url)
+          .timeout(const Duration(seconds: 20));
+      if (response == null || response.statusCode != 200) return [];
+
+      final document = xml.XmlDocument.parse(response.body);
+      final items = document.findAllElements('item');
+      for (final item in items.take(10)) {
+        final title = item.findElements('title').firstOrNull?.innerText ?? '';
+        final desc = item.findElements('description').firstOrNull?.innerText ?? '';
+        if (title.isNotEmpty && desc.isNotEmpty) {
+          final cleanDesc = desc.replaceAll(RegExp(r'<[^>]*>'), '').replaceAll('\n', ' ').trim();
+          final combined = '$title. $cleanDesc';
+          if (combined.length > 50 && combined.length < 500) results.add('📰 $combined');
+        }
+      }
+    } catch (e) {
+      print('ScienceDaily RSS 失败: $e');
+    }
+    return results;
+  }
+
+  // ========== 必应搜索 ==========
+  static Future<List<String>> _fetchBingFacts() async {
+    final List<String> results = [];
+    final client = _createHttpClient();
+    for (final keyword in chineseKeywords.take(15)) {
+      await Future.delayed(const Duration(seconds: 2));
+      try {
+        final url = Uri.parse('https://www.bing.com/search?q=${Uri.encodeComponent(keyword)}&count=2');
+        final response = await _getWithRetry(client, url.toString(), isUri: true, uri: url, retries: 2)
+            .timeout(const Duration(seconds: 15));
+        if (response == null || response.statusCode != 200) continue;
+
+        final document = html_parser.parse(response.body);
+        document.querySelectorAll('.b_caption p').forEach((el) {
+          String text = el.text.trim();
+          if (text.length > 40 && text.length < 300) results.add('📚 $text');
+        });
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    client.close();
+    return results.toSet().toList();
+  }
+
+  // ========== 百度搜索 ==========
+  static Future<List<String>> _fetchBaiduFacts() async {
+    final List<String> results = [];
+    final client = _createHttpClient();
+    for (final keyword in chineseKeywords.take(15)) {
+      await Future.delayed(const Duration(seconds: 2));
+      try {
+        final url = Uri.parse('https://www.baidu.com/s?wd=${Uri.encodeComponent(keyword)}&rn=2');
+        final response = await _getWithRetry(client, url.toString(), isUri: true, uri: url, retries: 2)
+            .timeout(const Duration(seconds: 15));
+        if (response == null || response.statusCode != 200) continue;
+
+        final document = html_parser.parse(response.body);
+        document.querySelectorAll('.c-abstract').forEach((el) {
+          String text = el.text.trim();
+          if (text.length > 40 && text.length < 300) results.add('📚 $text');
+        });
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    client.close();
+    return results.toSet().toList();
+  }
+
+  // ========== 名言网站抓取 ==========
+  static Future<List<String>> _fetchEncouragementsFromWeb() async {
+    final List<String> results = [];
+    final client = _createHttpClient();
+    for (final url in quoteSources.take(30)) {
+      await Future.delayed(const Duration(milliseconds: 800));
+      try {
+        final response = await _getWithRetry(client, url, retries: 2).timeout(const Duration(seconds: 12));
+        if (response == null || response.statusCode != 200) continue;
+
+        final document = html_parser.parse(response.body);
+        final elements = document.querySelectorAll('li, p, blockquote, .quote, .quote-text');
+        for (final el in elements) {
+          String text = el.text.trim();
+          if (text.length > 15 && text.length < 200 && !_containsBlacklisted(text)) {
+            results.add('💪 $text');
+          }
+        }
+        if (results.length >= 100) break;
+      } catch (e) {
+        /* ignore */
+      }
+    }
+    client.close();
+    return results.toSet().toList();
+  }
+
+  // ========== 辅助：带降级的抓取 ==========
+  static Future<List<String>> _fetchWithFallback(
+    Future<List<String>> Function() fetcher,
+    List<String> Function() fallback,
+    String name,
+  ) async {
+    try {
+      final result = await fetcher().timeout(const Duration(seconds: 60));
+      if (result.isNotEmpty) return result;
+      print('⚠️ $name 抓取为空，使用预设');
+      return fallback();
+    } catch (e) {
+      print('⚠️ $name 抓取失败: $e，使用预设');
+      return fallback();
+    }
+  }
+
+  // ========== HTTP 辅助函数 ==========
+  static http.Client _createHttpClient() => http.Client();
+
+  static Future<http.Response?> _getWithRetry(http.Client client, String url,
+      {int retries = 2, bool isUri = false, Uri? uri}) async {
+    for (int i = 0; i <= retries; i++) {
+      try {
+        final requestUri = isUri ? uri! : Uri.parse(url);
+        final response = await client.get(requestUri, headers: {
+          'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+          'Accept':
+              'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.5',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+        });
+        return response;
+      } catch (e) {
+        if (i == retries) rethrow;
+        await Future.delayed(Duration(seconds: 2));
+      }
+    }
+    return null;
+  }
+
+  // ========== 合并与日志 ==========
+  static Map<String, dynamic> _mergeAndLog(
+      Map<String, dynamic> data, String category, List<String> newEntries) {
+    if (!data.containsKey(category)) data[category] = [];
+    final oldSet = Set<String>.from(data[category].whereType<String>());
+    int added = 0;
+    for (final entry in newEntries) {
+      if (entry.isNotEmpty && !oldSet.contains(entry)) {
+        data[category].add(entry);
+        oldSet.add(entry);
+        added++;
+      }
+    }
+    if (added > 0) print('   ➕ $category 新增 $added 条');
+    return data;
+  }
+
+  static Map<String, int> _getStatsFromData(Map<String, dynamic> data) {
+    return {
+      '研究': (data['research_summaries'] as List?)?.length ?? 0,
+      '鼓励': (data['encouragements'] as List?)?.length ?? 0,
+      '提示': (data['tips'] as List?)?.length ?? 0,
+      '事实': (data['scientific_facts'] as List?)?.length ?? 0,
+      '迷思': (data['myth_busters'] as List?)?.length ?? 0,
+      '方案': (data['training_protocols'] as List?)?.length ?? 0,
+    };
+  }
+
+  // ========== 文件操作 ==========
+  static Future<File> _getJsonFile() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File('${dir.path}/$jsonFileName');
+    if (!await file.exists()) {
+      final defaultContent = await rootBundle.loadString('assets/$jsonFileName');
+      await file.writeAsString(defaultContent);
+    }
+    return file;
+  }
+
+  static Future<Map<String, dynamic>> _loadJson(File file) async {
+    final content = await file.readAsString();
+    return json.decode(content);
+  }
+
+  static Future<void> _saveJson(File file, Map<String, dynamic> data) async {
+    await file.writeAsString(json.encode(data), flush: true);
+  }
+
+  static Map<String, dynamic> _cleanBlacklisted(Map<String, dynamic> data) {
+    final categories = [
+      'scientific_facts',
+      'research_summaries',
+      'myth_busters',
+      'training_protocols',
+      'tips',
+      'encouragements'
+    ];
+    for (final cat in categories) {
+      if (data.containsKey(cat) && data[cat] is List) {
+        final list = List<String>.from(data[cat]);
+        final filtered = list.where((text) => !_containsBlacklisted(text)).toList();
+        data[cat] = filtered;
+      }
+    }
+    return data;
+  }
+
+  static bool _containsBlacklisted(String text) {
+    final lower = text.toLowerCase();
+    return blacklist.any((kw) => lower.contains(kw.toLowerCase()));
+  }
+
+  // ========== 预设内容（静态常量，避免重复生成） ==========
+  static final List<String> _presetResearch = [
     "🔬 研究：每周2-3次力量训练可增加肌肉质量并提高骨密度。",
     "🔬 蛋白质摄入时机：训练后30分钟内补充20-25g蛋白质最能促进肌肉合成。",
     "🔬 HIIT 训练能显著提高心肺功能和胰岛素敏感性。",
@@ -258,9 +704,9 @@ PRESET_RESEARCH = [
     "🔬 基因决定肌肉纤维比例。",
     "🔬 年龄增长导致肌肉流失（肌少症）。",
     "🔬 力量训练是预防肌少症最有效方法。"
-]
+  ];
 
-PRESET_ENCOURAGEMENTS = [
+  static final List<String> _presetEncouragements = [
     "💪 每一次力竭都是成长的信号！",
     "💪 坚持就是胜利，肌肉在休息时生长。",
     "💪 你流的每一滴汗，都在雕刻更好的自己。",
@@ -291,9 +737,9 @@ PRESET_ENCOURAGEMENTS = [
     "💪 相信自己，你可以。",
     "💪 没有痛苦，就没有收获。",
     "💪 健身让你更自信。"
-]
+  ];
 
-PRESET_TIPS = [
+  static final List<String> _presetTips = [
     "💡 训练前动态热身，训练后静态拉伸。",
     "💡 每组最后一两次要竭尽全力。",
     "💡 保持水分，每天至少喝2-3升水。",
@@ -324,9 +770,9 @@ PRESET_TIPS = [
     "💡 使用训练App记录进度。",
     "💡 寻找训练伙伴互相激励。",
     "💡 设定短期和长期目标。"
-]
+  ];
 
-PRESET_FACTS = [
+  static final List<String> _presetFacts = [
     "📚 蛋白质摄入建议每公斤体重1.6-2.2克。",
     "📚 睡眠不足会抑制肌肉恢复。",
     "📚 一磅肌肉每天消耗约6-10卡路里。",
@@ -357,9 +803,9 @@ PRESET_FACTS = [
     "📚 碳水化合物热效应5-10%。",
     "📚 脂肪热效应0-3%。",
     "📚 食物热效应占总消耗10%。"
-]
+  ];
 
-PRESET_MYTHS = [
+  static final List<String> _presetMyths = [
     "🧠 局部减脂不存在。",
     "🧠 流汗多不等于减脂多。",
     "🧠 肌肉不会变成脂肪，两者不同组织。",
@@ -387,9 +833,9 @@ PRESET_MYTHS = [
     "🧠 健身不会让你长不高（青少年）。",
     "🧠 健身不会影响生育。",
     "🧠 健身不会导致肾损伤（除非滥用药物）。"
-]
+  ];
 
-PRESET_PROTOCOLS = [
+  static final List<String> _presetProtocols = [
     "🏋️ 渐进超负荷原则：逐步增加重量或次数。",
     "🏋️ 复合动作是基础：深蹲、硬拉、卧推。",
     "🏋️ 分化训练：推拉腿、上下肢分化。",
@@ -420,336 +866,12 @@ PRESET_PROTOCOLS = [
     "🏋️ 壶铃摇摆锻炼后链。",
     "🏋️ 保加利亚分腿蹲单侧训练。",
     "🏋️ 罗马尼亚硬拉针对腘绳肌。"
-]
+  ];
 
-# ========== 工具函数 ==========
-def random_select(lst):
-    return random.choice(lst) if lst else ""
-
-def contains_blacklisted(text):
-    lower = text.lower()
-    return any(kw.lower() in lower for kw in BLACKLIST)
-
-def fetch_with_retry(url, max_retries=2, delay=2):
-    headers = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Accept-Encoding': 'gzip, deflate, br',
-        'Connection': 'keep-alive',
-    }
-    for i in range(max_retries + 1):
-        try:
-            resp = requests.get(url, headers=headers, timeout=15)
-            if resp.status_code == 200:
-                return resp
-        except Exception:
-            if i == max_retries:
-                raise
-            time.sleep(delay)
-    return None
-
-# ========== 抓取函数 ==========
-def fetch_encouragements_from_web():
-    results = []
-    for url in QUOTE_SOURCES[:30]:
-        time.sleep(0.8)
-        try:
-            resp = fetch_with_retry(url)
-            if not resp:
-                continue
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            for el in soup.select('li, p, blockquote, .quote, .quote-text'):
-                text = el.get_text(strip=True)
-                if 15 < len(text) < 200 and not contains_blacklisted(text):
-                    results.append(f"💪 {text}")
-            if len(results) >= 100:
-                break
-        except Exception:
-            continue
-    return list(set(results))
-
-def fetch_myths():
-    results = []
-    for url in QUOTE_SOURCES[:30]:
-        time.sleep(1.2)
-        try:
-            resp = fetch_with_retry(url)
-            if not resp:
-                continue
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            texts = []
-            for el in soup.select('p, li, h2, h3'):
-                text = el.get_text(strip=True)
-                if 'myth' in text.lower() or '误区' in text or '迷思' in text:
-                    if 15 < len(text) < 200:
-                        texts.append(f"🧠 {text}")
-            results.extend(texts)
-            if len(results) >= 80:
-                break
-        except Exception:
-            continue
-    unique = list(set(results))[:60]
-    return unique + PRESET_MYTHS
-
-def fetch_protocols():
-    results = []
-    for url in QUOTE_SOURCES[:30]:
-        time.sleep(1.2)
-        try:
-            resp = fetch_with_retry(url)
-            if not resp:
-                continue
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            texts = []
-            for el in soup.select('p, li'):
-                text = el.get_text(strip=True)
-                if 30 < len(text) < 200:
-                    texts.append(f"🏋️ {text}")
-            results.extend(texts)
-            if len(results) >= 80:
-                break
-        except Exception:
-            continue
-    unique = list(set(results))[:60]
-    return unique + PRESET_PROTOCOLS
-
-def fetch_bing_facts():
-    results = []
-    session = requests.Session()
-    session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-    for kw in CHINESE_KEYWORDS[:15]:
-        time.sleep(2)
-        try:
-            url = f"https://www.bing.com/search?q={requests.utils.quote(kw)}&count=2"
-            resp = session.get(url, timeout=15)
-            if resp.status_code != 200:
-                continue
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            for p in soup.select('.b_caption p'):
-                text = p.get_text(strip=True)
-                if 40 < len(text) < 300:
-                    results.append(f"📚 {text}")
-        except Exception:
-            continue
-    return list(set(results))
-
-def fetch_baidu_facts():
-    results = []
-    session = requests.Session()
-    session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
-    for kw in CHINESE_KEYWORDS[:15]:
-        time.sleep(2)
-        try:
-            url = f"https://www.baidu.com/s?wd={requests.utils.quote(kw)}&rn=2"
-            resp = session.get(url, timeout=15)
-            if resp.status_code != 200:
-                continue
-            soup = BeautifulSoup(resp.text, 'html.parser')
-            for p in soup.select('.c-abstract'):
-                text = p.get_text(strip=True)
-                if 40 < len(text) < 300:
-                    results.append(f"📚 {text}")
-        except Exception:
-            continue
-    return list(set(results))
-
-def fetch_pubmed_summaries():
-    results = []
-    session = requests.Session()
-    for query in PUBMED_QUERIES[:10]:
-        time.sleep(2)
-        try:
-            search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={requests.utils.quote(query)}&retmax=2&retmode=json&email={ENTREZ_EMAIL}"
-            search_resp = session.get(search_url, timeout=25)
-            if search_resp.status_code != 200:
-                continue
-            data = search_resp.json()
-            ids = data.get('esearchresult', {}).get('idlist', [])
-            if not ids:
-                continue
-            fetch_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?db=pubmed&id={','.join(ids)}&retmode=xml&email={ENTREZ_EMAIL}"
-            fetch_resp = session.get(fetch_url, timeout=25)
-            if fetch_resp.status_code != 200:
-                continue
-            root = ET.fromstring(fetch_resp.content)
-            for article in root.findall('.//PubmedArticle'):
-                title = article.find('.//ArticleTitle')
-                title_text = title.text.strip() if title is not None and title.text else ''
-                abstract_parts = []
-                for abs_text in article.findall('.//AbstractText'):
-                    if abs_text.text:
-                        abstract_parts.append(abs_text.text.strip())
-                abstract = ' '.join(abstract_parts)
-                if title_text and abstract:
-                    combined = f"{title_text}. {abstract}".replace('\n', ' ').replace('\r', ' ')
-                    if 50 < len(combined) < 600:
-                        results.append(f"🔬 {combined}")
-        except Exception as e:
-            print(f"PubMed error: {e}")
-            continue
-    return list(set(results))
-
-def fetch_arxiv_research():
-    results = []
-    session = requests.Session()
-    for query in ARXIV_QUERIES[:10]:
-        time.sleep(2)
-        try:
-            url = f"http://export.arxiv.org/api/query?search_query=all:{requests.utils.quote(query)}&start=0&max_results=1"
-            resp = session.get(url, timeout=20)
-            if resp.status_code != 200:
-                continue
-            root = ET.fromstring(resp.content)
-            for entry in root.findall('.//{http://www.w3.org/2005/Atom}entry'):
-                title = entry.find('.//{http://www.w3.org/2005/Atom}title')
-                summary = entry.find('.//{http://www.w3.org/2005/Atom}summary')
-                title_text = title.text.strip().replace('\n', ' ') if title is not None and title.text else ''
-                summary_text = summary.text.strip().replace('\n', ' ') if summary is not None and summary.text else ''
-                if title_text and summary_text:
-                    if len(summary_text) > 200:
-                        summary_text = summary_text[:200] + '...'
-                    results.append(f"🔬 {title_text}: {summary_text}")
-        except Exception:
-            continue
-    return list(set(results))
-
-def fetch_sciencedaily_rss():
-    results = []
-    try:
-        url = "https://www.sciencedaily.com/rss/health_medicine/fitness.xml"
-        resp = requests.get(url, timeout=20)
-        if resp.status_code != 200:
-            return []
-        root = ET.fromstring(resp.content)
-        for item in root.findall('.//item')[:10]:
-            title = item.find('title')
-            desc = item.find('description')
-            title_text = title.text.strip() if title is not None and title.text else ''
-            desc_text = desc.text.strip() if desc is not None and desc.text else ''
-            if title_text and desc_text:
-                import re
-                clean_desc = re.sub(r'<[^>]*>', '', desc_text).replace('\n', ' ').strip()
-                combined = f"{title_text}. {clean_desc}"
-                if 50 < len(combined) < 500:
-                    results.append(f"📰 {combined}")
-    except Exception as e:
-        print(f"ScienceDaily error: {e}")
-    return results
-
-def fetch_all_research():
-    arxiv = fetch_arxiv_research()
-    pubmed = fetch_pubmed_summaries()
-    rss = fetch_sciencedaily_rss()
-    return arxiv + pubmed + rss
-
-def fetch_all_encouragements():
-    web = fetch_encouragements_from_web()
-    return web + PRESET_ENCOURAGEMENTS
-
-def fetch_all_tips():
-    quotes = fetch_encouragements_from_web()
-    tips = []
-    for s in quotes:
-        if len(s) < 80:
-            tips.append(s.replace('💪', '💡'))
-    return tips + PRESET_TIPS
-
-def fetch_all_facts():
-    bing = fetch_bing_facts()
-    baidu = fetch_baidu_facts()
-    pubmed = fetch_pubmed_summaries()
-    arxiv = fetch_arxiv_research()
-    return bing + baidu + pubmed + arxiv + PRESET_FACTS
-
-# ========== 主抓取入口 ==========
-def fetch_all():
-    print("开始抓取所有类别...")
-    research = fetch_all_research()
-    encouragements = fetch_all_encouragements()
-    tips = fetch_all_tips()
-    facts = fetch_all_facts()
-    myths = fetch_myths()
-    protocols = fetch_protocols()
-    print(f"抓取结果: 研究{len(research)} 鼓励{len(encouragements)} 提示{len(tips)} 事实{len(facts)} 迷思{len(myths)} 方案{len(protocols)}")
-    return {
-        "scientific_facts": facts,
-        "research_summaries": research,
-        "myth_busters": myths,
-        "training_protocols": protocols,
-        "tips": tips,
-        "encouragements": encouragements,
-    }
-
-# ========== 增量更新逻辑 ==========
-def load_existing_data():
-    if LOCAL_JSON_PATH.exists():
-        with open(LOCAL_JSON_PATH, 'r', encoding='utf-8') as f:
-            return json.load(f)
-    return {}
-
-def merge_data(existing, new):
-    merged = {}
-    for cat in ["scientific_facts", "research_summaries", "myth_busters",
-                "training_protocols", "tips", "encouragements"]:
-        existing_set = set(existing.get(cat, []))
-        new_set = set(new.get(cat, []))
-        merged[cat] = list(existing_set | new_set)
-    return merged
-
-def save_json(data):
-    LOCAL_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
-    with open(LOCAL_JSON_PATH, 'w', encoding='utf-8') as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
-    print(f"[{datetime.now()}] JSON saved to {LOCAL_JSON_PATH}")
-
-# ========== Git 推送逻辑 ==========
-def git_commit_and_push():
-    try:
-        os.chdir(GIT_REPO_PATH)
-        # 添加文件
-        subprocess.run(["git", "add", str(LOCAL_JSON_PATH.relative_to(GIT_REPO_PATH))], check=True, capture_output=True)
-        # 提交（如果没有变化则跳过）
-        subprocess.run(["git", "commit", "-m", f"Auto update knowledge {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"], check=True, capture_output=True)
-        # 推送
-        subprocess.run(["git", "push", GIT_REMOTE_URL], check=True, capture_output=True)
-        print(f"[{datetime.now()}] Git push successful")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"[{datetime.now()}] Git push failed: {e}")
-        return False
-
-def push_with_retry():
-    for attempt in range(1, MAX_RETRIES + 1):
-        if git_commit_and_push():
-            return True
-        print(f"Push failed, retrying {attempt}/{MAX_RETRIES} in {RETRY_DELAY}s...")
-        time.sleep(RETRY_DELAY)
-    print("Push failed after maximum retries.")
-    return False
-
-# ========== 主循环 ==========
-def main_loop():
-    print("Knowledge updater started.")
-    last_push_time = time.time()
-    last_scrape_time = 0
-
-    while True:
-        now = time.time()
-        if now - last_scrape_time >= SCRAPE_INTERVAL:
-            print(f"[{datetime.now()}] Scraping...")
-            new_data = fetch_all()
-            existing_data = load_existing_data()
-            merged_data = merge_data(existing_data, new_data)
-            save_json(merged_data)
-            last_scrape_time = now
-
-        if now - last_push_time >= PUSH_INTERVAL:
-            print(f"[{datetime.now()}] Attempting to push to GitHub...")
-            push_with_retry()
-            last_push_time = now
-
-        time.sleep(60)
-
-if __name__ == "__main__":
-    main_loop()
+  static List<String> _getPresetResearch() => _presetResearch;
+  static List<String> _getPresetEncouragements() => _presetEncouragements;
+  static List<String> _getPresetTips() => _presetTips;
+  static List<String> _getPresetFacts() => _presetFacts;
+  static List<String> _getPresetMyths() => _presetMyths;
+  static List<String> _getPresetProtocols() => _presetProtocols;
+}
