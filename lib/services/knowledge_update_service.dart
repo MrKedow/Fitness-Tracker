@@ -8,7 +8,7 @@ import 'package:flutter/services.dart' show rootBundle;
 class KnowledgeUpdateService {
   static const String jsonFileName = 'coach_rules.json';
   static const String remoteJsonUrl =
-      'https://raw.githubusercontent.com/MrKedow/Fitness-Tracker/Android-Dev/assets/coach_rules.json';
+      'https://cdn.jsdelivr.net/gh/MrKedow/Fitness-Tracker@Android-Dev/assets/coach_rules.json';
 
   static Future<Map<String, int>> getStats() async {
     final file = await _getJsonFile();
