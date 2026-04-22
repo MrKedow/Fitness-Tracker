@@ -61,4 +61,6 @@ app.*.map.json
 /android/local.properties
 /android/.kts
 /android/MrKedow.kts
-"*.pdb" 
+*.pdb 
+*.exe
+*.dll

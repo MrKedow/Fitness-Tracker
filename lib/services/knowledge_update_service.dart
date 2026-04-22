@@ -7,13 +7,20 @@ import 'package:flutter/services.dart' show rootBundle;
 
 class KnowledgeUpdateService {
   static const String jsonFileName = 'coach_rules.json';
-  static const String remoteJsonUrl =
-      'https://cdn.jsdelivr.net/gh/MrKedow/Fitness-Tracker@Android-Dev/assets/coach_rules.json';
+  static const String baseRemoteUrl =
+      'https://raw.githubusercontent.com/MrKedow/Fitness-Tracker/Android-Dev/assets/coach_rules.json';
 
+  static const Map<String, String> _headers = {
+    'User-Agent':
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+  };
+
+  /// 获取当前本地 JSON 文件中各分类的条目数量（直接从文件读取）
   static Future<Map<String, int>> getStats() async {
     final file = await _getJsonFile();
+    print('📊 getStats 读取文件: ${file.path}');
     final data = await _loadJson(file);
-    return {
+    final stats = {
       '科学事实': (data['scientific_facts'] as List?)?.length ?? 0,
       '最新研究': (data['research_summaries'] as List?)?.length ?? 0,
       '打破迷思': (data['myth_busters'] as List?)?.length ?? 0,
@@ -21,68 +28,99 @@ class KnowledgeUpdateService {
       '小贴士': (data['tips'] as List?)?.length ?? 0,
       '鼓励语': (data['encouragements'] as List?)?.length ?? 0,
     };
+    print('📊 统计结果: $stats');
+    return stats;
   }
 
-  /// 从 GitHub 下载最新 JSON 并与本地合并
-  static Future<bool> runUpdate() async {
+  /// 从 GitHub 下载最新 JSON 并直接替换本地文件，返回是否成功以及新的统计信息
+  static Future<({bool success, Map<String, int>? stats})> runUpdateWithStats() async {
     print('📡 开始从 GitHub 更新知识库...');
-    try {
-      final response = await http.get(Uri.parse(remoteJsonUrl));
-      if (response.statusCode != 200) {
-        print('❌ 下载失败，状态码: ${response.statusCode}');
-        return false;
-      }
+    final timestamp = DateTime.now().millisecondsSinceEpoch;
+    final remoteUrl = '$baseRemoteUrl?t=$timestamp';
+    print('🌐 请求 URL: $remoteUrl');
 
-      final remoteData = json.decode(response.body) as Map<String, dynamic>;
-      final jsonFile = await _getJsonFile();
-      Map<String, dynamic> localData = await _loadJson(jsonFile);
+    for (int attempt = 1; attempt <= 3; attempt++) {
+      try {
+        print('尝试第 $attempt 次下载...');
+        final client = http.Client();
+        final request = http.Request('GET', Uri.parse(remoteUrl));
+        request.headers.addAll(_headers);
+        final response = await client.send(request).timeout(
+          const Duration(seconds: 15),
+          onTimeout: () {
+            client.close();
+            throw TimeoutException('连接超时');
+          },
+        );
+        final responseBody = await http.Response.fromStream(response);
+        client.close();
 
-      // 合并（只添加新条目，不删除）
-      for (final category in [
-        'scientific_facts',
-        'research_summaries',
-        'myth_busters',
-        'training_protocols',
-        'tips',
-        'encouragements'
-      ]) {
-        final localSet = Set<String>.from(localData[category] as List? ?? []);
-        final remoteList = remoteData[category] as List? ?? [];
-        for (final item in remoteList) {
-          if (item is String && item.isNotEmpty && !localSet.contains(item)) {
-            localData[category] = [...localSet, ...remoteList].toList();
-            // 重新构建 localSet 避免重复添加
-            break;
+        if (responseBody.statusCode == 200) {
+          final body = responseBody.body;
+          print('✅ 下载成功，内容长度: ${body.length} 字符');
+          // 打印前200字符预览
+          final preview = body.length > 200 ? body.substring(0, 200) : body;
+          print('📄 内容预览: $preview...');
+
+          // 直接覆盖本地文件
+          final jsonFile = await _getJsonFile();
+          await jsonFile.writeAsString(body, flush: true);
+          print('💾 已写入文件: ${jsonFile.path}');
+          print('📏 写入后文件大小: ${await jsonFile.length()} 字节');
+
+          // 立即重新读取并解析，验证写入内容
+          final newData = await _loadJson(jsonFile);
+          final scientificCount = (newData['scientific_facts'] as List?)?.length ?? 0;
+          print('🔍 写入后 scientific_facts 实际数量: $scientificCount');
+
+          if (scientificCount < 100) {
+            print('⚠️ 警告：下载的内容中 scientific_facts 只有 $scientificCount 条，可能不是最新版本！');
           }
-        }
-      }
 
-      await _saveJson(jsonFile, localData);
-      print('🎉 知识库更新完成！');
-      return true;
-    } catch (e) {
-      print('❌ 更新失败: $e');
-      return false;
+          final newStats = {
+            '科学事实': scientificCount,
+            '最新研究': (newData['research_summaries'] as List?)?.length ?? 0,
+            '打破迷思': (newData['myth_busters'] as List?)?.length ?? 0,
+            '训练方案': (newData['training_protocols'] as List?)?.length ?? 0,
+            '小贴士': (newData['tips'] as List?)?.length ?? 0,
+            '鼓励语': (newData['encouragements'] as List?)?.length ?? 0,
+          };
+          print('🎉 知识库更新完成！新统计: $newStats');
+          return (success: true, stats: newStats);
+        } else {
+          print('❌ HTTP 错误: ${responseBody.statusCode}');
+          if (attempt == 3) throw Exception('HTTP ${responseBody.statusCode}');
+          await Future.delayed(Duration(seconds: attempt));
+        }
+      } catch (e) {
+        print('❌ 尝试 $attempt 失败: $e');
+        if (attempt == 3) return (success: false, stats: null);
+        await Future.delayed(Duration(seconds: attempt));
+      }
     }
+    return (success: false, stats: null);
   }
 
-  // ========== 文件操作（保持不变） ==========
+  /// 保持原有的 runUpdate 方法兼容性
+  static Future<bool> runUpdate() async {
+    final result = await runUpdateWithStats();
+    return result.success;
+  }
+
   static Future<File> _getJsonFile() async {
     final dir = await getApplicationDocumentsDirectory();
     final file = File('${dir.path}/$jsonFileName');
     if (!await file.exists()) {
+      print('📁 本地文件不存在，从 assets 复制初始文件');
       final defaultContent = await rootBundle.loadString('assets/$jsonFileName');
       await file.writeAsString(defaultContent);
     }
+    print('📁 本地文件路径: ${file.path}');
     return file;
   }
 
   static Future<Map<String, dynamic>> _loadJson(File file) async {
     final content = await file.readAsString();
     return json.decode(content);
-  }
-
-  static Future<void> _saveJson(File file, Map<String, dynamic> data) async {
-    await file.writeAsString(json.encode(data), flush: true);
   }
 }

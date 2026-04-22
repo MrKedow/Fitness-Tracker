@@ -418,8 +418,8 @@ class KnowledgeUpdateService {
         final document = xml.XmlDocument.parse(response.body);
         final entries = document.findAllElements('entry');
         for (final entry in entries) {
-          final title = entry.findElements('title').firstOrNull?.innerText?.replaceAll('\n', ' ')?.trim() ?? '';
-          final summary = entry.findElements('summary').firstOrNull?.innerText?.replaceAll('\n', ' ')?.trim() ?? '';
+          final title = entry.findElements('title').firstOrNull?.innerText.replaceAll('\n', ' ').trim() ?? '';
+          final summary = entry.findElements('summary').firstOrNull?.innerText.replaceAll('\n', ' ').trim() ?? '';
           if (title.isEmpty || summary.isEmpty) continue;
           String cleanSummary = summary.length > 200 ? '${summary.substring(0, 200)}...' : summary;
           results.add('🔬 $title: $cleanSummary');
