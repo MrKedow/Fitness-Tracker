@@ -13,6 +13,7 @@ from typing import List, Dict, Set
 import requests
 from bs4 import BeautifulSoup
 import xml.etree.ElementTree as ET
+import re
 
 # ========== 配置区域（请根据实际情况修改） ==========
 LOCAL_JSON_PATH = Path(r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Android-Dev\Fitness-Tracker\assets\coach_rules.json")
@@ -23,7 +24,7 @@ GIT_REMOTE_URL = "https://github.com/MrKedow/Fitness-Tracker.git"
 # 抓取间隔（秒）—— 1 小时
 SCRAPE_INTERVAL = 3600
 # Git 推送间隔（秒）—— 10 小时
-PUSH_INTERVAL = 36000
+PUSH_INTERVAL = 5400
 # 推送失败最大重试次数
 MAX_RETRIES = 50
 # 重试间隔（秒）
@@ -207,6 +208,25 @@ BLACKLIST = [
     "武器装备", "武器", "军事", "战争", "国防", "军工", "军队", "战斗", "作战", "战略", "战术", "兵器",
     "坦克", "飞机", "舰船", "导弹", "核武器", "无人机", "特种部队", "情报", "间谍", "反恐",
     "批判", "政治", "时政", "国际关系", "外交", "内政", "经济政策", "社会问题", "文化评论",
+    "注音", "驱动", "程序", "更新", "下载", "卸载", "至尊", "钻石", "法律", "王者", "青铜",
+    "维基", "词典", "表意", "文字", "漢字", "词语", "歷史", "硬件", "Nvidia", "AMD", "Intel", "Apple Silicon", "GPU", "CPU", "TPU", "AI芯片", "深度学习加速器",
+    "数据库", "图书馆", "中文", "官話", "拼音", "解释", "份量", "背叛", "词性", "论衡", "发音",
+    "汉语", "本义", "表示", "笔顺", "官网", "期刊", "国际", "跳转", "教练", "补子", "官员",
+    "诊断", "治疗", "医疗", "用药", "服药", "服用", "省钱", "牌意", "关键词", "补子", "政策", "法规", "法律", "司法", "行政", "立法", "监管", "合规", "审查", "处罚", "罚款", "监禁", "判决", "律师", "法官", "法院", "检察院", "公安局", "国家安全局", "情报局", "军队", "武警", "特警", "反恐", "维稳",
+    "汉语", "本义", "表示", "笔顺", "官网", "期刊", "国际", "跳转", "教练", "补子", "官员",
+    "汉语", "本义", "表示", "笔顺", "官网", "期刊", "国际", "跳转", "教练", "补子", "官员",
+
+]
+
+BLACKLIST = list(set(BLACKLIST))
+
+REGEX_BLACKLIST = [
+    r'\d{4}年\d{1,2}月\d{1,2}日',   # 2023年10月5日
+    r'\d{4}-\d{1,2}-\d{1,2}',       # 2023-10-05
+    r'\d{4}/\d{1,2}/\d{1,2}',       # 2023/10/05
+    r'\d{1,2}月\d{1,2}日',          # 10月5日（不带年份）
+    r'\d{4}\.\d{1,2}\.\d{1,2}',     # 2023.10.05
+    r'\d{1,2}/\d{1,2}/\d{4}',       # 10/05/2023
 ]
 
 # ========== 预设内容（与原 Dart 保持一致，作为保底） ==========
@@ -430,10 +450,19 @@ PRESET_PROTOCOLS = [
 def random_select(lst):
     return random.choice(lst) if lst else ""
 
+# 预编译正则表达式（提高性能）
+_COMPILED_REGEX = [re.compile(pattern) for pattern in REGEX_BLACKLIST]
+
 def contains_blacklisted(text):
     lower = text.lower()
-    return any(kw.lower() in lower for kw in BLACKLIST)
-
+    # 1. 关键词黑名单检查
+    if any(kw.lower() in lower for kw in BLACKLIST):
+        return True
+    # 2. 正则表达式黑名单检查
+    for regex in _COMPILED_REGEX:
+        if regex.search(text):
+            return True
+    return False
 def fetch_with_retry(url, max_retries=2, delay=2):
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
@@ -523,7 +552,7 @@ def fetch_bing_facts():
     session = requests.Session()
     session.headers.update({'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'})
     for kw in CHINESE_KEYWORDS[:15]:
-        time.sleep(2)
+        time.sleep(5)
         try:
             url = f"https://www.bing.com/search?q={requests.utils.quote(kw)}&count=2"
             resp = session.get(url, timeout=15)
