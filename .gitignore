@@ -64,3 +64,4 @@ app.*.map.json
 *.pdb 
 *.exe
 *.dll
+*.lock

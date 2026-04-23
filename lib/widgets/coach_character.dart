@@ -592,28 +592,6 @@ class _CoachCharacterState extends State<CoachCharacter>
     );
   }
 
-  void _showContextMenu(BuildContext context, TapDownDetails details) {
-    final RenderObject? overlay =
-        Overlay.of(context).context.findRenderObject();
-    showMenu(
-      context: context,
-      position: RelativeRect.fromRect(
-        details.globalPosition & const Size(40, 40),
-        Offset.zero & (overlay?.paintBounds.size ?? Size.zero),
-      ),
-      items: const [
-        PopupMenuItem(value: 'changeImage', child: Text('🎨 更改陪练形象')),
-        PopupMenuItem(value: 'analyze', child: Text('📊 分析训练数据')),
-      ],
-    ).then((value) {
-      if (value == 'changeImage') {
-        _showChangeImageMenu();
-      } else if (value == 'analyze') {
-        _analyzeLocally();
-      }
-    });
-  }
-
   double? _getPreviousWeight(List<WorkoutRecord> records, String name,
       String part, DateTime currentDate) {
     for (var record in records) {
@@ -1373,8 +1351,6 @@ class _CoachCharacterState extends State<CoachCharacter>
           mainAxisSize: MainAxisSize.max,
           children: [
             GestureDetector(
-              onSecondaryTapDown: (details) =>
-                  _showContextMenu(context, details),
               onTap: () => _analyzeLocally(),
               child: Stack(
                 children: [
@@ -1506,7 +1482,7 @@ class _CoachCharacterState extends State<CoachCharacter>
                   : Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        '👆 单击形象获取训练分析\n👇 右键更换陪练形象',
+                        '单击形象获取训练分析',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 12,
