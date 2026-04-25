@@ -9,7 +9,6 @@ import time
 import random
 import subprocess
 from datetime import datetime
-from pathlib import Path
 from typing import List, Dict, Set
 import requests
 from bs4 import BeautifulSoup
@@ -21,24 +20,18 @@ LOCAL_JSON_PATH = Path("assets/coach_rules.json")
 SECONDARY_JSON_PATH = Path(
     r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\assets\coach_rules.json"
 )
-GIT_REPO_PATH = Path(".")  # 当前目录即为 Git 仓库根目录
-# 远程仓库 URL（使用 HTTPS + Personal Access Token）
+GIT_REPO_PATH = Path(".")
 GIT_REMOTE_URL = "https://github.com/MrKedow/Fitness-Tracker.git"
-SCRAPE_INTERVAL = 3600
-# Git 推送间隔（秒）—— 10 小时
-PUSH_INTERVAL = 5400
-# 推送失败最大重试次数
+SCRAPE_INTERVAL = 21600  # 6 小时抓取一次
+PUSH_INTERVAL = 43200  # 12 小时推送一次
 MAX_RETRIES = 50
-# 重试间隔（秒）
 RETRY_DELAY = 30
-# 坚果云 WebDAV 配置（可选，用于抓取 PubMed/arXiv 时可能用到）
 ENTREZ_EMAIL = "Ethocas@outlook.com"
-# 在配置区域之后添加
+
 if not (GIT_REPO_PATH / ".git").exists():
-    print(
-        "Error: Current directory is not a Git repository. Please run the script from the project root."
-    )
+    print("Error: Current directory is not a Git repository.")
     sys.exit(1)
+
 # ========== 抓取源列表（与原 Dart 代码完全一致） ==========
 QUOTE_SOURCES = [
     "https://www.bodybuilding.com/fun/88-motivational-quotes-for-bodybuilders.html",
@@ -100,8 +93,440 @@ QUOTE_SOURCES = [
     "https://www.health.com/fitness/best-workout-plans",
     "https://www.thehealthy.com/exercise/best-workout-routines/",
     "https://www.livestrong.com/article/13725599-best-workout-routines/",
+    # ===== 男士/女士健身主流媒体 =====
+    "https://www.menshealth.com/fitness/",
+    "https://www.womenshealthmag.com/fitness/",
+    "https://www.runnersworld.com/training/",
+    "https://www.bicycling.com/training/",
+    "https://www.triathlete.com/training/",
+    "https://www.yogajournal.com/poses/",
+    "https://www.pilatesstyle.com/",
+    # ===== 专业训练与力量举 =====
+    "https://www.strongerbyscience.com/",
+    "https://www.barbend.com/",
+    "https://www.t-nation.com/",
+    "https://www.breakingmuscle.com/",
+    "https://www.stack.com/",
+    "https://www.muscleandstrength.com/articles",
+    "https://www.bodybuilding.com/content/",
+    "https://www.elitefts.com/",
+    "https://www.catalystathletics.com/",
+    "https://www.allthingsgym.com/",
+    "https://www.jtsstrength.com/",
+    # ===== 运动科学、营养与补剂 =====
+    "https://www.precisionnutrition.com/",
+    "https://examine.com/",
+    "https://www.nutritionfacts.org/",
+    "https://www.sportsdietitians.com.au/",
+    "https://www.ais.gov.au/nutrition",
+    "https://www.gssiweb.org/",
+    "https://www.sportsnutritionsociety.org/",
+    # ===== 学术与医学健康门户 =====
+    "https://www.health.harvard.edu/exercise-and-fitness",
+    "https://www.hopkinsmedicine.org/health/wellness-and-prevention/exercise-and-fitness",
+    "https://www.clevelandclinic.org/health/",
+    "https://www.mayoclinic.org/healthy-lifestyle/fitness",
+    "https://www.nhs.uk/live-well/exercise/",
+    "https://www.cdc.gov/physicalactivity/index.html",
+    "https://www.who.int/news-room/fact-sheets/detail/physical-activity",
+    "https://medlineplus.gov/exerciseandphysicalfitness.html",
+    # ===== 运动医学/康复 =====
+    "https://www.sportsmed.org/",
+    "https://www.bjsm.bmj.com/",
+    "https://www.physio-pedia.com/",
+    "https://www.moveforwardpt.com/",
+    "https://www.aapmr.org/",
+    # ===== 心理健康与正念运动 =====
+    "https://www.mind.org.uk/information-support/tips-for-everyday-living/physical-activity/",
+    "https://www.mentalhealth.org.uk/explore-mental-health/a-z-topics/physical-health-and-mental-health",
+    "https://www.apa.org/topics/exercise-fitness",
+    "https://www.headspace.com/",
+    "https://www.calm.com/",
+    # ===== 女性/老年人/青少年专项 =====
+    "https://www.girlsgonestrong.com/",
+    "https://www.womenshealth.gov/fitness",
+    "https://www.nia.nih.gov/health/exercise-physical-activity",
+    "https://www.silversneakers.com/",
+    "https://www.kidshealth.org/en/teens/exercise-wise.html",
+    # ===== 健身博客与社区 =====
+    "https://www.nerdfitness.com/",
+    "https://www.artofmanliness.com/health-fitness/",
+    "https://www.fitbottomedgirls.com/",
+    "https://www.12minuteathlete.com/",
+    "https://www.fitnessblender.com/blog",
+    "https://www.blogilates.com/",
+    "https://www.carrotsncake.com/",
+    "https://www.popsugar.com/fitness",
+    # ===== 运动表现/科技 =====
+    "https://www.simplifaster.com/",
+    "https://www.freelapusa.com/",
+    "https://www.hudl.com/blog/",
+    "https://www.strengthandconditioningresearch.com/",
+    # ===== 瑜伽/普拉提/身心运动 =====
+    "https://www.doyou.com/",
+    "https://www.gaia.com/",
+    "https://www.yogiapproved.com/",
+    "https://www.doyogawithme.com/",
+    "https://www.pilatesanytime.com/",
+    # ===== 跑步/耐力运动 =====
+    "https://www.runnersconnect.net/",
+    "https://www.trailrunnermag.com/",
+    "https://www.irunfar.com/",
+    "https://www.220triathlon.com/",
+    "https://www.swimmingworldmagazine.com/",
+    # ===== 国际组织与认证机构 =====
+    "https://www.acsm.org/",
+    "https://www.nsca.com/",
+    "https://www.acefitness.org/education-and-resources/lifestyle/blog/",
+    "https://www.nasm.org/",
+    "https://www.issaonline.com/blog",
+    "https://www.canfitpro.com/",
+    "https://www.fitnessaustralia.com.au/",
+    # ===== 健康新闻与科普 =====
+    "https://www.nytimes.com/section/well",
+    "https://www.washingtonpost.com/wellness/",
+    "https://www.cnn.com/health",
+    "https://www.bbc.com/future/health",
+    "https://www.theguardian.com/lifeandstyle/health-and-wellbeing",
+    "https://www.everydayhealth.com/fitness/",
+    "https://www.livescience.com/health",
+    "https://www.medicalnewstoday.com/categories/sports-medicine-fitness",
+    # ===== 数据与工具 =====
+    "https://www.healthdata.org/",
+    "https://www.whoop.com/the-locker/",
+    "https://www.ouraring.com/blog/",
+    "https://www.stryd.com/blog",
+    # ===== 功能性训练 & CrossFit =====
+    "https://www.functionalmovement.com/",
+    "https://www.crossfit.com/essentials/",
+    "https://www.crossfitinvictus.com/blog/",
+    "https://www.theboxmag.com/",
+    "https://www.wodnationmagazine.com/",
+    "https://www.boxrox.com/",
+    "https://journal.crossfit.com/",
+    "https://www.crossfitfootball.com/",
+    "https://www.mobilitywod.com/",
+    # ===== 健美与体形 =====
+    "https://www.bodybuilding.com/fun/",
+    "https://www.muscleandfitness.com/",
+    "https://www.flexonline.com/",
+    "https://www.muscleandstrength.com/",
+    "https://www.ironmanmagazine.com/",
+    "https://www.digitalmuscle.com/",
+    "https://www.generationiron.com/",
+    "https://www.muscletech.com/blogs/",
+    "https://www.nutrabolics.com/blog/",
+    # ===== 力量举 & 大力士 =====
+    "https://www.powerliftingtowin.com/",
+    "https://www.powerliftingaustralia.com/",
+    "https://www.strongman.org/",
+    "https://www.startingstrength.com/",
+    "https://www.practicalprogramming.com/",
+    "https://www.barbellmedicine.com/blog/",
+    "https://www.reactivetrainingsystems.com/",
+    "https://www.andybaker.com/",
+    # ===== 运动康复 & 物理治疗 =====
+    "https://www.physio-network.com/",
+    "https://www.theprehabguys.com/",
+    "https://www.sportsinjuryclinic.net/",
+    "https://www.athletico.com/blog/",
+    "https://www.selectphysicaltherapy.com/blog/",
+    "https://www.orthocarolina.com/",
+    "https://www.hss.edu/condition-list_sports-medicine.asp",
+    "https://www.verywellhealth.com/exercise-and-fitness-4013695",
+    # ===== 跑步 & 耐力专项 =====
+    "https://www.runnersworld.com/",
+    "https://www.trailrunnermag.com/",
+    "https://www.ultrarunning.com/",
+    "https://www.runnersconnect.net/blog/",
+    "https://www.therunexperience.com/",
+    "https://www.marathonhandbook.com/",
+    "https://www.strengthrunning.com/",
+    "https://www.trainingpeaks.com/blog/",
+    "https://www.endurancesportswire.com/",
+    # ===== 自行车 & 铁人三项 =====
+    "https://www.bikeradar.com/training/",
+    "https://www.cyclingweekly.com/fitness",
+    "https://www.triathlete.com/",
+    "https://www.220triathlon.com/",
+    "https://www.tri247.com/",
+    "https://www.tritalk.co.uk/",
+    "https://www.slowtwitch.com/",
+    # ===== 游泳 & 水上运动 =====
+    "https://www.swimmingworldmagazine.com/",
+    "https://www.usms.org/fitness-and-training",
+    "https://www.swimswam.com/",
+    "https://www.swimsmooth.com/",
+    "https://www.triathletemag.com.au/",
+    # ===== 瑜伽 & 普拉提 =====
+    "https://www.yogajournal.com/",
+    "https://www.yogainternational.com/",
+    "https://www.doyogawithme.com/",
+    "https://www.pilatesanytime.com/",
+    "https://www.pilatesstyle.com/",
+    "https://www.verywellfit.com/yoga-4157117",
+    "https://www.yogabasics.com/",
+    # ===== MMA, 格斗 & 武术 =====
+    "https://www.mmajunkie.com/",
+    "https://www.sherdog.com/",
+    "https://www.bloodyelbow.com/",
+    "https://www.evolve-mma.com/blog/",
+    "https://www.tigermuaythai.com/",
+    "https://www.fightcampconditioning.com/",
+    # ===== 舞蹈 & 芭蕾健身 =====
+    "https://www.dancespirit.com/",
+    "https://www.dancemagazine.com/",
+    "https://www.pointemagazine.com/",
+    "https://www.balletbeautiful.com/",
+    # ===== 团体课 & 有氧器械 =====
+    "https://www.lesmills.com/",
+    "https://www.24hourfitness.com/",
+    "https://www.orangetheory.com/en-us/articles/",
+    "https://www.f45training.com/",
+    "https://www.soul-cycle.com/",
+    "https://www.purebarre.com/",
+    # ===== 女性健身 & 产后 =====
+    "https://www.girlsgonestrong.com/",
+    "https://www.pregnancyexercise.co.nz/",
+    "https://www.mamastefit.com/",
+    "https://www.bumpsandburpees.com/",
+    "https://www.thebump.com/fitness",
+    # ===== 青少年 & 儿童运动 =====
+    "https://www.kidshealth.org/en/teens/",
+    "https://www.healthychildren.org/",
+    "https://www.strong4life.com/",
+    "https://www.acefitness.org/education-and-resources/lifestyle/blog/",
+    "https://www.shapeamerica.org/",
+    # ===== 老年人 & 银发健身 =====
+    "https://www.nia.nih.gov/health/exercise-physical-activity",
+    "https://www.silversneakers.com/",
+    "https://www.aarp.org/health/healthy-living/",
+    "https://www.agingcare.com/",
+    "https://www.eldergym.com/",
+    # ===== 心理学 & 运动动机 =====
+    "https://www.psychologytoday.com/us/basics/exercise",
+    "https://www.headspace.com/",
+    "https://www.calm.com/blog",
+    "https://www.mindful.org/",
+    "https://www.apa.org/topics/exercise-fitness",
+    # ===== 营养科学 & 饮食 =====
+    "https://www.nutrition.gov/",
+    "https://www.eatright.org/",
+    "https://www.nutrition.org.uk/",
+    "https://www.choosemyplate.gov/",
+    "https://www.hsph.harvard.edu/nutritionsource/",
+    "https://www.fao.org/nutrition/en/",
+    "https://www.nal.usda.gov/",
+    "https://www.nutritionfacts.org/",
+    "https://www.dietdoctor.com/",
+    "https://www.authoritynutrition.com/",
+    # ===== 运动营养 =====
+    "https://www.ais.gov.au/nutrition",
+    "https://www.sportsdietitians.com.au/",
+    "https://www.gssiweb.org/",
+    "https://www.sportsnutritionsociety.org/",
+    "https://www.precisionnutrition.com/",
+    "https://www.examine.com/",
+    "https://www.nutritiontactics.com/",
+    "https://www.alanaragonblog.com/",
+    "https://www.bodyrecomposition.com/",
+    "https://www.biolayne.com/",
+    # ===== 力量与体能 =====
+    "https://www.nsca.com/",
+    "https://www.acsm.org/",
+    "https://www.nasm.org/",
+    "https://www.acefitness.org/education-and-resources/lifestyle/blog/",
+    "https://www.issaonline.com/blog",
+    "https://www.canfitpro.com/",
+    "https://www.fitnessaustralia.com.au/",
+    "https://www.ausactive.org.au/",
+    "https://www.repsuk.com/",
+    "https://www.exerciseismedicine.org/",
+    # ===== 健身科技 & 可穿戴 =====
+    "https://www.wareable.com/",
+    "https://www.dcrainmaker.com/",
+    "https://www.garmin.com/en-US/blog/",
+    "https://www.polar.com/blog/",
+    "https://www.whoop.com/the-locker/",
+    "https://www.ouraring.com/blog/",
+    "https://www.stryd.com/blog",
+    "https://www.movespring.com/",
+    "https://www.validic.com/blog",
+    "https://www.healthtechinsider.com/",
+    # ===== 健康与医疗综合 =====
+    "https://www.healthline.com/health/fitness-exercise",
+    "https://www.everydayhealth.com/fitness/",
+    "https://www.livescience.com/health",
+    "https://www.medicalnewstoday.com/categories/sports-medicine-fitness",
+    "https://www.webmd.com/fitness-exercise/default.htm",
+    "https://www.medscape.com/",
+    "https://www.uptodate.com/contents/search",
+    "https://www.patient.info/",
+    "https://www.nhs.uk/live-well/exercise/",
+    "https://www.cdc.gov/physicalactivity/index.html",
+    # ===== 公共卫生 & 政策 =====
+    "https://www.who.int/health-topics/physical-activity",
+    "https://www.euro.who.int/en/health-topics/disease-prevention/physical-activity",
+    "https://www.publichealth.org/",
+    "https://www.health.gov.au/",
+    "https://www.canada.ca/en/public-health/services/being-active.html",
+    "https://www.gov.uk/government/collections/physical-activity-guidelines",
+    "https://www.physio-pedia.com/",
+    # ===== 运动科学与研究 =====
+    "https://www.sportsci.org/",
+    "https://www.scienceforsport.com/",
+    "https://www.sportsscience.co/",
+    "https://www.worldscientific.com/worldscinet/jssm",
+    "https://www.biomedcentral.com/series/sports-medicine",
+    "https://www.tandfonline.com/loi/tejs20",
+    "https://www.springer.com/journal/40279",
+    "https://www.journals.elsevier.com/psychology-of-sport-and-exercise",
+    "https://www.researchgate.net/",
+    "https://www.frontiersin.org/journals/physiology",
+    # ===== 康复与物理治疗 =====
+    "https://www.moveforwardpt.com/",
+    "https://www.choosept.com/",
+    "https://www.apta.org/",
+    "https://www.sportsmed.org/",
+    "https://www.aapmr.org/",
+    "https://www.orthopt.org/",
+    "https://www.physiotherapyboard.org.au/",
+    "https://www.csp.org.uk/",
+    # ===== 瑜伽 & 正念 =====
+    "https://www.yogajournal.com/",
+    "https://www.yogainternational.com/",
+    "https://www.doyogawithme.com/",
+    "https://www.yogabasics.com/",
+    "https://www.gaia.com/",
+    "https://www.mindbodygreen.com/",
+    "https://www.mindful.org/",
+    "https://www.headspace.com/",
+    # ===== 综合健身新闻与媒体 =====
+    "https://www.nytimes.com/section/well",
+    "https://www.washingtonpost.com/wellness/",
+    "https://www.cnn.com/health",
+    "https://www.bbc.com/future/health",
+    "https://www.theguardian.com/lifeandstyle/health-and-wellbeing",
+    "https://www.mensjournal.com/",
+    "https://www.outsideonline.com/health/",
+    "https://www.wellandgood.com/",
+    "https://www.self.com/topic/fitness",
+    "https://www.shape.com/fitness",
+    "https://www.prevention.com/fitness/",
+    "https://www.health.com/fitness",
+    "https://www.everydayhealth.com/fitness/",
+    "https://www.livescience.com/health",
+    "https://www.medicalnewstoday.com/categories/sports-medicine-fitness",
+    "https://www.webmd.com/fitness-exercise/default.htm",
+    "https://www.medscape.com/",
+    "https://www.uptodate.com/contents/search",
+    "https://www.patient.info/",
+    "https://www.nhs.uk/live-well/exercise/",
+    "https://www.cdc.gov/physicalactivity/index.html",
+    # ===== 健身博客与个人网站 =====
+    "https://www.nerdfitness.com/blog/",
+    "https://www.artofmanliness.com/health-fitness/",
+    "https://www.bornfitness.com/",
+    "https://www.catalystathletics.com/articles/",
+    "https://www.elitefts.com/education/",
+    "https://www.t-nation.com/all-articles/",
+    "https://www.marksdailyapple.com/",
+    "https://www.girlsgonestrong.com/blog/",
+    "https://www.sofletescience.com/",
+    "https://www.juliapiresfitness.com/",
+    "https://www.strengthandconditioningresearch.com/",
+    "https://www.biolayne.com/articles/",
+    "https://www.mennohenselmans.com/",
+    "https://www.christinabarker.com/",
+    "https://www.kelseywentzwellness.com/",
+    "https://www.mollygalbraith.com/",
+    "https://www.benpakulski.com/",
+    "https://www.jtsstrength.com/articles/",
+    "https://www.strongerbyscience.com/",
+    "https://www.thestrengthathlete.com/",
+    # ===== 线上健身学院 =====
+    "https://www.ptonthenet.com/",
+    "https://www.fitnessmentors.com/",
+    "https://www.nestacertified.com/",
+    "https://www.afaa.com/",
+    "https://www.nfpt.com/",
+    "https://www.ifpa-fitness.com/",
+    "https://www.fit.edu.au/",
+    "https://www.aipt.edu.au/",
+    # ===== 运动医学与生理学 =====
+    "https://www.bjsm.bmj.com/",
+    "https://www.sportsmedicine-open.com/",
+    "https://journalofsportsmedicine.com/",
+    "https://www.jospt.org/",
+    "https://www.aspetar.com/journal/",
+    "https://www.karger.com/Journal/Home/223958",
+    "https://www.humankinetics.com/",
+    "https://www.physiology.org/",
+    # ===== 国家与国际体育组织 =====
+    "https://www.olympic.org/",
+    "https://www.teamusa.org/",
+    "https://www.sportengland.org/",
+    "https://www.sportaus.gov.au/",
+    "https://www.sportscotland.org.uk/",
+    "https://www.sportnz.org.nz/",
+    "https://www.sportaccord.sport/",
+    # ===== 青少年与学校体育 =====
+    "https://www.shapeamerica.org/",
+    "https://www.pecentral.org/",
+    "https://www.sparkpe.org/",
+    "https://www.actionforhealthykids.org/",
+    "https://www.healthiergeneration.org/",
+    "https://www.cdc.gov/healthyschools/",
+    # ===== 运动心理与表现 =====
+    "https://www.appliedsportpsych.org/",
+    "https://www.psychologytoday.com/us/basics/sport-and-competition",
+    "https://www.mentaltoughnesstrainer.com/",
+    "https://www.headspace.com/sport",
+    "https://www.peakperformance.com/",
+    "https://www.sportpsychologytoday.com/",
+    # ===== 肥胖管理与代谢健康 =====
+    "https://www.obesity.org/",
+    "https://www.worldobesity.org/",
+    "https://www.niddk.nih.gov/health-information/weight-management",
+    "https://www.diabetes.org/",
+    "https://www.heart.org/en/healthy-living/fitness",
+    "https://www.stroke.org/en/healthy-living",
+    # ===== 女性与特殊人群健身 =====
+    "https://www.womenshealth.gov/fitness",
+    "https://www.mend.com/",
+    "https://www.girlsgonestrong.com/",
+    "https://www.activepregnancy.org/",
+    "https://www.postpartumfitnessguide.com/",
+    "https://www.agingcare.com/",
+    "https://www.eldergym.com/",
+    "https://www.seniorfitness.org/",
+    # ===== 军事与战术体能 =====
+    "https://www.military.com/military-fitness",
+    "https://www.army.mil/article/",
+    "https://www.navyfitness.org/",
+    "https://www.airforce.com/careers/detail/special-warfare",
+    "https://www.marines.com/becoming-a-marine/requirements/physical-fitness.html",
+    # ===== 国际健康与健身展会 =====
+    "https://www.fibo.com/",
+    "https://www.ideafit.com/",
+    "https://www.canfitpro.com/",
+    "https://www.filex.com.au/",
+    "https://www.sibec.co.uk/",
+    # ===== 饮食与补剂科学 =====
+    "https://examine.com/",
+    "https://www.supplementwatch.com/",
+    "https://www.consumerlab.com/",
+    "https://www.labdoor.com/",
+    "https://www.usp.org/",
+    "https://www.fda.gov/food/dietary-supplements",
+    # ===== 户外运动与探险 =====
+    "https://www.rei.com/learn/c/hiking",
+    "https://www.climbing.com/",
+    "https://www.trailmag.co.za/",
+    "https://www.snowsportengland.org.uk/",
+    "https://www.surfertoday.com/",
 ]
-
+QUOTE_SOURCES = list(set(QUOTE_SOURCES))
 CHINESE_KEYWORDS = [
     "运动营养",
     "力量训练 研究",
@@ -1049,22 +1474,49 @@ PRESETS = {
     "encouragements": PRESET_ENCOURAGEMENTS,
 }
 
-
 # ========== 工具函数 ==========
-def random_select(lst):
-    return random.choice(lst) if lst else ""
-
-
-# 预编译正则表达式（提高性能）
 _COMPILED_REGEX = [re.compile(pattern) for pattern in REGEX_BLACKLIST]
+
+# 若文本含有这些健身/学术关键词，即使命中部分黑名单也放行
+FITNESS_SAFE_WORDS = [
+    "研究",
+    "实验",
+    "结论",
+    "表明",
+    "数据",
+    "分析",
+    "肌肉",
+    "训练",
+    "运动",
+    "营养",
+    "健康",
+    "恢复",
+    "强度",
+    "耐力",
+    "蛋白",
+    "碳水化合物",
+    "脂肪",
+    "study",
+    "research",
+    "conclusion",
+    "evidence",
+    "muscle",
+    "exercise",
+    "training",
+    "nutrition",
+]
 
 
 def contains_blacklisted(text):
     lower = text.lower()
-    # 1. 关键词黑名单检查
+    # 如果包含健身安全词，直接放行（避免误杀学术/科普内容）
+    for safe in FITNESS_SAFE_WORDS:
+        if safe.lower() in lower:
+            return False
+    # 关键词黑名单
     if any(kw.lower() in lower for kw in BLACKLIST):
         return True
-    # 2. 正则表达式黑名单检查
+    # 正则黑名单
     for regex in _COMPILED_REGEX:
         if regex.search(text):
             return True
@@ -1091,21 +1543,37 @@ def fetch_with_retry(url, max_retries=2, delay=2):
     return None
 
 
-# ========== 抓取函数 ==========
+# ========== 抓取函数（全部源 / 全部关键词） ==========
+
+
 def fetch_encouragements_from_web():
     results = []
-    for url in QUOTE_SOURCES[:30]:
+    # 随机打乱全部源，避免每次访问相同顺序
+    urls = random.sample(QUOTE_SOURCES, len(QUOTE_SOURCES))
+    for url in urls:
         time.sleep(0.8)
         try:
             resp = fetch_with_retry(url)
             if not resp:
                 continue
             soup = BeautifulSoup(resp.text, "html.parser")
-            for el in soup.select("li, p, blockquote, .quote, .quote-text"):
-                text = el.get_text(strip=True)
-                if 15 < len(text) < 200 and not contains_blacklisted(text):
-                    results.append(f"💪 {text}")
-            if len(results) >= 100:
+            # 扩展选择器，覆盖常见文章容器
+            selectors = [
+                "article p",
+                ".content p",
+                ".entry-content p",
+                ".post-content p",
+                "li",
+                "blockquote",
+                ".quote",
+                ".quote-text",
+            ]
+            for sel in selectors:
+                for el in soup.select(sel):
+                    text = el.get_text(strip=True)
+                    if 15 < len(text) < 200 and not contains_blacklisted(text):
+                        results.append(f"💪 {text}")
+            if len(results) >= 200:  # 适当提高上限
                 break
         except Exception:
             continue
@@ -1114,48 +1582,59 @@ def fetch_encouragements_from_web():
 
 def fetch_myths():
     results = []
-    for url in QUOTE_SOURCES[:30]:
+    urls = random.sample(QUOTE_SOURCES, len(QUOTE_SOURCES))
+    for url in urls:
         time.sleep(1.2)
         try:
             resp = fetch_with_retry(url)
             if not resp:
                 continue
             soup = BeautifulSoup(resp.text, "html.parser")
+            selectors = [
+                "article p",
+                ".content p",
+                ".entry-content p",
+                "li",
+                "h2",
+                "h3",
+            ]
             texts = []
-            for el in soup.select("p, li, h2, h3"):
-                text = el.get_text(strip=True)
-                if "myth" in text.lower() or "误区" in text or "迷思" in text:
-                    if 15 < len(text) < 200:
-                        texts.append(f"🧠 {text}")
+            for sel in selectors:
+                for el in soup.select(sel):
+                    text = el.get_text(strip=True)
+                    if "myth" in text.lower() or "误区" in text or "迷思" in text:
+                        if 15 < len(text) < 200:
+                            texts.append(f"🧠 {text}")
             results.extend(texts)
-            if len(results) >= 80:
+            if len(results) >= 120:
                 break
         except Exception:
             continue
-    unique = list(set(results))[:60]
+    unique = list(set(results))[:100]
     return unique + PRESET_MYTHS
 
 
 def fetch_protocols():
     results = []
-    for url in QUOTE_SOURCES[:30]:
+    urls = random.sample(QUOTE_SOURCES, len(QUOTE_SOURCES))
+    for url in urls:
         time.sleep(1.2)
         try:
             resp = fetch_with_retry(url)
             if not resp:
                 continue
             soup = BeautifulSoup(resp.text, "html.parser")
-            texts = []
-            for el in soup.select("p, li"):
-                text = el.get_text(strip=True)
-                if 30 < len(text) < 200:
-                    texts.append(f"🏋️ {text}")
-            results.extend(texts)
-            if len(results) >= 80:
+            selectors = ["article p", ".content p", ".entry-content p", "li"]
+            for sel in selectors:
+                for el in soup.select(sel):
+                    text = el.get_text(strip=True)
+                    if 30 < len(text) < 200:
+                        results.append(f"🏋️ {text}")
+            if len(results) >= 120:
                 break
         except Exception:
             continue
-    unique = list(set(results))[:60]
+    unique = list(set(results))[:100]
     return unique + PRESET_PROTOCOLS
 
 
@@ -1163,12 +1642,14 @@ def fetch_bing_facts():
     results = []
     session = requests.Session()
     session.headers.update(
-        {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+        }
     )
-    for kw in CHINESE_KEYWORDS[:15]:
+    for kw in CHINESE_KEYWORDS:  # 全部关键词
         time.sleep(5)
         try:
-            url = f"https://www.bing.com/search?q={requests.utils.quote(kw)}&count=2"
+            url = f"https://www.bing.com/search?q={requests.utils.quote(kw)}&count=3"
             resp = session.get(url, timeout=15)
             if resp.status_code != 200:
                 continue
@@ -1185,13 +1666,11 @@ def fetch_bing_facts():
 def fetch_baidu_facts():
     results = []
     session = requests.Session()
-    session.headers.update(
-        {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
-    )
-    for kw in CHINESE_KEYWORDS[:15]:
+    session.headers.update({"User-Agent": "Mozilla/5.0 ..."})
+    for kw in CHINESE_KEYWORDS:
         time.sleep(2)
         try:
-            url = f"https://www.baidu.com/s?wd={requests.utils.quote(kw)}&rn=2"
+            url = f"https://www.baidu.com/s?wd={requests.utils.quote(kw)}&rn=3"
             resp = session.get(url, timeout=15)
             if resp.status_code != 200:
                 continue
@@ -1208,11 +1687,11 @@ def fetch_baidu_facts():
 def fetch_pubmed_summaries(max_retries=3):
     results = []
     session = requests.Session()
-    for query in PUBMED_QUERIES[:10]:
+    for query in PUBMED_QUERIES:  # 全部查询
         for attempt in range(max_retries):
             try:
                 time.sleep(3)
-                search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={requests.utils.quote(query)}&retmax=2&retmode=json&email={ENTREZ_EMAIL}"
+                search_url = f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esearch.fcgi?db=pubmed&term={requests.utils.quote(query)}&retmax=3&retmode=json&email={ENTREZ_EMAIL}"
                 search_resp = session.get(search_url, timeout=30)
                 if search_resp.status_code != 200:
                     raise Exception(f"HTTP {search_resp.status_code}")
@@ -1241,7 +1720,7 @@ def fetch_pubmed_summaries(max_retries=3):
                         ).replace("\r", " ")
                         if 50 < len(combined) < 600:
                             results.append(f"🔬 {combined}")
-                break  # 成功，跳出重试循环
+                break
             except Exception as e:
                 print(f"PubMed error (attempt {attempt+1}): {e}")
                 if attempt == max_retries - 1:
@@ -1253,10 +1732,10 @@ def fetch_pubmed_summaries(max_retries=3):
 def fetch_arxiv_research():
     results = []
     session = requests.Session()
-    for query in ARXIV_QUERIES[:10]:
+    for query in ARXIV_QUERIES:  # 全部查询
         time.sleep(2)
         try:
-            url = f"http://export.arxiv.org/api/query?search_query=all:{requests.utils.quote(query)}&start=0&max_results=1"
+            url = f"http://export.arxiv.org/api/query?search_query=all:{requests.utils.quote(query)}&start=0&max_results=2"
             resp = session.get(url, timeout=20)
             if resp.status_code != 200:
                 continue
@@ -1291,14 +1770,12 @@ def fetch_sciencedaily_rss():
         if resp.status_code != 200:
             return []
         root = ET.fromstring(resp.content)
-        for item in root.findall(".//item")[:10]:
+        for item in root.findall(".//item")[:15]:
             title = item.find("title")
             desc = item.find("description")
             title_text = title.text.strip() if title is not None and title.text else ""
             desc_text = desc.text.strip() if desc is not None and desc.text else ""
             if title_text and desc_text:
-                import re
-
                 clean_desc = (
                     re.sub(r"<[^>]*>", "", desc_text).replace("\n", " ").strip()
                 )
@@ -1310,22 +1787,17 @@ def fetch_sciencedaily_rss():
     return results
 
 
-def fetch_all_research():
-    arxiv = fetch_arxiv_research()
-    pubmed = fetch_pubmed_summaries()
-    rss = fetch_sciencedaily_rss()
-    return arxiv + pubmed + rss
-
-
+# ========== 汇总函数（避免重复抓取） ==========
 def fetch_all_encouragements():
     web = fetch_encouragements_from_web()
     return web + PRESET_ENCOURAGEMENTS
 
 
-def fetch_all_tips():
-    quotes = fetch_encouragements_from_web()
+def fetch_all_tips(encouragements=None):
+    if encouragements is None:
+        encouragements = fetch_all_encouragements()
     tips = []
-    for s in quotes:
+    for s in encouragements:
         if len(s) < 80:
             tips.append(s.replace("💪", "💡"))
     return tips + PRESET_TIPS
@@ -1339,53 +1811,19 @@ def fetch_all_facts():
     return bing + baidu + pubmed + arxiv + PRESET_FACTS
 
 
-# ========== 新增/修改清理函数 ==========
-def clean_data(data, presets):
-    """根据 BLACKLIST 清理所有类别中的违规条目，但保护预设内容不被误删"""
-    cleaned = {}
-    total_removed = 0
-    for cat in [
-        "scientific_facts",
-        "research_summaries",
-        "myth_busters",
-        "training_protocols",
-        "tips",
-        "encouragements",
-    ]:
-        original = data.get(cat, [])
-        preset_set = set(presets.get(cat, []))  # 当前类别的预设集合
-        new_list = []
-        for item in original:
-            # 属于预设条目，直接保留，不检查黑名单
-            if item in preset_set:
-                new_list.append(item)
-            elif not contains_blacklisted(item):
-                new_list.append(item)
-        removed = len(original) - len(new_list)
-        total_removed += removed
-        cleaned[cat] = new_list
-        if removed > 0:
-            print(f"   🧹 {cat}: 清理了 {removed} 条违规内容")
-    print(f"总共清理了 {total_removed} 条违规条目")
-    return cleaned
+def fetch_all_research():
+    arxiv = fetch_arxiv_research()
+    pubmed = fetch_pubmed_summaries()
+    rss = fetch_sciencedaily_rss()
+    return arxiv + pubmed + rss
 
 
-def ensure_preset_fallback(data):
-    """确保每个类别至少有一定数量的预设内容（如果为空）"""
-    for cat, preset in PRESETS.items():
-        if not data.get(cat):
-            data[cat] = preset
-            print(f"📦 {cat} 为空，已填充预设 {len(preset)} 条")
-    return data
-
-
-# ========== 主抓取入口 ==========
 def fetch_all():
-    print("开始抓取所有类别...")
-    research = fetch_all_research()
+    print("开始抓取所有类别（全源全关键词）...")
     encouragements = fetch_all_encouragements()
-    tips = fetch_all_tips()
+    tips = fetch_all_tips(encouragements)  # 复用 encouragements
     facts = fetch_all_facts()
+    research = fetch_all_research()
     myths = fetch_myths()
     protocols = fetch_protocols()
     print(
@@ -1401,9 +1839,50 @@ def fetch_all():
     }
 
 
-# ========== 增量更新逻辑 ==========
+# ========== 清理与合并 ==========
+def clean_data(data, presets):
+    cleaned = {}
+    total_removed = 0
+    for cat in [
+        "scientific_facts",
+        "research_summaries",
+        "myth_busters",
+        "training_protocols",
+        "tips",
+        "encouragements",
+    ]:
+        original = data.get(cat, [])
+        preset_set = set(presets.get(cat, []))
+        new_list = []
+        for item in original:
+            if item in preset_set or not contains_blacklisted(item):
+                new_list.append(item)
+        removed = len(original) - len(new_list)
+        total_removed += removed
+        cleaned[cat] = new_list
+        if removed > 0:
+            print(f"   🧹 {cat}: 清理了 {removed} 条违规内容")
+    print(f"总共清理了 {total_removed} 条违规条目")
+    return cleaned
+
+
+def ensure_preset_fallback(data):
+    for cat, preset in PRESETS.items():
+        if not data.get(cat):
+            data[cat] = preset
+            print(f"📦 {cat} 为空，已填充预设 {len(preset)} 条")
+    return data
+
+
+def merge_data(existing, new):
+    merged = {}
+    for cat in existing.keys() | new.keys():
+        merged[cat] = list(set(existing.get(cat, [])) | set(new.get(cat, [])))
+    return merged
+
+
+# ========== 文件与 Git 操作 ==========
 def load_existing_data():
-    """加载现有 JSON，如果文件损坏则返回空字典"""
     if not LOCAL_JSON_PATH.exists():
         print("本地 JSON 文件不存在，将创建新文件")
         return {}
@@ -1412,17 +1891,24 @@ def load_existing_data():
             return json.load(f)
     except json.JSONDecodeError as e:
         print(f"⚠️ JSON 解析失败: {e}")
-        print("将重置为空数据，后续会用预设内容填充")
         backup_path = LOCAL_JSON_PATH.with_suffix(".json.broken")
-        try:
-            LOCAL_JSON_PATH.rename(backup_path)
-            print(f"已备份损坏文件到 {backup_path}")
-        except:
-            pass
+        LOCAL_JSON_PATH.rename(backup_path)
+        print(f"已备份损坏文件到 {backup_path}")
         return {}
 
 
 def save_json(data):
+    # 检查是否真正有变化，避免无意义写入
+    if LOCAL_JSON_PATH.exists():
+        try:
+            with open(LOCAL_JSON_PATH, "r", encoding="utf-8") as f:
+                old = json.load(f)
+            if old == data:
+                print(f"[{datetime.now()}] No content change, skip saving.")
+                return
+        except:
+            pass
+
     LOCAL_JSON_PATH.parent.mkdir(parents=True, exist_ok=True)
     with open(LOCAL_JSON_PATH, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -1435,36 +1921,16 @@ def save_json(data):
         print(f"[{datetime.now()}] JSON also saved to {SECONDARY_JSON_PATH}")
 
 
-def merge_data(existing, new):
-    merged = {}
-    for cat in [
-        "scientific_facts",
-        "research_summaries",
-        "myth_busters",
-        "training_protocols",
-        "tips",
-        "encouragements",
-    ]:
-        existing_set = set(existing.get(cat, []))
-        new_set = set(new.get(cat, []))
-        merged[cat] = list(existing_set | new_set)
-    return merged
-
-
-# ========== Git 推送逻辑 ==========
 def git_commit_and_push():
     try:
         os.chdir(GIT_REPO_PATH)
         rel_path = str(LOCAL_JSON_PATH.relative_to(GIT_REPO_PATH))
-
-        # 检查文件是否有变更
         status = subprocess.run(
             ["git", "status", "--porcelain", rel_path], capture_output=True, text=True
         )
         if not status.stdout.strip():
             print(f"[{datetime.now()}] No changes to commit, skipping push.")
-            return True  # 无变化视为成功，避免重试
-
+            return True
         subprocess.run(["git", "add", rel_path], check=True, capture_output=True)
         subprocess.run(
             [
@@ -1474,11 +1940,8 @@ def git_commit_and_push():
                 f"Auto update knowledge {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             ],
             check=True,
-            capture_output=False,
         )
-        subprocess.run(
-            ["git", "push", GIT_REMOTE_URL], check=True, capture_output=False
-        )
+        subprocess.run(["git", "push", GIT_REMOTE_URL], check=True)
         print(f"[{datetime.now()}] Git push successful")
         return True
     except subprocess.CalledProcessError as e:
@@ -1498,11 +1961,10 @@ def push_with_retry():
 
 # ========== 主循环 ==========
 def main_loop():
-    print("Knowledge updater started.")
+    print("Knowledge updater started (full-source scraping).")
     last_push_time = time.time()
     last_scrape_time = 0
 
-    # 启动时先清理一次现有数据（传入 PRESETS 保护预设）
     print("正在清理现有知识库...")
     existing = load_existing_data()
     if existing:
@@ -1511,14 +1973,7 @@ def main_loop():
         save_json(cleaned)
         existing = cleaned
     else:
-        fresh = {
-            "scientific_facts": PRESET_FACTS,
-            "research_summaries": PRESET_RESEARCH,
-            "myth_busters": PRESET_MYTHS,
-            "training_protocols": PRESET_PROTOCOLS,
-            "tips": PRESET_TIPS,
-            "encouragements": PRESET_ENCOURAGEMENTS,
-        }
+        fresh = {cat: preset for cat, preset in PRESETS.items()}
         save_json(fresh)
         existing = fresh
         print("已使用预设内容初始化知识库")
@@ -1529,7 +1984,6 @@ def main_loop():
             print(f"[{datetime.now()}] Scraping...")
             new_data = fetch_all()
             merged = merge_data(existing, new_data)
-            # 清洗时保护预设
             merged = clean_data(merged, PRESETS)
             merged = ensure_preset_fallback(merged)
             save_json(merged)
@@ -1537,12 +1991,10 @@ def main_loop():
             last_scrape_time = now
 
         if now - last_push_time >= PUSH_INTERVAL:
-            print(f"[{datetime.now()}] Attempting to push to GitHub...")
-            success = push_with_retry()
-            if success:
+            print(f"[{datetime.now()}] Attempting push...")
+            if push_with_retry():
                 last_push_time = now
             else:
-                print("Push failed, will retry after 5 minutes.")
                 last_push_time = now - PUSH_INTERVAL + 300
         time.sleep(60)
 
