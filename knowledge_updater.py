@@ -18,7 +18,9 @@ import re
 
 # ========== 配置区域 ==========
 LOCAL_JSON_PATH = Path("assets/coach_rules.json")
-SECONDARY_JSON_PATH = Path(r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\assets\coach_rules.json")
+SECONDARY_JSON_PATH = Path(
+    r"C:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\assets\coach_rules.json"
+)
 GIT_REPO_PATH = Path(".")  # 当前目录即为 Git 仓库根目录
 # 远程仓库 URL（使用 HTTPS + Personal Access Token）
 GIT_REMOTE_URL = "https://github.com/MrKedow/Fitness-Tracker.git"
@@ -212,6 +214,26 @@ PUBMED_QUERIES = [
 ]
 
 BLACKLIST = [
+    "命运",
+    "～",
+    "点击",
+    "购买",
+    "优惠",
+    "神奇",
+    "保证",
+    "广告",
+    "赞助",
+    "影视剧",
+    "小说",
+    "漫画",
+    "游戏",
+    "娱乐",
+    "八卦",
+    "明星",
+    "网红",
+    "测评",
+    "推荐",
+    "选购",
     "click here",
     "buy now",
     "discount",
@@ -1017,6 +1039,17 @@ PRESET_PROTOCOLS = [
 ]
 
 
+# ========== 预设字典（用于保护预设条目免被误删） ==========
+PRESETS = {
+    "scientific_facts": PRESET_FACTS,
+    "research_summaries": PRESET_RESEARCH,
+    "myth_busters": PRESET_MYTHS,
+    "training_protocols": PRESET_PROTOCOLS,
+    "tips": PRESET_TIPS,
+    "encouragements": PRESET_ENCOURAGEMENTS,
+}
+
+
 # ========== 工具函数 ==========
 def random_select(lst):
     return random.choice(lst) if lst else ""
@@ -1306,9 +1339,9 @@ def fetch_all_facts():
     return bing + baidu + pubmed + arxiv + PRESET_FACTS
 
 
-# ========== 新增清理函数 ==========
-def clean_data(data):
-    """根据 BLACKLIST 清理所有类别中的违规条目"""
+# ========== 新增/修改清理函数 ==========
+def clean_data(data, presets):
+    """根据 BLACKLIST 清理所有类别中的违规条目，但保护预设内容不被误删"""
     cleaned = {}
     total_removed = 0
     for cat in [
@@ -1320,9 +1353,13 @@ def clean_data(data):
         "encouragements",
     ]:
         original = data.get(cat, [])
+        preset_set = set(presets.get(cat, []))  # 当前类别的预设集合
         new_list = []
         for item in original:
-            if not contains_blacklisted(item):
+            # 属于预设条目，直接保留，不检查黑名单
+            if item in preset_set:
+                new_list.append(item)
+            elif not contains_blacklisted(item):
                 new_list.append(item)
         removed = len(original) - len(new_list)
         total_removed += removed
@@ -1335,14 +1372,7 @@ def clean_data(data):
 
 def ensure_preset_fallback(data):
     """确保每个类别至少有一定数量的预设内容（如果为空）"""
-    for cat, preset in [
-        ("scientific_facts", PRESET_FACTS),
-        ("research_summaries", PRESET_RESEARCH),
-        ("myth_busters", PRESET_MYTHS),
-        ("training_protocols", PRESET_PROTOCOLS),
-        ("tips", PRESET_TIPS),
-        ("encouragements", PRESET_ENCOURAGEMENTS),
-    ]:
+    for cat, preset in PRESETS.items():
         if not data.get(cat):
             data[cat] = preset
             print(f"📦 {cat} 为空，已填充预设 {len(preset)} 条")
@@ -1446,7 +1476,9 @@ def git_commit_and_push():
             check=True,
             capture_output=False,
         )
-        subprocess.run(["git", "push", GIT_REMOTE_URL], check=True, capture_output=False)
+        subprocess.run(
+            ["git", "push", GIT_REMOTE_URL], check=True, capture_output=False
+        )
         print(f"[{datetime.now()}] Git push successful")
         return True
     except subprocess.CalledProcessError as e:
@@ -1470,11 +1502,11 @@ def main_loop():
     last_push_time = time.time()
     last_scrape_time = 0
 
-    # 启动时先清理一次现有数据
+    # 启动时先清理一次现有数据（传入 PRESETS 保护预设）
     print("正在清理现有知识库...")
     existing = load_existing_data()
     if existing:
-        cleaned = clean_data(existing)
+        cleaned = clean_data(existing, PRESETS)
         cleaned = ensure_preset_fallback(cleaned)
         save_json(cleaned)
         existing = cleaned
@@ -1497,7 +1529,8 @@ def main_loop():
             print(f"[{datetime.now()}] Scraping...")
             new_data = fetch_all()
             merged = merge_data(existing, new_data)
-            merged = clean_data(merged)
+            # 清洗时保护预设
+            merged = clean_data(merged, PRESETS)
             merged = ensure_preset_fallback(merged)
             save_json(merged)
             existing = merged
@@ -1510,8 +1543,7 @@ def main_loop():
                 last_push_time = now
             else:
                 print("Push failed, will retry after 5 minutes.")
-                # 可选：将 last_push_time 设置为当前时间减去一半间隔，以便稍后重试
-                last_push_time = now - PUSH_INTERVAL + 300  # 5 分钟后重试
+                last_push_time = now - PUSH_INTERVAL + 300
         time.sleep(60)
 
 
