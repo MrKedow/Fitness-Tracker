@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GitStats - Fitness-Tracker</title>
+	<!-- Apply theme before CSS loads to prevent flash of unstyled content -->
+	<script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+	<link rel="stylesheet" href="gitstats.css" type="text/css">
+	<meta name="generator" content="GitStats <function get_version at 0x000002AAA641B5E0>">
+	<script type="text/javascript" src="sortable.js"></script>
+	<script type="text/javascript" src="chart.umd.min.js"></script>
+	<script>
+		function getCSSVar(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+		function toggleTheme() {
+			const currentTheme = document.documentElement.getAttribute('data-theme');
+			const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+			document.documentElement.setAttribute('data-theme', newTheme);
+			localStorage.setItem('theme', newTheme);
+			updateThemeIcon(newTheme);
+		}
+
+		function updateThemeIcon(theme) {
+			const button = document.getElementById('theme-toggle');
+			if (button) {
+				button.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+				button.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			updateThemeIcon(document.documentElement.getAttribute('data-theme'));
+		});
+	</script>
+</head>
+<body>
+
+            <div class="nav">
+            <a href="index.html" class="nav-brand">GitStats</a>
+            <ul>
+            <li><a href="index.html">General</a></li>
+            <li><a href="activity.html">Activity</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="files.html">Files</a></li>
+            <li><a href="lines.html">Lines</a></li>
+            <li><a href="tags.html">Tags</a></li>
+            
+            </ul>
+            <div class="nav-right">
+            <a href="https://github.com/shenxianpeng/gitstats" class="nav-github" target="_blank" rel="noopener" aria-label="GitHub"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Switch to dark mode">🌙</button>
+            </div>
+            </div>
+            <h1>Files</h1><dl>
+<dt>Total files</dt><dd>78</dd><dt>Total lines</dt><dd>16340</dd><dt>Average file size</dt><dd>107432.00 bytes</dd></dl>
+
+<h2 id="file_count_by_date"><a href="#file_count_by_date">File count by date</a></h2>
+
+<div style="max-width:100%;margin-bottom:8px"><canvas id="chart-files-by-date"></canvas></div>
+<script>
+(function() {
+  var ctx = document.getElementById('chart-files-by-date').getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-25", "2026-04-26", "2026-04-28"],
+      datasets: [{"label": "Files", "data": [61, 65, 67, 82, 88, 88, 88, 93, 78, 78, 78, 78, 78, 78], "backgroundColor": getCSSVar('--bar-color'), "borderColor": getCSSVar('--bar-color'), "borderWidth": 1, "pointRadius": 2}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 3,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 45 } },
+        y: { beginAtZero: true, title: { display: true, text: 'Files' } }
+      }
+    }
+  });
+  document.addEventListener('themechange', function() { chart.update(); });
+})();
+</script>
+
+<h2 id="extensions"><a href="#extensions">Extensions</a></h2>
+
+<p><em>Note: Files with excluded extensions are not shown. Configure <code>exclude_exts</code> in gitstats.conf.</em></p><table class="sortable" id="ext"><tr><th>Extension</th><th>Files (%)</th><th>Lines (%)</th><th>Lines/file</th></tr><tr><td>dart</td><td>8 (10.26%)</td><td>6482 (39.67%)</td><td>810</td></tr><tr><td>gif</td><td>11 (14.10%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>iss</td><td>1 (1.28%)</td><td>48 (0.29%)</td><td>48</td></tr><tr><td>java</td><td>1 (1.28%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>json</td><td>3 (3.85%)</td><td>5616 (34.37%)</td><td>1872</td></tr><tr><td>kt</td><td>1 (1.28%)</td><td>5 (0.03%)</td><td>5</td></tr><tr><td>kts</td><td>3 (3.85%)</td><td>104 (0.64%)</td><td>34</td></tr><tr><td>md</td><td>1 (1.28%)</td><td>27 (0.17%)</td><td>27</td></tr><tr><td>png</td><td>8 (10.26%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>properties</td><td>2 (2.56%)</td><td>7 (0.04%)</td><td>3</td></tr><tr><td>py</td><td>3 (3.85%)</td><td>3567 (21.83%)</td><td>1189</td></tr><tr><td>txt</td><td>2 (2.56%)</td><td>11 (0.07%)</td><td>5</td></tr><tr><td>webp</td><td>15 (19.23%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>xml</td><td>12 (15.38%)</td><td>214 (1.31%)</td><td>17</td></tr><tr><td>yaml</td><td>4 (5.13%)</td><td>148 (0.91%)</td><td>37</td></tr></table>
+<h2 id="most_changed_files_(code_churn)"><a href="#most_changed_files_(code_churn)">Most Changed Files (Code Churn)</a></h2>
+
+<p><em>Files touched most often across all commits. High-churn files are hotspots that may benefit from extra review or refactoring.</em></p><table class="sortable" id="churn"><tr><th>File</th><th>Times Changed</th></tr><tr><td class="heat heat4">assets/coach_rules.json</td><td>21</td></tr><tr><td class="heat heat2">lib/main.dart</td><td>10</td></tr><tr><td class="heat heat2">pubspec.yaml</td><td>9</td></tr><tr><td class="heat heat2">README.md</td><td>9</td></tr><tr><td class="heat heat2">lib/widgets/coach_character.dart</td><td>8</td></tr><tr><td class="heat heat2">pubspec.lock</td><td>6</td></tr><tr><td class="heat heat1">knowledge_updater.py</td><td>5</td></tr><tr><td class="heat heat1">.gitignore</td><td>5</td></tr><tr><td class="heat heat1">lib/services/knowledge_update_service.dart</td><td>5</td></tr><tr><td class="heat heat1">lib/widgets/draggable_cat.dart</td><td>4</td></tr><tr><td class="heat heat1">windows/flutter/generated_plugin_registrant.cc</td><td>4</td></tr><tr><td class="heat heat1">windows/flutter/generated_plugins.cmake</td><td>4</td></tr><tr><td class="heat heat1">windows/runner/Runner.rc</td><td>4</td></tr><tr><td class="heat heat1">lib/widgets/roaming_cat.dart</td><td>4</td></tr><tr><td class="heat heat1">&quot;\342\200\213Fitness-Tracker_HTML_v1.0.HTML&quot;</td><td>4</td></tr><tr><td class="heat heat1">android/app/src/main/AndroidManifest.xml</td><td>3</td></tr><tr><td class="heat heat1">lib/screens/settings_page.dart</td><td>3</td></tr><tr><td class="heat heat1">&quot;HTML\347\211\210\345\272\224\347\224\250\357\274\210\350\275\273\351\207\217\345\220\257\345\212\250\357\274\214\345\205\250\345\271\263\345\217\260\346\224\257\346\214\201\357\274\211/Fitness-Tracker_HTML_v3.0.HTML&quot;</td><td>3</td></tr><tr><td class="heat heat1">&quot;Windows\347\211\210\346\226\260\345\212\237\350\203\275\346\274\224\347\244\272/Win_v3.0.gif&quot;</td><td>3</td></tr><tr><td class="heat heat1">android/app/src/main/res/mipmap-hdpi/ic_launcher.png</td><td>2</td></tr><tr><td class="heat heat1">android/app/src/main/res/mipmap-mdpi/ic_launcher.png</td><td>2</td></tr><tr><td class="heat heat1">android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png</td><td>2</td></tr><tr><td class="heat heat1">android/app/src/main/res/mipmap-xhdpi/ic_launcher.png</td><td>2</td></tr><tr><td class="heat heat1">android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png</td><td>2</td></tr><tr><td class="heat heat1">android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png</td><td>2</td></tr></table><div style="max-width:100%;margin-bottom:8px"><canvas id="chart-file-churn"></canvas></div>
+<script>
+(function() {
+  var ctx = document.getElementById('chart-file-churn').getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ["assets/coach_rules.json", "lib/main.dart", "pubspec.yaml", "README.md", "lib/widgets/coach_character.dart", "pubspec.lock", "knowledge_updater.py", ".gitignore", "lib/services/knowledge_update_service.dart", "lib/widgets/draggable_cat.dart", "windows/flutter/generated_plugin_registrant.cc", "windows/flutter/generated_plugins.cmake", "windows/runner/Runner.rc", "lib/widgets/roaming_cat.dart", "\"\\342\\200\\213Fitness-Tracker_HTML_v1.0.HTML\"", "android/app/src/main/AndroidManifest.xml", "lib/screens/settings_page.dart", "\"HTML\\347\\211\\210\\345\\272\\224\\347\\224\\250\\357\\274\\210\\350\\275\\273\\351\\207\\217\\345\\220\\257\\345\\212\\250\\357\\274\\214\\345\\205\\250\\345\\271\\263\\345\\217\\260\\346\\224\\257\\346\\214\\201\\357\\274\\211/Fitness-Tracker_HTML_v3.0.HTML\"", "\"Windows\\347\\211\\210\\346\\226\\260\\345\\212\\237\\350\\203\\275\\346\\274\\224\\347\\244\\272/Win_v3.0.gif\"", "android/app/src/main/res/mipmap-hdpi/ic_launcher.png", "android/app/src/main/res/mipmap-mdpi/ic_launcher.png", "android/app/src/main/res/mipmap-mdpi/ic_launcher_foreground.png", "android/app/src/main/res/mipmap-xhdpi/ic_launcher.png", "android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png", "android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png"],
+      datasets: [{"label": "Commits", "data": [21, 10, 9, 9, 8, 6, 5, 5, 5, 4, 4, 4, 4, 4, 4, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2], "backgroundColor": getCSSVar('--bar-color'), "borderColor": getCSSVar('--bar-color')}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 3,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 45 } },
+        y: { beginAtZero: true, title: { display: true, text: 'Times Changed' } }
+      }
+    }
+  });
+  document.addEventListener('themechange', function() { chart.update(); });
+})();
+</script>
+</body></html>

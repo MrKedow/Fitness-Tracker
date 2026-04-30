@@ -21,11 +21,11 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.example.fitness_tracker"
+        applicationId = "com.MrKedow.FT"
         minSdk = flutter.minSdkVersion
         targetSdk = 34
-        versionCode = 1
-        versionName = "1.0"
+        versionCode = 2
+        versionName = "Android_v1.1"
     }
 
     signingConfigs {

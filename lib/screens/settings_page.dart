@@ -477,7 +477,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           style: TextStyle(
                               fontSize: 18, fontWeight: FontWeight.bold)),
                       const SizedBox(height: 4),
-                      Text('版本: Android_v1.0',
+                      Text('版本: Android_v1.1',
                           style: TextStyle(color: Colors.grey[600])),
                       const SizedBox(height: 12),
                       const Text('本项目是一个开源的健身数据管理工具，支持AI分析和多端同步。'),

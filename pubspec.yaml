@@ -24,6 +24,7 @@ dependencies:
   process_run: ^1.1.0
   html: ^0.15.4   # 用于解析 HTML
   xml: ^6.3.0    # 用于解析 XML
+  share_plus: ^10.0.0
 
 dev_dependencies:
   flutter_test:

@@ -22,7 +22,7 @@ SECONDARY_JSON_PATH = Path(
 )
 GIT_REPO_PATH = Path(".")
 GIT_REMOTE_URL = "https://github.com/MrKedow/Fitness-Tracker.git"
-SCRAPE_INTERVAL = 21600  # 6 小时抓取一次
+SCRAPE_INTERVAL = 7200  # 2 小时抓取一次
 PUSH_INTERVAL = 43200  # 12 小时推送一次
 MAX_RETRIES = 50
 RETRY_DELAY = 30
