@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>GitStats - Fitness-Tracker</title>
+	<!-- Apply theme before CSS loads to prevent flash of unstyled content -->
+	<script>(function(){var t=localStorage.getItem('theme')||'light';document.documentElement.setAttribute('data-theme',t);})();</script>
+	<link rel="stylesheet" href="gitstats.css" type="text/css">
+	<meta name="generator" content="GitStats <function get_version at 0x000001A0B6BFB530>">
+	<script type="text/javascript" src="sortable.js"></script>
+	<script type="text/javascript" src="chart.umd.min.js"></script>
+	<script>
+		function getCSSVar(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
+
+		function toggleTheme() {
+			const currentTheme = document.documentElement.getAttribute('data-theme');
+			const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+			document.documentElement.setAttribute('data-theme', newTheme);
+			localStorage.setItem('theme', newTheme);
+			updateThemeIcon(newTheme);
+		}
+
+		function updateThemeIcon(theme) {
+			const button = document.getElementById('theme-toggle');
+			if (button) {
+				button.innerHTML = theme === 'dark' ? '☀️' : '🌙';
+				button.setAttribute('aria-label', theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode');
+			}
+		}
+
+		document.addEventListener('DOMContentLoaded', function() {
+			updateThemeIcon(document.documentElement.getAttribute('data-theme'));
+		});
+	</script>
+</head>
+<body>
+
+            <div class="nav">
+            <a href="index.html" class="nav-brand">GitStats</a>
+            <ul>
+            <li><a href="index.html">General</a></li>
+            <li><a href="activity.html">Activity</a></li>
+            <li><a href="authors.html">Authors</a></li>
+            <li><a href="files.html">Files</a></li>
+            <li><a href="lines.html">Lines</a></li>
+            <li><a href="tags.html">Tags</a></li>
+            
+            </ul>
+            <div class="nav-right">
+            <a href="https://github.com/shenxianpeng/gitstats" class="nav-github" target="_blank" rel="noopener" aria-label="GitHub"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/></svg></a>
+            <button id="theme-toggle" class="theme-toggle" onclick="toggleTheme()" aria-label="Switch to dark mode">🌙</button>
+            </div>
+            </div>
+            <h1>Files</h1><dl>
+<dt>Total files</dt><dd>85</dd><dt>Total lines</dt><dd>9061</dd><dt>Average file size</dt><dd>928502.01 bytes</dd></dl>
+
+<h2 id="file_count_by_date"><a href="#file_count_by_date">File count by date</a></h2>
+
+<div style="max-width:100%;margin-bottom:8px"><canvas id="chart-files-by-date"></canvas></div>
+<script>
+(function() {
+  var ctx = document.getElementById('chart-files-by-date').getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels: ["2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-18", "2026-04-19", "2026-04-20", "2026-04-22"],
+      datasets: [{"label": "Files", "data": [61, 65, 67, 82, 88, 88, 88, 93, 85], "backgroundColor": getCSSVar('--bar-color'), "borderColor": getCSSVar('--bar-color'), "borderWidth": 1, "pointRadius": 2}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 3,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 45 } },
+        y: { beginAtZero: true, title: { display: true, text: 'Files' } }
+      }
+    }
+  });
+  document.addEventListener('themechange', function() { chart.update(); });
+})();
+</script>
+
+<h2 id="extensions"><a href="#extensions">Extensions</a></h2>
+
+<p><em>Note: Files with excluded extensions are not shown. Configure <code>exclude_exts</code> in gitstats.conf.</em></p><table class="sortable" id="ext"><tr><th>Extension</th><th>Files (%)</th><th>Lines (%)</th><th>Lines/file</th></tr><tr><td>backup</td><td>3 (3.53%)</td><td>72 (0.79%)</td><td>24</td></tr><tr><td>cc</td><td>1 (1.18%)</td><td>20 (0.22%)</td><td>20</td></tr><tr><td>cmake</td><td>1 (1.18%)</td><td>27 (0.30%)</td><td>27</td></tr><tr><td>cpp</td><td>4 (4.71%)</td><td>467 (5.15%)</td><td>116</td></tr><tr><td>dart</td><td>4 (4.71%)</td><td>5361 (59.17%)</td><td>1340</td></tr><tr><td>exe</td><td>1 (1.18%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>gif</td><td>14 (16.47%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>gradle</td><td>3 (3.53%)</td><td>116 (1.28%)</td><td>38</td></tr><tr><td>h</td><td>5 (5.88%)</td><td>185 (2.04%)</td><td>37</td></tr><tr><td>html</td><td>1 (1.18%)</td><td>46 (0.51%)</td><td>46</td></tr><tr><td>ico</td><td>1 (1.18%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>iss</td><td>1 (1.18%)</td><td>48 (0.53%)</td><td>48</td></tr><tr><td>json</td><td>4 (4.71%)</td><td>674 (7.44%)</td><td>168</td></tr><tr><td>kt</td><td>1 (1.18%)</td><td>5 (0.06%)</td><td>5</td></tr><tr><td>manifest</td><td>1 (1.18%)</td><td>14 (0.15%)</td><td>14</td></tr><tr><td>md</td><td>1 (1.18%)</td><td>151 (1.67%)</td><td>151</td></tr><tr><td>png</td><td>12 (14.12%)</td><td>0 (0.00%)</td><td>0</td></tr><tr><td>properties</td><td>2 (2.35%)</td><td>9 (0.10%)</td><td>4</td></tr><tr><td>py</td><td>2 (2.35%)</td><td>1093 (12.06%)</td><td>546</td></tr><tr><td>rc</td><td>1 (1.18%)</td><td>121 (1.34%)</td><td>121</td></tr><tr><td>spec</td><td>1 (1.18%)</td><td>38 (0.42%)</td><td>38</td></tr><tr><td>txt</td><td>5 (5.88%)</td><td>268 (2.96%)</td><td>53</td></tr><tr><td>xml</td><td>7 (8.24%)</td><td>108 (1.19%)</td><td>15</td></tr><tr><td>yaml</td><td>4 (4.71%)</td><td>146 (1.61%)</td><td>36</td></tr></table>
+<h2 id="most_changed_files_(code_churn)"><a href="#most_changed_files_(code_churn)">Most Changed Files (Code Churn)</a></h2>
+
+<p><em>Files touched most often across all commits. High-churn files are hotspots that may benefit from extra review or refactoring.</em></p><table class="sortable" id="churn"><tr><th>File</th><th>Times Changed</th></tr><tr><td class="heat heat4">lib/main.dart</td><td>8</td></tr><tr><td class="heat heat4">README.md</td><td>8</td></tr><tr><td class="heat heat3">pubspec.yaml</td><td>6</td></tr><tr><td class="heat heat3">assets/coach_rules.json</td><td>5</td></tr><tr><td class="heat heat2">lib/widgets/coach_character.dart</td><td>4</td></tr><tr><td class="heat heat2">lib/widgets/roaming_cat.dart</td><td>4</td></tr><tr><td class="heat heat2">pubspec.lock</td><td>4</td></tr><tr><td class="heat heat2">&quot;\342\200\213Fitness-Tracker_HTML_v1.0.HTML&quot;</td><td>4</td></tr><tr><td class="heat heat2">.gitignore</td><td>3</td></tr><tr><td class="heat heat2">&quot;HTML\347\211\210\345\272\224\347\224\250\357\274\210\350\275\273\351\207\217\345\220\257\345\212\250\357\274\214\345\205\250\345\271\263\345\217\260\346\224\257\346\214\201\357\274\211/Fitness-Tracker_HTML_v3.0.HTML&quot;</td><td>3</td></tr><tr><td class="heat heat2">windows/runner/Runner.rc</td><td>3</td></tr><tr><td class="heat heat2">windows/flutter/generated_plugin_registrant.cc</td><td>3</td></tr><tr><td class="heat heat2">windows/flutter/generated_plugins.cmake</td><td>3</td></tr><tr><td class="heat heat1">&quot;HTML\347\211\210\345\272\224\347\224\250\357\274\210\350\275\273\351\207\217\345\220\257\345\212\250\357\274\214\345\205\250\345\271\263\345\217\260\346\224\257\346\214\201\357\274\211/Fitness-Tracker_HTML_v1.0.HTML&quot;</td><td>2</td></tr><tr><td class="heat heat1">&quot;HTML\347\211\210\345\272\224\347\224\250\357\274\210\350\275\273\351\207\217\345\220\257\345\212\250\357\274\214\345\205\250\345\271\263\345\217\260\346\224\257\346\214\201\357\274\211/Fitness-Tracker_HTML_v2.0.HTML&quot;</td><td>2</td></tr><tr><td class="heat heat1">&quot;HTML\347\211\210\346\226\260\345\212\237\350\203\275\346\274\224\347\244\272/HTML_v1.0.gif&quot;</td><td>2</td></tr><tr><td class="heat heat1">&quot;HTML\347\211\210\346\226\260\345\212\237\350\203\275\346\274\224\347\244\272/HTML_v2.0.gif&quot;</td><td>2</td></tr><tr><td class="heat heat1">&quot;HTML\347\211\210\346\226\260\345\212\237\350\203\275\346\274\224\347\244\272/HTML_v3.0.mp4&quot;</td><td>2</td></tr><tr><td class="heat heat1">&quot;Windows\347\211\210\344\270\200\351\224\256\350\260\203\350\257\225\345\222\214\346\236\204\345\273\272\345\267\245\345\205\267.exe&quot;</td><td>2</td></tr><tr><td class="heat heat1">dist/update_coach_knowledge.exe</td><td>2</td></tr><tr><td class="heat heat1">lib/widgets/draggable_cat.dart</td><td>2</td></tr><tr><td class="heat heat1">update_coach_knowledge.py</td><td>2</td></tr><tr><td class="heat heat1">backup/icon.png</td><td>2</td></tr><tr><td class="heat heat1">backup/main.dart</td><td>2</td></tr><tr><td class="heat heat1">backup/pubspec.lock</td><td>2</td></tr></table><div style="max-width:100%;margin-bottom:8px"><canvas id="chart-file-churn"></canvas></div>
+<script>
+(function() {
+  var ctx = document.getElementById('chart-file-churn').getContext('2d');
+  var chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ["lib/main.dart", "README.md", "pubspec.yaml", "assets/coach_rules.json", "lib/widgets/coach_character.dart", "lib/widgets/roaming_cat.dart", "pubspec.lock", "\"\\342\\200\\213Fitness-Tracker_HTML_v1.0.HTML\"", ".gitignore", "\"HTML\\347\\211\\210\\345\\272\\224\\347\\224\\250\\357\\274\\210\\350\\275\\273\\351\\207\\217\\345\\220\\257\\345\\212\\250\\357\\274\\214\\345\\205\\250\\345\\271\\263\\345\\217\\260\\346\\224\\257\\346\\214\\201\\357\\274\\211/Fitness-Tracker_HTML_v3.0.HTML\"", "windows/runner/Runner.rc", "windows/flutter/generated_plugin_registrant.cc", "windows/flutter/generated_plugins.cmake", "\"HTML\\347\\211\\210\\345\\272\\224\\347\\224\\250\\357\\274\\210\\350\\275\\273\\351\\207\\217\\345\\220\\257\\345\\212\\250\\357\\274\\214\\345\\205\\250\\345\\271\\263\\345\\217\\260\\346\\224\\257\\346\\214\\201\\357\\274\\211/Fitness-Tracker_HTML_v1.0.HTML\"", "\"HTML\\347\\211\\210\\345\\272\\224\\347\\224\\250\\357\\274\\210\\350\\275\\273\\351\\207\\217\\345\\220\\257\\345\\212\\250\\357\\274\\214\\345\\205\\250\\345\\271\\263\\345\\217\\260\\346\\224\\257\\346\\214\\201\\357\\274\\211/Fitness-Tracker_HTML_v2.0.HTML\"", "\"HTML\\347\\211\\210\\346\\226\\260\\345\\212\\237\\350\\203\\275\\346\\274\\224\\347\\244\\272/HTML_v1.0.gif\"", "\"HTML\\347\\211\\210\\346\\226\\260\\345\\212\\237\\350\\203\\275\\346\\274\\224\\347\\244\\272/HTML_v2.0.gif\"", "\"HTML\\347\\211\\210\\346\\226\\260\\345\\212\\237\\350\\203\\275\\346\\274\\224\\347\\244\\272/HTML_v3.0.mp4\"", "\"Windows\\347\\211\\210\\344\\270\\200\\351\\224\\256\\350\\260\\203\\350\\257\\225\\345\\222\\214\\346\\236\\204\\345\\273\\272\\345\\267\\245\\345\\205\\267.exe\"", "dist/update_coach_knowledge.exe", "lib/widgets/draggable_cat.dart", "update_coach_knowledge.py", "backup/icon.png", "backup/main.dart", "backup/pubspec.lock"],
+      datasets: [{"label": "Commits", "data": [8, 8, 6, 5, 4, 4, 4, 4, 3, 3, 3, 3, 3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2], "backgroundColor": getCSSVar('--bar-color'), "borderColor": getCSSVar('--bar-color')}]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 3,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: { ticks: { maxRotation: 45, minRotation: 45 } },
+        y: { beginAtZero: true, title: { display: true, text: 'Times Changed' } }
+      }
+    }
+  });
+  document.addEventListener('themechange', function() { chart.update(); });
+})();
+</script>
+</body></html>

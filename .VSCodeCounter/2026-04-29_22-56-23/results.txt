@@ -1,0 +1,118 @@
+Date : 2026-04-29 22:56:23
+Directory : c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker
+Total : 50 files,  14816 codes, 360 comments, 806 blanks, all 15982 lines
+
+Languages
++------------+------------+------------+------------+------------+------------+
+| language   | files      | code       | comment    | blank      | total      |
++------------+------------+------------+------------+------------+------------+
+| JSON       |          3 |      6,322 |          0 |          1 |      6,323 |
+| Dart       |          4 |      5,063 |         32 |        268 |      5,363 |
+| Python     |          2 |        940 |         47 |        106 |      1,093 |
+| HTML       |          7 |        719 |         29 |         64 |        812 |
+| C++        |         10 |        445 |         94 |        143 |        682 |
+| PostCSS    |          1 |        430 |         30 |         76 |        536 |
+| JavaScript |          2 |        281 |         50 |         15 |        346 |
+| CMake      |          4 |        243 |          0 |         44 |        287 |
+| Markdown   |          1 |        119 |          0 |         33 |        152 |
+| Gradle     |          3 |         99 |          1 |         17 |        117 |
+| YAML       |          4 |         86 |         37 |         25 |        148 |
+| XML        |          7 |         60 |         40 |         14 |        114 |
+| Properties |          2 |          9 |          0 |          0 |          9 |
++------------+------------+------------+------------+------------+------------+
+
+Directories
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| path                                                                                                                                    | files      | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| .                                                                                                                                       |         50 |     14,816 |        360 |        806 |     15,982 |
+| . (Files)                                                                                                                               |          4 |        167 |         22 |         42 |        231 |
+| android                                                                                                                                 |         12 |        168 |         41 |         31 |        240 |
+| android (Files)                                                                                                                         |          3 |         45 |          1 |          4 |         50 |
+| android\app                                                                                                                             |          8 |        118 |         40 |         27 |        185 |
+| android\app (Files)                                                                                                                     |          1 |         58 |          0 |         13 |         71 |
+| android\app\src                                                                                                                         |          7 |         60 |         40 |         14 |        114 |
+| android\app\src\debug                                                                                                                   |          1 |          3 |          4 |          1 |          8 |
+| android\app\src\main                                                                                                                    |          5 |         54 |         32 |         12 |         98 |
+| android\app\src\main (Files)                                                                                                            |          1 |         28 |          0 |          6 |         34 |
+| android\app\src\main\res                                                                                                                |          4 |         26 |         32 |          6 |         64 |
+| android\app\src\main\res\drawable                                                                                                       |          1 |          4 |          7 |          2 |         13 |
+| android\app\src\main\res\drawable-v21                                                                                                   |          1 |          4 |          7 |          2 |         13 |
+| android\app\src\main\res\values                                                                                                         |          1 |          9 |          9 |          1 |         19 |
+| android\app\src\main\res\values-night                                                                                                   |          1 |          9 |          9 |          1 |         19 |
+| android\app\src\profile                                                                                                                 |          1 |          3 |          4 |          1 |          8 |
+| android\gradle                                                                                                                          |          1 |          5 |          0 |          0 |          5 |
+| android\gradle\wrapper                                                                                                                  |          1 |          5 |          0 |          0 |          5 |
+| assets                                                                                                                                  |          1 |      6,188 |          0 |          0 |      6,188 |
+| data                                                                                                                                    |          1 |         99 |          0 |          0 |         99 |
+| data\flutter_assets                                                                                                                     |          1 |         99 |          0 |          0 |         99 |
+| data\flutter_assets\assets                                                                                                              |          1 |         99 |          0 |          0 |         99 |
+| dist                                                                                                                                    |          2 |        940 |         47 |        106 |      1,093 |
+| lib                                                                                                                                     |          5 |      5,101 |         47 |        284 |      5,432 |
+| lib (Files)                                                                                                                             |          1 |      3,386 |         28 |        141 |      3,555 |
+| lib\utils                                                                                                                               |          1 |         38 |         15 |         16 |         69 |
+| lib\widgets                                                                                                                             |          3 |      1,677 |          4 |        127 |      1,808 |
+| stats_report                                                                                                                            |          9 |      1,411 |         86 |        150 |      1,647 |
+| web                                                                                                                                     |          2 |         54 |         23 |          6 |         83 |
+| windows                                                                                                                                 |         14 |        688 |         94 |        187 |        969 |
+| windows (Files)                                                                                                                         |          1 |         89 |          0 |         19 |        108 |
+| windows\flutter                                                                                                                         |          4 |        137 |          9 |         29 |        175 |
+| windows\runner                                                                                                                          |          9 |        462 |         85 |        139 |        686 |
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+
+Files
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| filename                                                                                                                                | language   | code       | comment    | blank      | total      |
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\README.md                                                   | Markdown   |        119 |          0 |         33 |        152 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\analysis_options.yaml                                       | YAML       |          3 |         22 |          4 |         29 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\build.gradle                                    | Gradle     |         58 |          0 |         13 |         71 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\src\debug\AndroidManifest.xml                   | XML        |          3 |          4 |          1 |          8 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\src\main\AndroidManifest.xml                    | XML        |         28 |          0 |          6 |         34 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\src\main\res\drawable-v21\launch_background.xml | XML        |          4 |          7 |          2 |         13 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\src\main\res\drawable\launch_background.xml     | XML        |          4 |          7 |          2 |         13 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\src\main\res\values-night\styles.xml            | XML        |          9 |          9 |          1 |         19 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\src\main\res\values\styles.xml                  | XML        |          9 |          9 |          1 |         19 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\app\src\profile\AndroidManifest.xml                 | XML        |          3 |          4 |          1 |          8 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\build.gradle                                        | Gradle     |         30 |          1 |          3 |         34 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\gradle.properties                                   | Properties |          4 |          0 |          0 |          4 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\gradle\wrapper\gradle-wrapper.properties            | Properties |          5 |          0 |          0 |          5 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\android\settings.gradle                                     | Gradle     |         11 |          0 |          1 |         12 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\assets\coach_rules.json                                     | JSON       |      6,188 |          0 |          0 |      6,188 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\data\flutter_assets\assets\coach_rules.json                 | JSON       |         99 |          0 |          0 |         99 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\devtools_options.yaml                                       | YAML       |          3 |          0 |          1 |          4 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\dist\Windows一键调试和构建工具.py                                    | Python     |        229 |         36 |         46 |        311 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\dist\update_coach_knowledge_2.0.py                          | Python     |        711 |         11 |         60 |        782 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\lib\main.dart                                               | Dart       |      3,386 |         28 |        141 |      3,555 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\lib\utils\permission_handler.yaml                           | YAML       |         38 |         15 |         16 |         69 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\lib\widgets\coach_character.dart                            | Dart       |      1,236 |          2 |         94 |      1,332 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\lib\widgets\draggable_cat.dart                              | Dart       |        196 |          2 |         12 |        210 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\lib\widgets\roaming_cat.dart                                | Dart       |        245 |          0 |         21 |        266 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\pubspec.yaml                                                | YAML       |         42 |          0 |          4 |         46 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\activity.html                                  | HTML       |        249 |          1 |         17 |        267 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\authors.html                                   | HTML       |        165 |          1 |         14 |        180 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\chart.umd.min.js                               | JavaScript |          2 |         18 |          1 |         21 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\files.html                                     | HTML       |        107 |          1 |         10 |        118 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\gitstats.css                                   | PostCSS    |        430 |         30 |         76 |        536 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\index.html                                     | HTML       |         52 |          1 |          6 |         59 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\lines.html                                     | HTML       |         78 |          1 |          7 |         86 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\sortable.js                                    | JavaScript |        279 |         32 |         14 |        325 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\stats_report\tags.html                                      | HTML       |         49 |          1 |          5 |         55 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\web\index.html                                              | HTML       |         19 |         23 |          5 |         47 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\web\manifest.json                                           | JSON       |         35 |          0 |          1 |         36 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\CMakeLists.txt                                      | CMake      |         89 |          0 |         19 |        108 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\flutter\CMakeLists.txt                              | CMake      |         98 |          0 |         12 |        110 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\flutter\generated_plugin_registrant.cc              | C++        |         12 |          4 |          5 |         21 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\flutter\generated_plugin_registrant.h               | C++        |          5 |          5 |          6 |         16 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\flutter\generated_plugins.cmake                     | CMake      |         22 |          0 |          6 |         28 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\CMakeLists.txt                               | CMake      |         34 |          0 |          7 |         41 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\flutter_window.cpp                           | C++        |         49 |          7 |         16 |         72 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\flutter_window.h                             | C++        |         20 |          5 |          9 |         34 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\main.cpp                                     | C++        |         30 |          4 |         10 |         44 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\resource.h                                   | C++        |          9 |          6 |          2 |         17 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\utils.cpp                                    | C++        |         54 |          2 |         10 |         66 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\utils.h                                      | C++        |          8 |          6 |          6 |         20 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\win32_window.cpp                             | C++        |        210 |         24 |         55 |        289 |
+| c:\Users\Ethoc\Documents\GitHub\Fitness-Tracker_Windows-Dev\Fitness-Tracker\windows\runner\win32_window.h                               | C++        |         48 |         31 |         24 |        103 |
+| Total                                                                                                                                   |            |     14,816 |        360 |        806 |     15,982 |
++-----------------------------------------------------------------------------------------------------------------------------------------+------------+------------+------------+------------+------------+
