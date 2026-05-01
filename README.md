@@ -1,7 +1,7 @@
 ## 概述
 #### 一款健身记录兼电子陪练APP、支持三端同步和数据导出。告别纸笔和复杂表格，用精美而优雅的界面铭记每一次训练，自动计算做功，并即时获取AI训练分析。
 ---
-#### Newest CSDN：[Android_v1.1](https://blog.csdn.net/Ethocas/article/details/160480717)
+#### Newest CSDN：[Android_v1.1](https://blog.csdn.net/Ethocas/article/details/160692111)
 ---
 #### 2026.04.30 [Android_v1.1 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Android_v1.1)
 #### 2026.04.24 [Android_v1.0 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Android_v1.0)
