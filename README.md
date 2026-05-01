@@ -1,8 +1,10 @@
 ## 概述
-#### 一个专为个人健身记录设计的"本地优先、云端同步"的现代化桌面/移动应用。告别纸笔和复杂表格，用优雅的界面记录每一次训练，自动计算做功，并支持坚果云 WebDAV 一键同步。
+#### 一款健身记录兼电子陪练APP、支持三端同步和数据导出。告别纸笔和复杂表格，用精美而优雅的界面铭记每一次训练，自动计算做功，并即时获取AI训练分析。
 ---
-#### 本项目CSDN链接：[Ethocas的博客](https://blog.csdn.net/Ethocas?type=blog)
+#### Newest CSDN：[Android_v1.1](https://blog.csdn.net/Ethocas/article/details/160480717)
 ---
+#### 2026.04.30 [Android_v1.1 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Android_v1.1)
+#### 2026.04.24 [Android_v1.0 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Android_v1.0)
 #### 2026.04.20 [Win_v4.0 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Win_v4.0)
 #### 2026.04.19 [Win_v3.1.1 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Win_v3.1.1)
 #### 2026.04.16 [Win_v3.0 Release](https://github.com/MrKedow/Fitness-Tracker/releases/tag/Win_Newest_Stable)
